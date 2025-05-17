@@ -8,3 +8,4 @@ crate-type = ["rlib", "cdylib"]
 
 [dependencies]
 pastey = "0.1.0"
+stabby = "72.1.1"

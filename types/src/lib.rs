@@ -1,4 +1,11 @@
-use std::{collections::HashMap, num::NonZeroU16, ptr};
+use std::collections::HashMap;
+use std::ffi::{c_char, CStr};
+use std::{num::NonZeroU16, ptr};
+
+use stabby::str::Str as RStr;
+use stabby::dynptr;
+use stabby::{Any, boxed::Box as RBox};
+
 use pastey::paste;
 use critical::RustVariable;
 
@@ -25,14 +32,15 @@ pub struct FnStack {
   /// Return value (identifier in MemoryMap)
   pub ret: Maybe<CVariable>,
   // General Purpose (identifiers in MemoryMap)
-  pub(crate) r1: Option<NonZeroU16>,
-  pub(crate) r2: Option<NonZeroU16>,
-  pub(crate) r3: Option<NonZeroU16>,
-  pub(crate) r4: Option<NonZeroU16>,
-  pub(crate) r5: Option<NonZeroU16>,
-  pub(crate) r6: Option<NonZeroU16>,
-  pub(crate) r7: Option<NonZeroU16>,
-  pub(crate) r8: Option<NonZeroU16>,
+  pub itself: Option<NonZeroU16>,
+  pub r1: Option<NonZeroU16>,
+  pub r2: Option<NonZeroU16>,
+  pub r3: Option<NonZeroU16>,
+  pub r4: Option<NonZeroU16>,
+  pub r5: Option<NonZeroU16>,
+  pub r6: Option<NonZeroU16>,
+  pub r7: Option<NonZeroU16>,
+  pub r8: Option<NonZeroU16>,
 }
 
 impl FnStack {
@@ -40,6 +48,7 @@ impl FnStack {
   pub extern "C" fn create() -> Self {
     Self {
       ret: MaybeNone,
+      itself: None,
       r1: None,
       r2: None,
       r3: None,
@@ -66,13 +75,27 @@ pub struct CVariable {
   pub _clone: extern "C" fn(*mut ()) -> CVariable,
 }
 
+impl CVariable {
+  pub unsafe fn get_u32(&self) -> u32 {
+    let data: &RustVariable<Wrapper<u32>> = unsafe { RustVariable::from_ptr(self.data) };
+
+    data.inner()
+  }
+}
+
 #[repr(C)]
 #[derive(Debug, Clone)]
 pub struct Wrapper<T: Copy + Clone>(T);
 
+impl<T: Copy + Clone> Wrapper<T> {
+  pub fn inner(&self) -> T {
+    self.0
+  }
+}
+
 generate! {
   CVariable;
-  generate: u8,u16,u32,u64,i8,i16,i32,i64,f32,f64
+  generate: u8,u16,u32,u64,usize,i8,i16,i32,i64,f32,f64,isize,bool
 }
 
 #[repr(C)]
@@ -111,11 +134,59 @@ impl CVariable {
   }
 }
 
+pub struct RHashMap(HashMap<u16, VariableData>);
+
+#[repr(C)]
 pub struct MemoryMap {
-  pub variables: HashMap<u16, VariableData>,
+  variables: HashMap<u16, VariableData>,
 }
 
+impl MemoryMap {
+  #[unsafe(no_mangle)]
+  pub extern "C" fn create_map() -> Self {
+    Self {
+      variables: HashMap::new(),
+    }
+  }
+}
+
+#[repr(C)]
 pub enum VariableData {
-  Constant(&'static str),
+  Constant(RStr<'static>),
   Raw(CVariable),
+  Abi(dynptr!(RBox<dyn Any + 'static>))
+}
+
+#[repr(C)]
+pub struct CLikeMap {
+  map: HashMap<u16, VariableData>,
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn new_map() -> *mut CLikeMap {
+  Box::into_raw(Box::new(CLikeMap {
+    map: HashMap::new(),
+  }))
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn insert_into_map(map: *mut CLikeMap, key: u16, value: VariableData) {
+  let map = unsafe { &mut *map };
+  
+  map.map.insert(key, value);
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn get_from_map<'a>(map: *mut CLikeMap, key: u16) -> &'a VariableData {
+  let map = unsafe { &mut *map };
+  
+  &map.map.get(&key).unwrap()
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn free_the_map(map: *mut CLikeMap) -> Maybe<()> {
+  if map.is_null() { return MaybeNone; }
+  drop(unsafe { Box::from_raw(map) });
+
+  MaybeSome(())
 }

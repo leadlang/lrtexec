@@ -1,0 +1,1 @@
+Clear-Host; cargo expand > r.rs; cbindgen --config config.toml --output a.h r.rs

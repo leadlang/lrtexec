@@ -3,9 +3,11 @@
 use std::prelude::rust_2024::*;
 #[macro_use]
 extern crate std;
-use std::{collections::HashMap, num::NonZeroU16, ptr};
+use std::{num::NonZeroU16, ptr};
+use abi_stable::std_types::RStr;
 use pastey::paste;
 use critical::RustVariable;
+pub use abi_stable::std_types::RHashMap;
 pub mod common {
     use std::ffi::{CStr, CString, c_char};
     use crate::{CVariable, critical::RustVariable};
@@ -139,20 +141,22 @@ use Maybe::Some as MaybeSome;
 pub struct FnStack {
     /// Return value (identifier in MemoryMap)
     pub ret: Maybe<CVariable>,
-    pub(crate) r1: Option<NonZeroU16>,
-    pub(crate) r2: Option<NonZeroU16>,
-    pub(crate) r3: Option<NonZeroU16>,
-    pub(crate) r4: Option<NonZeroU16>,
-    pub(crate) r5: Option<NonZeroU16>,
-    pub(crate) r6: Option<NonZeroU16>,
-    pub(crate) r7: Option<NonZeroU16>,
-    pub(crate) r8: Option<NonZeroU16>,
+    pub itself: Option<NonZeroU16>,
+    pub r1: Option<NonZeroU16>,
+    pub r2: Option<NonZeroU16>,
+    pub r3: Option<NonZeroU16>,
+    pub r4: Option<NonZeroU16>,
+    pub r5: Option<NonZeroU16>,
+    pub r6: Option<NonZeroU16>,
+    pub r7: Option<NonZeroU16>,
+    pub r8: Option<NonZeroU16>,
 }
 impl FnStack {
     #[unsafe(no_mangle)]
     pub extern "C" fn create() -> Self {
         Self {
             ret: MaybeNone,
+            itself: None,
             r1: None,
             r2: None,
             r3: None,
@@ -175,6 +179,14 @@ pub struct CVariable {
     pub _drop: extern "C" fn(*mut ()),
     pub _clone: extern "C" fn(*mut ()) -> CVariable,
 }
+impl CVariable {
+    pub unsafe fn get_u32(&self) -> u32 {
+        let data: &RustVariable<Wrapper<u32>> = unsafe {
+            RustVariable::from_ptr(self.data)
+        };
+        data.inner()
+    }
+}
 #[repr(C)]
 pub struct Wrapper<T: Copy + Clone>(T);
 #[automatically_derived]
@@ -191,46 +203,167 @@ impl<T: ::core::clone::Clone + Copy + Clone> ::core::clone::Clone for Wrapper<T>
         Wrapper(::core::clone::Clone::clone(&self.0))
     }
 }
+impl<T: Copy + Clone> Wrapper<T> {
+    pub fn inner(&self) -> T {
+        self.0
+    }
+}
 impl CVariable {
     #[unsafe(no_mangle)]
-    pub extern "C" fn from_c_to_rustu8(value: Wrapper<u8>) -> Self {
+    pub extern "C" fn into_common_u8(value: Wrapper<u8>) -> Self {
         RustVariable::new(value).to_c()
     }
+    /// This creates a Clone of the inner value
     #[unsafe(no_mangle)]
-    pub extern "C" fn from_c_to_rustu16(value: Wrapper<u16>) -> Self {
-        RustVariable::new(value).to_c()
+    pub extern "C" fn get_common_u8(self) -> u8 {
+        let data: &RustVariable<Wrapper<u8>> = unsafe {
+            RustVariable::from_ptr(self.data)
+        };
+        data.inner()
     }
     #[unsafe(no_mangle)]
-    pub extern "C" fn from_c_to_rustu32(value: Wrapper<u32>) -> Self {
+    pub extern "C" fn into_common_u16(value: Wrapper<u16>) -> Self {
         RustVariable::new(value).to_c()
     }
+    /// This creates a Clone of the inner value
     #[unsafe(no_mangle)]
-    pub extern "C" fn from_c_to_rustu64(value: Wrapper<u64>) -> Self {
-        RustVariable::new(value).to_c()
+    pub extern "C" fn get_common_u16(self) -> u16 {
+        let data: &RustVariable<Wrapper<u16>> = unsafe {
+            RustVariable::from_ptr(self.data)
+        };
+        data.inner()
     }
     #[unsafe(no_mangle)]
-    pub extern "C" fn from_c_to_rusti8(value: Wrapper<i8>) -> Self {
+    pub extern "C" fn into_common_u32(value: Wrapper<u32>) -> Self {
         RustVariable::new(value).to_c()
     }
+    /// This creates a Clone of the inner value
     #[unsafe(no_mangle)]
-    pub extern "C" fn from_c_to_rusti16(value: Wrapper<i16>) -> Self {
-        RustVariable::new(value).to_c()
+    pub extern "C" fn get_common_u32(self) -> u32 {
+        let data: &RustVariable<Wrapper<u32>> = unsafe {
+            RustVariable::from_ptr(self.data)
+        };
+        data.inner()
     }
     #[unsafe(no_mangle)]
-    pub extern "C" fn from_c_to_rusti32(value: Wrapper<i32>) -> Self {
+    pub extern "C" fn into_common_u64(value: Wrapper<u64>) -> Self {
         RustVariable::new(value).to_c()
     }
+    /// This creates a Clone of the inner value
     #[unsafe(no_mangle)]
-    pub extern "C" fn from_c_to_rusti64(value: Wrapper<i64>) -> Self {
-        RustVariable::new(value).to_c()
+    pub extern "C" fn get_common_u64(self) -> u64 {
+        let data: &RustVariable<Wrapper<u64>> = unsafe {
+            RustVariable::from_ptr(self.data)
+        };
+        data.inner()
     }
     #[unsafe(no_mangle)]
-    pub extern "C" fn from_c_to_rustf32(value: Wrapper<f32>) -> Self {
+    pub extern "C" fn into_common_usize(value: Wrapper<usize>) -> Self {
         RustVariable::new(value).to_c()
     }
+    /// This creates a Clone of the inner value
     #[unsafe(no_mangle)]
-    pub extern "C" fn from_c_to_rustf64(value: Wrapper<f64>) -> Self {
+    pub extern "C" fn get_common_usize(self) -> usize {
+        let data: &RustVariable<Wrapper<usize>> = unsafe {
+            RustVariable::from_ptr(self.data)
+        };
+        data.inner()
+    }
+    #[unsafe(no_mangle)]
+    pub extern "C" fn into_common_i8(value: Wrapper<i8>) -> Self {
         RustVariable::new(value).to_c()
+    }
+    /// This creates a Clone of the inner value
+    #[unsafe(no_mangle)]
+    pub extern "C" fn get_common_i8(self) -> i8 {
+        let data: &RustVariable<Wrapper<i8>> = unsafe {
+            RustVariable::from_ptr(self.data)
+        };
+        data.inner()
+    }
+    #[unsafe(no_mangle)]
+    pub extern "C" fn into_common_i16(value: Wrapper<i16>) -> Self {
+        RustVariable::new(value).to_c()
+    }
+    /// This creates a Clone of the inner value
+    #[unsafe(no_mangle)]
+    pub extern "C" fn get_common_i16(self) -> i16 {
+        let data: &RustVariable<Wrapper<i16>> = unsafe {
+            RustVariable::from_ptr(self.data)
+        };
+        data.inner()
+    }
+    #[unsafe(no_mangle)]
+    pub extern "C" fn into_common_i32(value: Wrapper<i32>) -> Self {
+        RustVariable::new(value).to_c()
+    }
+    /// This creates a Clone of the inner value
+    #[unsafe(no_mangle)]
+    pub extern "C" fn get_common_i32(self) -> i32 {
+        let data: &RustVariable<Wrapper<i32>> = unsafe {
+            RustVariable::from_ptr(self.data)
+        };
+        data.inner()
+    }
+    #[unsafe(no_mangle)]
+    pub extern "C" fn into_common_i64(value: Wrapper<i64>) -> Self {
+        RustVariable::new(value).to_c()
+    }
+    /// This creates a Clone of the inner value
+    #[unsafe(no_mangle)]
+    pub extern "C" fn get_common_i64(self) -> i64 {
+        let data: &RustVariable<Wrapper<i64>> = unsafe {
+            RustVariable::from_ptr(self.data)
+        };
+        data.inner()
+    }
+    #[unsafe(no_mangle)]
+    pub extern "C" fn into_common_f32(value: Wrapper<f32>) -> Self {
+        RustVariable::new(value).to_c()
+    }
+    /// This creates a Clone of the inner value
+    #[unsafe(no_mangle)]
+    pub extern "C" fn get_common_f32(self) -> f32 {
+        let data: &RustVariable<Wrapper<f32>> = unsafe {
+            RustVariable::from_ptr(self.data)
+        };
+        data.inner()
+    }
+    #[unsafe(no_mangle)]
+    pub extern "C" fn into_common_f64(value: Wrapper<f64>) -> Self {
+        RustVariable::new(value).to_c()
+    }
+    /// This creates a Clone of the inner value
+    #[unsafe(no_mangle)]
+    pub extern "C" fn get_common_f64(self) -> f64 {
+        let data: &RustVariable<Wrapper<f64>> = unsafe {
+            RustVariable::from_ptr(self.data)
+        };
+        data.inner()
+    }
+    #[unsafe(no_mangle)]
+    pub extern "C" fn into_common_isize(value: Wrapper<isize>) -> Self {
+        RustVariable::new(value).to_c()
+    }
+    /// This creates a Clone of the inner value
+    #[unsafe(no_mangle)]
+    pub extern "C" fn get_common_isize(self) -> isize {
+        let data: &RustVariable<Wrapper<isize>> = unsafe {
+            RustVariable::from_ptr(self.data)
+        };
+        data.inner()
+    }
+    #[unsafe(no_mangle)]
+    pub extern "C" fn into_common_bool(value: Wrapper<bool>) -> Self {
+        RustVariable::new(value).to_c()
+    }
+    /// This creates a Clone of the inner value
+    #[unsafe(no_mangle)]
+    pub extern "C" fn get_common_bool(self) -> bool {
+        let data: &RustVariable<Wrapper<bool>> = unsafe {
+            RustVariable::from_ptr(self.data)
+        };
+        data.inner()
     }
 }
 impl From<Wrapper<u8>> for CVariable {
@@ -250,6 +383,11 @@ impl From<Wrapper<u32>> for CVariable {
 }
 impl From<Wrapper<u64>> for CVariable {
     fn from(value: Wrapper<u64>) -> Self {
+        RustVariable::new(value).to_c()
+    }
+}
+impl From<Wrapper<usize>> for CVariable {
+    fn from(value: Wrapper<usize>) -> Self {
         RustVariable::new(value).to_c()
     }
 }
@@ -283,6 +421,16 @@ impl From<Wrapper<f64>> for CVariable {
         RustVariable::new(value).to_c()
     }
 }
+impl From<Wrapper<isize>> for CVariable {
+    fn from(value: Wrapper<isize>) -> Self {
+        RustVariable::new(value).to_c()
+    }
+}
+impl From<Wrapper<bool>> for CVariable {
+    fn from(value: Wrapper<bool>) -> Self {
+        RustVariable::new(value).to_c()
+    }
+}
 #[repr(C)]
 pub struct RustClosure {
     _closure: extern "C" fn(*mut ()),
@@ -313,10 +461,18 @@ impl CVariable {
         Some(VariableData::Raw(self))
     }
 }
+#[repr(C)]
 pub struct MemoryMap {
-    pub variables: HashMap<u16, VariableData>,
+    pub variables: RHashMap<u16, VariableData>,
 }
+impl MemoryMap {
+    #[unsafe(no_mangle)]
+    pub extern "C" fn create_map() -> Self {
+        Self { variables: RHashMap::new() }
+    }
+}
+#[repr(C)]
 pub enum VariableData {
-    Constant(&'static str),
+    Constant(RStr<'static>),
     Raw(CVariable),
 }
