@@ -1,0 +1,6 @@
+__alias
+%ahq:= utf8="Hello World"
+%num:= u64=32
+
+_text
+MOVE r8 @bytes(%num)
