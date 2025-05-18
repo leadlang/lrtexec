@@ -1,5 +1,5 @@
 [package]
-name = "types"
+name = "lrtexec_types"
 version = "0.1.0"
 edition = "2024"
 
@@ -9,3 +9,7 @@ crate-type = ["rlib", "cdylib"]
 [dependencies]
 pastey = "0.1.0"
 stabby = "72.1.1"
+
+[features]
+default = []
+memory = []

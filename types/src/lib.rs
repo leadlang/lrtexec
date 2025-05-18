@@ -1,7 +1,7 @@
 use std::collections::HashMap;
-use std::ffi::{c_char, CStr};
 use std::{num::NonZeroU16, ptr};
 
+use common::hashmap::RTVariableMap;
 use stabby::str::Str as RStr;
 use stabby::dynptr;
 use stabby::{Any, boxed::Box as RBox};
@@ -60,7 +60,17 @@ impl FnStack {
     }
   }
 
-  pub fn clear(&mut self) {}
+  pub fn clear(&mut self) {
+    self.itself = None;
+    self.r1 = None;
+    self.r2 = None;
+    self.r3 = None;
+    self.r4 = None;
+    self.r5 = None;
+    self.r6 = None;
+    self.r7 = None;
+    self.r8 = None;
+  }
 
   #[unsafe(no_mangle)]
   pub extern "C" fn setOutput(&mut self, data: CVariable) {
@@ -134,16 +144,14 @@ impl CVariable {
   }
 }
 
-pub struct RHashMap(HashMap<u16, VariableData>);
-
 #[repr(C)]
 pub struct MemoryMap {
-  variables: HashMap<u16, VariableData>,
+  variables: RTVariableMap,
 }
 
 impl MemoryMap {
-  #[unsafe(no_mangle)]
-  pub extern "C" fn create_map() -> Self {
+  #[cfg(feature = "memory")]
+  pub fn create_map() -> Self {
     Self {
       variables: HashMap::new(),
     }
@@ -155,38 +163,4 @@ pub enum VariableData {
   Constant(RStr<'static>),
   Raw(CVariable),
   Abi(dynptr!(RBox<dyn Any + 'static>))
-}
-
-#[repr(C)]
-pub struct CLikeMap {
-  map: HashMap<u16, VariableData>,
-}
-
-#[unsafe(no_mangle)]
-pub extern "C" fn new_map() -> *mut CLikeMap {
-  Box::into_raw(Box::new(CLikeMap {
-    map: HashMap::new(),
-  }))
-}
-
-#[unsafe(no_mangle)]
-pub extern "C" fn insert_into_map(map: *mut CLikeMap, key: u16, value: VariableData) {
-  let map = unsafe { &mut *map };
-  
-  map.map.insert(key, value);
-}
-
-#[unsafe(no_mangle)]
-pub extern "C" fn get_from_map<'a>(map: *mut CLikeMap, key: u16) -> &'a VariableData {
-  let map = unsafe { &mut *map };
-  
-  &map.map.get(&key).unwrap()
-}
-
-#[unsafe(no_mangle)]
-pub extern "C" fn free_the_map(map: *mut CLikeMap) -> Maybe<()> {
-  if map.is_null() { return MaybeNone; }
-  drop(unsafe { Box::from_raw(map) });
-
-  MaybeSome(())
 }

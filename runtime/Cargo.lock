@@ -3,5 +3,5 @@
 version = 4
 
 [[package]]
-name = "runtime"
+name = "lrt_runtime"
 version = "0.1.0"

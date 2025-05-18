@@ -3,6 +3,8 @@ use std::
 
 use crate::{CVariable, critical::RustVariable};
 
+pub mod hashmap;
+
 #[repr(C)]
 #[derive(Clone, Debug)]
 pub struct CommonString {

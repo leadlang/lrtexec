@@ -1,6 +1,7 @@
 [package]
-name = "runtime"
+name = "lrt_runtime"
 version = "0.1.0"
 edition = "2024"
+description = "The LRT Runtime (a package that can execute lrt code)"
 
 [dependencies]

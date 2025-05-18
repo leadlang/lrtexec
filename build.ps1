@@ -1,0 +1,46 @@
+$release = $env:RELEASE -eq "true"
+
+Set-Location dialog
+
+# Determine build type
+$buildType = if ($release) { "release" } else { "debug" }
+$nogui = if ($env:GUI -eq "false") { "nogui" } else {}
+
+# Build dialog crate
+if ($env:GUI -ne "false") {
+  Write-Host "Building dialog ($($buildType))"
+  ../compiler $buildType --lib
+  ""
+}
+
+# Navigate to lrt directory
+Set-Location ../lrt
+
+# Build lrt crate
+Write-Host "Building lrt ($($buildType))"
+../compiler $buildType --bins $($nogui)
+""
+
+Set-Location ../compiler
+
+# Build compiler
+Write-Host "Building compiler ($($buildType))"
+../compiler $buildType --bins
+""
+
+Set-Location ..
+
+New-Item -Path dist -ItemType Directory -ErrorAction SilentlyContinue
+
+if ($env:GUI -ne "false") {
+  New-Item -Path dist/dialog -ItemType Directory -ErrorAction SilentlyContinue
+}
+
+$buildTarget = $env:BUILD_TARGET
+$buildTarget = if ($buildTarget) { "/$($buildTarget)" } else {}
+
+Copy-Item -Path "./compiler/target$($buildTarget)/$($buildType)/*" -Filter compiler* -Destination "./dist/" -Recurse
+if ($env:GUI -ne "false") {
+  Copy-Item -Path "./dialog/target$($buildTarget)/$($buildType)/*" -Filter intl_dialog* -Destination "./dist/dialog/" -Recurse
+  Copy-Item -Path "./dialog/target$($buildTarget)/$($buildType)/*" -Filter libintl_dialog* -Destination "./dist/dialog/" -Recurse
+}
