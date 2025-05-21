@@ -8,7 +8,7 @@ mod instructions;
 #[cfg(feature = "internal")]
 #[proc_macro]
 pub fn instructions(item: TokenStream) -> TokenStream {
-  macros::ver(item)
+  instructions::inst(item)
 }
 
 #[cfg(feature = "internal")]
