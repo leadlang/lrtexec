@@ -30,10 +30,11 @@ Write-Host "Building compiler ($($buildType))"
 
 Set-Location ..
 
-New-Item -Path dist -ItemType Directory -ErrorAction SilentlyContinue
+Remove-Item -Path dist -Recurse -ErrorAction SilentlyContinue
+New-Item -Path dist -ItemType Directory -ErrorAction SilentlyContinue > $null
 
 if ($env:GUI -ne "false") {
-  New-Item -Path dist/dialog -ItemType Directory -ErrorAction SilentlyContinue
+  New-Item -Path dist/dialog -ItemType Directory -ErrorAction SilentlyContinue > $null
 }
 
 $buildTarget = $env:BUILD_TARGET

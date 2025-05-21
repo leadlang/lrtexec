@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 use std::{num::NonZeroU16, ptr};
 
 use common::hashmap::RTVariableMap;
