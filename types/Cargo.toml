@@ -9,7 +9,14 @@ crate-type = ["rlib", "cdylib"]
 [dependencies]
 pastey = "0.1.0"
 stabby = "72.1.1"
+lrt_macros = { path = "../macros" }
 
 [features]
-default = []
+default = ["v_all"]
 memory = []
+
+# LRTEXEC Interpreter Versions
+v_all = [
+  "v0"
+]
+v0 = []

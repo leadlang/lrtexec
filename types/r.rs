@@ -4,13 +4,626 @@ use std::prelude::rust_2024::*;
 #[macro_use]
 extern crate std;
 use std::{num::NonZeroU16, ptr};
-use abi_stable::std_types::RStr;
+use common::hashmap::RTVariableMap;
+use stabby::str::Str as RStr;
+use stabby::dynptr;
+use stabby::{Any, boxed::Box as RBox};
 use pastey::paste;
 use critical::RustVariable;
-pub use abi_stable::std_types::RHashMap;
 pub mod common {
     use std::ffi::{CStr, CString, c_char};
     use crate::{CVariable, critical::RustVariable};
+    pub mod hashmap {
+        use std::collections::HashMap;
+        use stabby::stabby;
+        use crate::CVariable;
+        #[deny(improper_ctypes_definitions)]
+        pub trait RHashMap {
+            extern "C" fn get<'a>(&'a self, key: &'a u16) -> Option<&'a CVariable>;
+            extern "C" fn insert(&mut self, key: u16, value: CVariable);
+        }
+        #[allow(unknown_lints)]
+        #[allow(clippy::multiple_bound_locations)]
+        ///An stabby-generated item for [`RHashMap`]
+        #[repr(C)]
+        pub struct StabbyVtableRHashMap<'stabby_vt_lt> {
+            ///An stabby-generated item for [`RHashMap`]
+            pub get: stabby::abi::StableLike<
+                for<'a> extern "C" fn(
+                    stabby::abi::AnonymRef<'a>,
+                    ::core::marker::PhantomData<&'a &'stabby_vt_lt ()>,
+                    &'a u16,
+                ) -> Option<&'a CVariable>,
+                &'static (),
+            >,
+            ///An stabby-generated item for [`RHashMap`]
+            pub insert: stabby::abi::StableLike<
+                for<'stabby_receiver_lt> extern "C" fn(
+                    stabby::abi::AnonymRefMut<'stabby_receiver_lt>,
+                    ::core::marker::PhantomData<&'stabby_receiver_lt &'stabby_vt_lt ()>,
+                    u16,
+                    CVariable,
+                ),
+                &'static (),
+            >,
+        }
+        #[automatically_derived]
+        unsafe impl<'stabby_vt_lt> stabby::abi::IStable
+        for StabbyVtableRHashMap<'stabby_vt_lt>
+        where
+            stabby::abi::Struct<
+                stabby::abi::FieldPair<
+                    stabby::abi::StableLike<
+                        for<'a> extern "C" fn(
+                            stabby::abi::AnonymRef<'a>,
+                            ::core::marker::PhantomData<&'a &'stabby_vt_lt ()>,
+                            &'a u16,
+                        ) -> Option<&'a CVariable>,
+                        &'static (),
+                    >,
+                    stabby::abi::StableLike<
+                        for<'stabby_receiver_lt> extern "C" fn(
+                            stabby::abi::AnonymRefMut<'stabby_receiver_lt>,
+                            ::core::marker::PhantomData<
+                                &'stabby_receiver_lt &'stabby_vt_lt (),
+                            >,
+                            u16,
+                            CVariable,
+                        ),
+                        &'static (),
+                    >,
+                >,
+            >: stabby::abi::IStable,
+            stabby::abi::StableLike<
+                for<'stabby_receiver_lt> extern "C" fn(
+                    stabby::abi::AnonymRefMut<'stabby_receiver_lt>,
+                    ::core::marker::PhantomData<&'stabby_receiver_lt &'stabby_vt_lt ()>,
+                    u16,
+                    CVariable,
+                ),
+                &'static (),
+            >: stabby::abi::IStable,
+            stabby::abi::StableLike<
+                for<'a> extern "C" fn(
+                    stabby::abi::AnonymRef<'a>,
+                    ::core::marker::PhantomData<&'a &'stabby_vt_lt ()>,
+                    &'a u16,
+                ) -> Option<&'a CVariable>,
+                &'static (),
+            >: stabby::abi::IStable,
+        {
+            type ForbiddenValues = <stabby::abi::Struct<
+                stabby::abi::FieldPair<
+                    stabby::abi::StableLike<
+                        for<'a> extern "C" fn(
+                            stabby::abi::AnonymRef<'a>,
+                            ::core::marker::PhantomData<&'a &'stabby_vt_lt ()>,
+                            &'a u16,
+                        ) -> Option<&'a CVariable>,
+                        &'static (),
+                    >,
+                    stabby::abi::StableLike<
+                        for<'stabby_receiver_lt> extern "C" fn(
+                            stabby::abi::AnonymRefMut<'stabby_receiver_lt>,
+                            ::core::marker::PhantomData<
+                                &'stabby_receiver_lt &'stabby_vt_lt (),
+                            >,
+                            u16,
+                            CVariable,
+                        ),
+                        &'static (),
+                    >,
+                >,
+            > as stabby::abi::IStable>::ForbiddenValues;
+            type UnusedBits = <stabby::abi::Struct<
+                stabby::abi::FieldPair<
+                    stabby::abi::StableLike<
+                        for<'a> extern "C" fn(
+                            stabby::abi::AnonymRef<'a>,
+                            ::core::marker::PhantomData<&'a &'stabby_vt_lt ()>,
+                            &'a u16,
+                        ) -> Option<&'a CVariable>,
+                        &'static (),
+                    >,
+                    stabby::abi::StableLike<
+                        for<'stabby_receiver_lt> extern "C" fn(
+                            stabby::abi::AnonymRefMut<'stabby_receiver_lt>,
+                            ::core::marker::PhantomData<
+                                &'stabby_receiver_lt &'stabby_vt_lt (),
+                            >,
+                            u16,
+                            CVariable,
+                        ),
+                        &'static (),
+                    >,
+                >,
+            > as stabby::abi::IStable>::UnusedBits;
+            type Size = <stabby::abi::Struct<
+                stabby::abi::FieldPair<
+                    stabby::abi::StableLike<
+                        for<'a> extern "C" fn(
+                            stabby::abi::AnonymRef<'a>,
+                            ::core::marker::PhantomData<&'a &'stabby_vt_lt ()>,
+                            &'a u16,
+                        ) -> Option<&'a CVariable>,
+                        &'static (),
+                    >,
+                    stabby::abi::StableLike<
+                        for<'stabby_receiver_lt> extern "C" fn(
+                            stabby::abi::AnonymRefMut<'stabby_receiver_lt>,
+                            ::core::marker::PhantomData<
+                                &'stabby_receiver_lt &'stabby_vt_lt (),
+                            >,
+                            u16,
+                            CVariable,
+                        ),
+                        &'static (),
+                    >,
+                >,
+            > as stabby::abi::IStable>::Size;
+            type Align = <stabby::abi::Struct<
+                stabby::abi::FieldPair<
+                    stabby::abi::StableLike<
+                        for<'a> extern "C" fn(
+                            stabby::abi::AnonymRef<'a>,
+                            ::core::marker::PhantomData<&'a &'stabby_vt_lt ()>,
+                            &'a u16,
+                        ) -> Option<&'a CVariable>,
+                        &'static (),
+                    >,
+                    stabby::abi::StableLike<
+                        for<'stabby_receiver_lt> extern "C" fn(
+                            stabby::abi::AnonymRefMut<'stabby_receiver_lt>,
+                            ::core::marker::PhantomData<
+                                &'stabby_receiver_lt &'stabby_vt_lt (),
+                            >,
+                            u16,
+                            CVariable,
+                        ),
+                        &'static (),
+                    >,
+                >,
+            > as stabby::abi::IStable>::Align;
+            type HasExactlyOneNiche = <stabby::abi::Struct<
+                stabby::abi::FieldPair<
+                    stabby::abi::StableLike<
+                        for<'a> extern "C" fn(
+                            stabby::abi::AnonymRef<'a>,
+                            ::core::marker::PhantomData<&'a &'stabby_vt_lt ()>,
+                            &'a u16,
+                        ) -> Option<&'a CVariable>,
+                        &'static (),
+                    >,
+                    stabby::abi::StableLike<
+                        for<'stabby_receiver_lt> extern "C" fn(
+                            stabby::abi::AnonymRefMut<'stabby_receiver_lt>,
+                            ::core::marker::PhantomData<
+                                &'stabby_receiver_lt &'stabby_vt_lt (),
+                            >,
+                            u16,
+                            CVariable,
+                        ),
+                        &'static (),
+                    >,
+                >,
+            > as stabby::abi::IStable>::HasExactlyOneNiche;
+            type ContainsIndirections = <stabby::abi::Struct<
+                stabby::abi::FieldPair<
+                    stabby::abi::StableLike<
+                        for<'a> extern "C" fn(
+                            stabby::abi::AnonymRef<'a>,
+                            ::core::marker::PhantomData<&'a &'stabby_vt_lt ()>,
+                            &'a u16,
+                        ) -> Option<&'a CVariable>,
+                        &'static (),
+                    >,
+                    stabby::abi::StableLike<
+                        for<'stabby_receiver_lt> extern "C" fn(
+                            stabby::abi::AnonymRefMut<'stabby_receiver_lt>,
+                            ::core::marker::PhantomData<
+                                &'stabby_receiver_lt &'stabby_vt_lt (),
+                            >,
+                            u16,
+                            CVariable,
+                        ),
+                        &'static (),
+                    >,
+                >,
+            > as stabby::abi::IStable>::ContainsIndirections;
+            const REPORT: &'static stabby::abi::report::TypeReport = &stabby::abi::report::TypeReport {
+                name: stabby::abi::str::Str::new("StabbyVtableRHashMap"),
+                module: stabby::abi::str::Str::new("lrtexec_types::common::hashmap"),
+                fields: unsafe {
+                    stabby::abi::StableLike::new(
+                        Some(
+                            &stabby::abi::report::FieldReport {
+                                name: stabby::abi::str::Str::new("insert"),
+                                ty: <stabby::abi::StableLike<
+                                    for<'stabby_receiver_lt> extern "C" fn(
+                                        stabby::abi::AnonymRefMut<'stabby_receiver_lt>,
+                                        ::core::marker::PhantomData<
+                                            &'stabby_receiver_lt &'stabby_vt_lt (),
+                                        >,
+                                        u16,
+                                        CVariable,
+                                    ),
+                                    &'static (),
+                                > as stabby::abi::IStable>::REPORT,
+                                next_field: stabby::abi::StableLike::new(
+                                    Some(
+                                        &stabby::abi::report::FieldReport {
+                                            name: stabby::abi::str::Str::new("get"),
+                                            ty: <stabby::abi::StableLike<
+                                                for<'a> extern "C" fn(
+                                                    stabby::abi::AnonymRef<'a>,
+                                                    ::core::marker::PhantomData<&'a &'stabby_vt_lt ()>,
+                                                    &'a u16,
+                                                ) -> Option<&'a CVariable>,
+                                                &'static (),
+                                            > as stabby::abi::IStable>::REPORT,
+                                            next_field: stabby::abi::StableLike::new(None),
+                                        },
+                                    ),
+                                ),
+                            },
+                        ),
+                    )
+                },
+                version: 0u32,
+                tyty: stabby::abi::report::TyTy::Struct,
+            };
+            const ID: u64 = {
+                if core::mem::size_of::<Self>()
+                    != <<Self as stabby::abi::IStable>::Size as stabby::abi::Unsigned>::USIZE
+                {
+                    {
+                        ::core::panicking::panic_fmt(
+                            format_args!(
+                                "StabbyVtableRHashMap\'s size was mis-evaluated by stabby, this is definitely a bug and may cause UB, please file an issue",
+                            ),
+                        );
+                    }
+                }
+                if core::mem::align_of::<Self>()
+                    != <<Self as stabby::abi::IStable>::Align as stabby::abi::Unsigned>::USIZE
+                {
+                    {
+                        ::core::panicking::panic_fmt(
+                            format_args!(
+                                "StabbyVtableRHashMap\'s align was mis-evaluated by stabby, this is definitely a bug and may cause UB, please file an issue",
+                            ),
+                        );
+                    }
+                }
+                stabby::abi::report::gen_id(Self::REPORT)
+            };
+        }
+        #[allow(dead_code, missing_docs)]
+        struct OptimizedLayoutForStabbyVtableRHashMap<'stabby_vt_lt> {
+            ///An stabby-generated item for [`RHashMap`]
+            pub get: stabby::abi::StableLike<
+                for<'a> extern "C" fn(
+                    stabby::abi::AnonymRef<'a>,
+                    ::core::marker::PhantomData<&'a &'stabby_vt_lt ()>,
+                    &'a u16,
+                ) -> Option<&'a CVariable>,
+                &'static (),
+            >,
+            ///An stabby-generated item for [`RHashMap`]
+            pub insert: stabby::abi::StableLike<
+                for<'stabby_receiver_lt> extern "C" fn(
+                    stabby::abi::AnonymRefMut<'stabby_receiver_lt>,
+                    ::core::marker::PhantomData<&'stabby_receiver_lt &'stabby_vt_lt ()>,
+                    u16,
+                    CVariable,
+                ),
+                &'static (),
+            >,
+        }
+        impl<'stabby_vt_lt> StabbyVtableRHashMap<'stabby_vt_lt>
+        where
+            stabby::abi::Struct<
+                stabby::abi::FieldPair<
+                    stabby::abi::StableLike<
+                        for<'a> extern "C" fn(
+                            stabby::abi::AnonymRef<'a>,
+                            ::core::marker::PhantomData<&'a &'stabby_vt_lt ()>,
+                            &'a u16,
+                        ) -> Option<&'a CVariable>,
+                        &'static (),
+                    >,
+                    stabby::abi::StableLike<
+                        for<'stabby_receiver_lt> extern "C" fn(
+                            stabby::abi::AnonymRefMut<'stabby_receiver_lt>,
+                            ::core::marker::PhantomData<
+                                &'stabby_receiver_lt &'stabby_vt_lt (),
+                            >,
+                            u16,
+                            CVariable,
+                        ),
+                        &'static (),
+                    >,
+                >,
+            >: stabby::abi::IStable,
+            stabby::abi::StableLike<
+                for<'stabby_receiver_lt> extern "C" fn(
+                    stabby::abi::AnonymRefMut<'stabby_receiver_lt>,
+                    ::core::marker::PhantomData<&'stabby_receiver_lt &'stabby_vt_lt ()>,
+                    u16,
+                    CVariable,
+                ),
+                &'static (),
+            >: stabby::abi::IStable,
+            stabby::abi::StableLike<
+                for<'a> extern "C" fn(
+                    stabby::abi::AnonymRef<'a>,
+                    ::core::marker::PhantomData<&'a &'stabby_vt_lt ()>,
+                    &'a u16,
+                ) -> Option<&'a CVariable>,
+                &'static (),
+            >: stabby::abi::IStable,
+        {
+            ///Returns true if the layout for [`StabbyVtableRHashMap`] is smaller or equal to that Rust would have generated for it.
+            pub const fn has_optimal_layout() -> bool {
+                core::mem::size_of::<Self>()
+                    <= core::mem::size_of::<
+                        OptimizedLayoutForStabbyVtableRHashMap<'stabby_vt_lt>,
+                    >()
+            }
+        }
+        impl<'stabby_vt_lt> Clone for StabbyVtableRHashMap<'stabby_vt_lt> {
+            fn clone(&self) -> Self {
+                *self
+            }
+        }
+        #[allow(unknown_lints)]
+        #[allow(clippy::multiple_bound_locations)]
+        impl<'stabby_vt_lt> Copy for StabbyVtableRHashMap<'stabby_vt_lt> {}
+        #[allow(unknown_lints)]
+        #[allow(clippy::multiple_bound_locations)]
+        impl<'stabby_vt_lt> core::cmp::PartialEq
+        for StabbyVtableRHashMap<'stabby_vt_lt> {
+            fn eq(&self, other: &Self) -> bool {
+                core::ptr::eq(
+                    (*unsafe { self.get.as_ref_unchecked() }) as *const (),
+                    (*unsafe { other.get.as_ref_unchecked() }) as *const _,
+                )
+                    && core::ptr::eq(
+                        (*unsafe { self.insert.as_ref_unchecked() }) as *const (),
+                        (*unsafe { other.insert.as_ref_unchecked() }) as *const _,
+                    ) && true
+            }
+        }
+        #[allow(unknown_lints)]
+        #[allow(clippy::multiple_bound_locations)]
+        impl<'stabby_vt_lt> core::hash::Hash for StabbyVtableRHashMap<'stabby_vt_lt> {
+            fn hash<H: core::hash::Hasher>(&self, state: &mut H) {
+                self.get.hash(state);
+                self.insert.hash(state);
+            }
+        }
+        #[allow(unknown_lints)]
+        #[allow(clippy::multiple_bound_locations)]
+        impl<'stabby_vt_lt> core::fmt::Debug for StabbyVtableRHashMap<'stabby_vt_lt> {
+            fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+                let mut s = f.debug_struct("StabbyVtableRHashMap");
+                s.field(
+                    "get",
+                    &format_args!("{0:p}", unsafe { self.get.as_ref_unchecked() }),
+                );
+                s.field(
+                    "insert",
+                    &format_args!("{0:p}", unsafe { self.insert.as_ref_unchecked() }),
+                );
+                s.finish()
+            }
+        }
+        #[allow(unknown_lints)]
+        #[allow(clippy::multiple_bound_locations)]
+        impl<
+            'stabby_vt_lt,
+            StabbyArbitraryType,
+        > stabby::abi::vtable::IConstConstructor<'stabby_vt_lt, StabbyArbitraryType>
+        for StabbyVtableRHashMap<'stabby_vt_lt>
+        where
+            StabbyArbitraryType: RHashMap,
+        {
+            const VTABLE: StabbyVtableRHashMap<'stabby_vt_lt> = StabbyVtableRHashMap {
+                get: unsafe {
+                    stabby::abi::StableLike::new({
+                        extern "C" fn ext_get<
+                            'stabby_local_lt,
+                            'a,
+                            StabbyArbitraryType: 'stabby_local_lt,
+                        >(
+                            this: stabby::abi::AnonymRef<'a>,
+                            _lt_proof: ::core::marker::PhantomData<
+                                &'a &'stabby_local_lt (),
+                            >,
+                            _0: &'a u16,
+                        ) -> Option<&'a CVariable>
+                        where
+                            StabbyArbitraryType: RHashMap,
+                        {
+                            unsafe {
+                                <StabbyArbitraryType as RHashMap>::get(
+                                    this.cast::<StabbyArbitraryType>().as_ref(),
+                                    _0,
+                                )
+                            }
+                        }
+                        ext_get::<StabbyArbitraryType>
+                            as for<'a> extern "C" fn(
+                                stabby::abi::AnonymRef<'a>,
+                                ::core::marker::PhantomData<&'a &'stabby_vt_lt ()>,
+                                &'a u16,
+                            ) -> Option<&'a CVariable>
+                    })
+                },
+                insert: unsafe {
+                    stabby::abi::StableLike::new({
+                        extern "C" fn ext_insert<
+                            'stabby_local_lt,
+                            'stabby_receiver_lt,
+                            StabbyArbitraryType: 'stabby_local_lt,
+                        >(
+                            this: stabby::abi::AnonymRefMut<'stabby_receiver_lt>,
+                            _lt_proof: ::core::marker::PhantomData<
+                                &'stabby_receiver_lt &'stabby_local_lt (),
+                            >,
+                            _0: u16,
+                            _1: CVariable,
+                        )
+                        where
+                            StabbyArbitraryType: RHashMap,
+                        {
+                            unsafe {
+                                <StabbyArbitraryType as RHashMap>::insert(
+                                    this.cast::<StabbyArbitraryType>().as_mut(),
+                                    _0,
+                                    _1,
+                                )
+                            }
+                        }
+                        ext_insert::<StabbyArbitraryType>
+                            as for<'stabby_receiver_lt> extern "C" fn(
+                                stabby::abi::AnonymRefMut<'stabby_receiver_lt>,
+                                ::core::marker::PhantomData<
+                                    &'stabby_receiver_lt &'stabby_vt_lt (),
+                                >,
+                                u16,
+                                CVariable,
+                            )
+                    })
+                },
+            };
+        }
+        #[allow(unknown_lints)]
+        #[allow(clippy::multiple_bound_locations)]
+        impl<'stabby_vt_lt> stabby::abi::vtable::CompoundVt<'stabby_vt_lt>
+        for dyn RHashMap {
+            ///An stabby-generated item for [`RHashMap`]
+            type Vt<StabbyNextVtable> = stabby::abi::vtable::VTable<
+                StabbyVtableRHashMap<'stabby_vt_lt>,
+                StabbyNextVtable,
+            >;
+        }
+        #[allow(unknown_lints)]
+        #[allow(clippy::multiple_bound_locations)]
+        ///An stabby-generated item for [`RHashMap`]
+        pub trait RHashMapDyn<StabbyTransitiveDerefN> {
+            ///An stabby-generated item for [`RHashMap`]
+            extern "C" fn get<'a>(&'a self, _0: &'a u16) -> Option<&'a CVariable>;
+        }
+        #[allow(unknown_lints)]
+        #[allow(clippy::multiple_bound_locations)]
+        impl<
+            'stabby_vt_lt,
+            StabbyVtProvider: stabby::abi::vtable::TransitiveDeref<
+                    StabbyVtableRHashMap<'stabby_vt_lt>,
+                    StabbyTransitiveDerefN,
+                > + Copy,
+            StabbyTransitiveDerefN,
+        > RHashMapDyn<StabbyTransitiveDerefN>
+        for stabby::abi::DynRef<'_, StabbyVtProvider> {
+            ///An stabby-generated item for [`RHashMap`]
+            extern "C" fn get<'a>(&'a self, _0: &'a u16) -> Option<&'a CVariable> {
+                unsafe {
+                    (self
+                        .vtable()
+                        .tderef()
+                        .get
+                        .as_ref_unchecked())(self.ptr(), ::core::marker::PhantomData, _0)
+                }
+            }
+        }
+        #[allow(unknown_lints)]
+        #[allow(clippy::multiple_bound_locations)]
+        impl<
+            'stabby_vt_lt,
+            StabbyPtrProvider: stabby::abi::IPtrOwned + stabby::abi::IPtr,
+            StabbyVtProvider: stabby::abi::vtable::HasDropVt + Copy
+                + stabby::abi::vtable::TransitiveDeref<
+                    StabbyVtableRHashMap<'stabby_vt_lt>,
+                    StabbyTransitiveDerefN,
+                >,
+            StabbyTransitiveDerefN,
+        > RHashMapDyn<StabbyTransitiveDerefN>
+        for stabby::abi::Dyn<'_, StabbyPtrProvider, StabbyVtProvider> {
+            ///An stabby-generated item for [`RHashMap`]
+            extern "C" fn get<'a>(&'a self, _0: &'a u16) -> Option<&'a CVariable> {
+                unsafe {
+                    (self
+                        .vtable()
+                        .tderef()
+                        .get
+                        .as_ref_unchecked())(
+                        self.ptr().as_ref(),
+                        ::core::marker::PhantomData,
+                        _0,
+                    )
+                }
+            }
+        }
+        #[allow(unknown_lints)]
+        #[allow(clippy::multiple_bound_locations)]
+        ///An stabby-generated item for [`RHashMap`]
+        pub trait RHashMapDynMut<
+            StabbyTransitiveDerefN,
+        >: RHashMapDyn<StabbyTransitiveDerefN> {
+            ///An stabby-generated item for [`RHashMap`]
+            extern "C" fn insert(&mut self, _0: u16, _1: CVariable);
+        }
+        #[allow(unknown_lints)]
+        #[allow(clippy::multiple_bound_locations)]
+        impl<
+            'stabby_vt_lt,
+            StabbyPtrProvider,
+            StabbyVtProvider,
+            StabbyTransitiveDerefN,
+        > RHashMapDynMut<StabbyTransitiveDerefN>
+        for stabby::abi::Dyn<'_, StabbyPtrProvider, StabbyVtProvider>
+        where
+            StabbyPtrProvider: stabby::abi::IPtrOwned + stabby::abi::IPtrMut,
+            StabbyVtProvider: stabby::abi::vtable::HasDropVt + Copy
+                + stabby::abi::vtable::TransitiveDeref<
+                    StabbyVtableRHashMap<'stabby_vt_lt>,
+                    StabbyTransitiveDerefN,
+                >,
+        {
+            ///An stabby-generated item for [`RHashMap`]
+            extern "C" fn insert(&mut self, _0: u16, _1: CVariable) {
+                unsafe {
+                    (self
+                        .vtable()
+                        .tderef()
+                        .insert
+                        .as_ref_unchecked())(
+                        self.ptr_mut().as_mut(),
+                        ::core::marker::PhantomData,
+                        _0,
+                        _1,
+                    )
+                }
+            }
+        }
+        pub struct RTVariableMap {
+            map: HashMap<u16, CVariable>,
+        }
+        impl RTVariableMap {
+            pub fn new() -> Self {
+                Self { map: HashMap::new() }
+            }
+        }
+        impl RHashMap for RTVariableMap {
+            extern "C" fn get<'a>(&'a self, key: &'a u16) -> Option<&'a CVariable> {
+                self.map.get(key)
+            }
+            extern "C" fn insert(&mut self, key: u16, value: CVariable) {
+                self.map.insert(key, value);
+            }
+        }
+    }
     #[repr(C)]
     pub struct CommonString {
         ptr: *mut c_char,
@@ -127,6 +740,9 @@ pub mod critical {
         }
     }
 }
+pub mod commands {
+    pub mod v0 {}
+}
 #[macro_use]
 mod macros {}
 pub const VERSION: u16 = 0;
@@ -167,7 +783,17 @@ impl FnStack {
             r8: None,
         }
     }
-    pub fn clear(&mut self) {}
+    pub fn clear(&mut self) {
+        self.itself = None;
+        self.r1 = None;
+        self.r2 = None;
+        self.r3 = None;
+        self.r4 = None;
+        self.r5 = None;
+        self.r6 = None;
+        self.r7 = None;
+        self.r8 = None;
+    }
     #[unsafe(no_mangle)]
     pub extern "C" fn setOutput(&mut self, data: CVariable) {
         self.ret = MaybeSome(data);
@@ -463,16 +1089,20 @@ impl CVariable {
 }
 #[repr(C)]
 pub struct MemoryMap {
-    pub variables: RHashMap<u16, VariableData>,
+    variables: RTVariableMap,
 }
-impl MemoryMap {
-    #[unsafe(no_mangle)]
-    pub extern "C" fn create_map() -> Self {
-        Self { variables: RHashMap::new() }
-    }
-}
+impl MemoryMap {}
 #[repr(C)]
 pub enum VariableData {
     Constant(RStr<'static>),
     Raw(CVariable),
+    Abi(
+        stabby::abi::Dyn<
+            'static,
+            RBox<()>,
+            <dyn Any as stabby::abi::vtable::CompoundVt<
+                'static,
+            >>::Vt<stabby::abi::vtable::VtDrop>,
+        >,
+    ),
 }

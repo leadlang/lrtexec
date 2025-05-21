@@ -11,6 +11,7 @@ use critical::RustVariable;
 pub mod common;
 /// If we mess up any of these structs, we're dead
 pub mod critical;
+pub mod commands;
 
 #[macro_use]
 mod macros;
