@@ -27,7 +27,7 @@ impl RHashMap for RTVariableMap {
     self.map.get(key)
   }
 
-  extern "C" fn insert(&mut self,key:u16,value:CVariable) {
+  extern "C" fn insert(&mut self, key: u16, value: CVariable) {
     self.map.insert(key, value);
   }
 }

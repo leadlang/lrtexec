@@ -1,7 +1,12 @@
 use proc_macro::TokenStream;
 use proc_macro2::TokenStream as TokenStream2;
-use quote::{quote, ToTokens};
-use syn::{parse::{Parse, ParseStream}, parse_macro_input, punctuated::Punctuated, Result, Token};
+use quote::{ToTokens, quote};
+use syn::{
+  Result, Token,
+  parse::{Parse, ParseStream},
+  parse_macro_input,
+  punctuated::Punctuated,
+};
 
 struct VarName(syn::Ident);
 
@@ -51,5 +56,6 @@ pub fn ver(item: TokenStream) -> TokenStream {
 
   quote! {
     #(#data)*
-  }.into()
+  }
+  .into()
 }

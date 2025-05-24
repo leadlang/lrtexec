@@ -5,11 +5,59 @@ use std::prelude::rust_2024::*;
 extern crate std;
 use std::{num::NonZeroU16, ptr};
 use common::hashmap::RTVariableMap;
-use stabby::str::Str as RStr;
 use stabby::dynptr;
+use stabby::str::Str as RStr;
 use stabby::{Any, boxed::Box as RBox};
-use pastey::paste;
 use critical::RustVariable;
+use pastey::paste;
+pub mod commands {
+    use lrt_macros::ver;
+    pub mod v0 {
+        use lrt_macros::declare;
+        pub struct ScriptV0 {}
+        pub type Script = ScriptV0;
+        pub fn cmd_to_int(cmd: &str, vect: &mut Vec<u8>) -> Option<()> {
+            match cmd {
+                "extend" => {
+                    vect.push(1u8);
+                    Some(())
+                }
+                "set" => {
+                    vect.push(2u8);
+                    Some(())
+                }
+                "loadfromreg" => {
+                    vect.push(3u8);
+                    Some(())
+                }
+                "regset" => {
+                    vect.push(4u8);
+                    Some(())
+                }
+                "regload" => {
+                    vect.push(5u8);
+                    Some(())
+                }
+                "dlopen" => {
+                    vect.push(6u8);
+                    Some(())
+                }
+                "drop" => {
+                    vect.push(7u8);
+                    Some(())
+                }
+                "hello" => {
+                    vect.push(0u8);
+                    vect.push(1u8);
+                    vect.push(0u8);
+                    Some(())
+                }
+                _ => None,
+            }
+        }
+        pub fn handle_line(s: &mut Script) {}
+    }
+}
 pub mod common {
     use std::ffi::{CStr, CString, c_char};
     use crate::{CVariable, critical::RustVariable};
@@ -232,7 +280,7 @@ pub mod common {
             > as stabby::abi::IStable>::ContainsIndirections;
             const REPORT: &'static stabby::abi::report::TypeReport = &stabby::abi::report::TypeReport {
                 name: stabby::abi::str::Str::new("StabbyVtableRHashMap"),
-                module: stabby::abi::str::Str::new("lrtexec_types::common::hashmap"),
+                module: stabby::abi::str::Str::new("lrtexec_lib::common::hashmap"),
                 fields: unsafe {
                     stabby::abi::StableLike::new(
                         Some(
@@ -740,9 +788,6 @@ pub mod critical {
         }
     }
 }
-pub mod commands {
-    pub mod v0 {}
-}
 #[macro_use]
 mod macros {}
 pub const VERSION: u16 = 0;
@@ -756,7 +801,7 @@ use Maybe::Some as MaybeSome;
 #[repr(C)]
 pub struct FnStack {
     /// Return value (identifier in MemoryMap)
-    pub ret: Maybe<CVariable>,
+    pub ret: Maybe<VariableData>,
     pub itself: Option<NonZeroU16>,
     pub r1: Option<NonZeroU16>,
     pub r2: Option<NonZeroU16>,
@@ -796,6 +841,10 @@ impl FnStack {
     }
     #[unsafe(no_mangle)]
     pub extern "C" fn setOutput(&mut self, data: CVariable) {
+        self.ret = MaybeSome(VariableData::Raw(data));
+    }
+    #[unsafe(no_mangle)]
+    pub extern "C" fn setVariableOutput(&mut self, data: VariableData) {
         self.ret = MaybeSome(data);
     }
 }

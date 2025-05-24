@@ -57,7 +57,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "lrtexec_types"
+name = "lrtexec_lib"
 version = "0.1.0"
 dependencies = [
  "lrt_macros",

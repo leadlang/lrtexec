@@ -1,17 +1,17 @@
 use std::{num::NonZeroU16, ptr};
 
 use common::hashmap::RTVariableMap;
-use stabby::str::Str as RStr;
 use stabby::dynptr;
+use stabby::str::Str as RStr;
 use stabby::{Any, boxed::Box as RBox};
 
-use pastey::paste;
 use critical::RustVariable;
+use pastey::paste;
 
+pub mod commands;
 pub mod common;
 /// If we mess up any of these structs, we're dead
 pub mod critical;
-pub mod commands;
 
 #[macro_use]
 mod macros;
@@ -21,7 +21,7 @@ pub const VERSION: u16 = 0;
 #[repr(C)]
 pub enum Maybe<T> {
   Some(T),
-  None
+  None,
 }
 
 use Maybe::None as MaybeNone;
@@ -30,7 +30,7 @@ use Maybe::Some as MaybeSome;
 #[repr(C)]
 pub struct FnStack {
   /// Return value (identifier in MemoryMap)
-  pub ret: Maybe<CVariable>,
+  pub ret: Maybe<VariableData>,
   // General Purpose (identifiers in MemoryMap)
   pub itself: Option<NonZeroU16>,
   pub r1: Option<NonZeroU16>,
@@ -74,6 +74,11 @@ impl FnStack {
 
   #[unsafe(no_mangle)]
   pub extern "C" fn setOutput(&mut self, data: CVariable) {
+    self.ret = MaybeSome(VariableData::Raw(data));
+  }
+
+  #[unsafe(no_mangle)]
+  pub extern "C" fn setVariableOutput(&mut self, data: VariableData) {
     self.ret = MaybeSome(data);
   }
 }
@@ -162,5 +167,5 @@ impl MemoryMap {
 pub enum VariableData {
   Constant(RStr<'static>),
   Raw(CVariable),
-  Abi(dynptr!(RBox<dyn Any + 'static>))
+  Abi(dynptr!(RBox<dyn Any + 'static>)),
 }

@@ -1,5 +1,4 @@
-use std::
-  ffi::{CStr, CString, c_char};
+use std::ffi::{CStr, CString, c_char};
 
 use crate::{CVariable, critical::RustVariable};
 
