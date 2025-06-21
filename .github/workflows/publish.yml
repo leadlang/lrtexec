@@ -13,5 +13,5 @@ jobs:
           toolchain: nightly
           components: clippy
       - name: Build
-        run: cargo build
+        run: cargo +nightly build
         working-directory: types
