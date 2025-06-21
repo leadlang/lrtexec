@@ -1,4 +1,4 @@
-
+#![feature(trivial_bounds)]
 // use common::hashmap::RTVariableMap;
 
 pub mod commands;
