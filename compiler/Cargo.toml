@@ -3,4 +3,9 @@ name = "compiler"
 version = "0.1.0"
 edition = "2024"
 
+[lib]
+name = "lrt_compiler"
+
 [dependencies]
+tokio = "1.45.1"
+zip = "4.1.0"

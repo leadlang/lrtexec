@@ -4,10 +4,9 @@ version = "0.1.0"
 edition = "2024"
 
 [lib]
-crate-type = ["rlib", "cdylib"]
+crate-type = ["rlib"]
 
 [dependencies]
-pastey = "0.1.0"
 stabby = "72.1.1"
 lrt_macros = { path = "../macros" }
 
@@ -16,7 +15,5 @@ default = ["v_all"]
 memory = []
 
 # LRTEXEC Interpreter Versions
-v_all = [
-  "v0"
-]
+v_all = ["v0"]
 v0 = []
