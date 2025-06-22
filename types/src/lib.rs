@@ -2,7 +2,7 @@
 // use common::hashmap::RTVariableMap;
 
 pub mod commands;
-// pub mod common;
+pub mod common;
 
 // pub const VERSION: u16 = 0;
 
@@ -68,7 +68,6 @@ pub mod commands;
 //     self.0
 //   }
 // }
-
 
 // pub struct MemoryMap {
 //   variables: RTVariableMap,

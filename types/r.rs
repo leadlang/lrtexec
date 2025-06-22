@@ -13,1838 +13,378 @@ pub mod commands {
         }
         pub mod structs {
             //! Structs related to v0 commands
-            use std::{fmt::Debug, num::NonZeroU16};
-            use stabby::{
-                boxed::{Box as RBox, BoxedStr},
-                dynptr, stabby, str::Str, sync::Arc,
-            };
+            use std::os::raw::c_void;
+            use crate::common::FFIableObject;
             #[repr(C)]
-            pub struct FnStackV0 {
-                /// Return value (identifier in MemoryMap)
-                pub ret: Option<VariableDataV0>,
-                pub itself: Option<NonZeroU16>,
-                pub r1: Option<NonZeroU16>,
-                pub r2: Option<NonZeroU16>,
-                pub r3: Option<NonZeroU16>,
-                pub r4: Option<NonZeroU16>,
-                pub r5: Option<NonZeroU16>,
-                pub r6: Option<NonZeroU16>,
-                pub r7: Option<NonZeroU16>,
-                pub r8: Option<NonZeroU16>,
+            pub enum VariableDataV0 {
+                Inbuilt(Container),
+                Object(FFIableObject),
             }
-            #[automatically_derived]
-            unsafe impl stabby::abi::IStable for FnStackV0
-            where
-                stabby::abi::Struct<
-                    stabby::abi::FieldPair<
-                        stabby::abi::FieldPair<
-                            stabby::abi::FieldPair<
-                                stabby::abi::FieldPair<
-                                    stabby::abi::FieldPair<
-                                        stabby::abi::FieldPair<
-                                            stabby::abi::FieldPair<
-                                                stabby::abi::FieldPair<
-                                                    stabby::abi::FieldPair<
-                                                        Option<VariableDataV0>,
-                                                        Option<NonZeroU16>,
-                                                    >,
-                                                    Option<NonZeroU16>,
-                                                >,
-                                                Option<NonZeroU16>,
-                                            >,
-                                            Option<NonZeroU16>,
-                                        >,
-                                        Option<NonZeroU16>,
-                                    >,
-                                    Option<NonZeroU16>,
-                                >,
-                                Option<NonZeroU16>,
-                            >,
-                            Option<NonZeroU16>,
-                        >,
-                        Option<NonZeroU16>,
-                    >,
-                >: stabby::abi::IStable,
-                Option<NonZeroU16>: stabby::abi::IStable,
-                Option<VariableDataV0>: stabby::abi::IStable,
-            {
-                type ForbiddenValues = <stabby::abi::Struct<
-                    stabby::abi::FieldPair<
-                        stabby::abi::FieldPair<
-                            stabby::abi::FieldPair<
-                                stabby::abi::FieldPair<
-                                    stabby::abi::FieldPair<
-                                        stabby::abi::FieldPair<
-                                            stabby::abi::FieldPair<
-                                                stabby::abi::FieldPair<
-                                                    stabby::abi::FieldPair<
-                                                        Option<VariableDataV0>,
-                                                        Option<NonZeroU16>,
-                                                    >,
-                                                    Option<NonZeroU16>,
-                                                >,
-                                                Option<NonZeroU16>,
-                                            >,
-                                            Option<NonZeroU16>,
-                                        >,
-                                        Option<NonZeroU16>,
-                                    >,
-                                    Option<NonZeroU16>,
-                                >,
-                                Option<NonZeroU16>,
-                            >,
-                            Option<NonZeroU16>,
-                        >,
-                        Option<NonZeroU16>,
-                    >,
-                > as stabby::abi::IStable>::ForbiddenValues;
-                type UnusedBits = <stabby::abi::Struct<
-                    stabby::abi::FieldPair<
-                        stabby::abi::FieldPair<
-                            stabby::abi::FieldPair<
-                                stabby::abi::FieldPair<
-                                    stabby::abi::FieldPair<
-                                        stabby::abi::FieldPair<
-                                            stabby::abi::FieldPair<
-                                                stabby::abi::FieldPair<
-                                                    stabby::abi::FieldPair<
-                                                        Option<VariableDataV0>,
-                                                        Option<NonZeroU16>,
-                                                    >,
-                                                    Option<NonZeroU16>,
-                                                >,
-                                                Option<NonZeroU16>,
-                                            >,
-                                            Option<NonZeroU16>,
-                                        >,
-                                        Option<NonZeroU16>,
-                                    >,
-                                    Option<NonZeroU16>,
-                                >,
-                                Option<NonZeroU16>,
-                            >,
-                            Option<NonZeroU16>,
-                        >,
-                        Option<NonZeroU16>,
-                    >,
-                > as stabby::abi::IStable>::UnusedBits;
-                type Size = <stabby::abi::Struct<
-                    stabby::abi::FieldPair<
-                        stabby::abi::FieldPair<
-                            stabby::abi::FieldPair<
-                                stabby::abi::FieldPair<
-                                    stabby::abi::FieldPair<
-                                        stabby::abi::FieldPair<
-                                            stabby::abi::FieldPair<
-                                                stabby::abi::FieldPair<
-                                                    stabby::abi::FieldPair<
-                                                        Option<VariableDataV0>,
-                                                        Option<NonZeroU16>,
-                                                    >,
-                                                    Option<NonZeroU16>,
-                                                >,
-                                                Option<NonZeroU16>,
-                                            >,
-                                            Option<NonZeroU16>,
-                                        >,
-                                        Option<NonZeroU16>,
-                                    >,
-                                    Option<NonZeroU16>,
-                                >,
-                                Option<NonZeroU16>,
-                            >,
-                            Option<NonZeroU16>,
-                        >,
-                        Option<NonZeroU16>,
-                    >,
-                > as stabby::abi::IStable>::Size;
-                type Align = <stabby::abi::Struct<
-                    stabby::abi::FieldPair<
-                        stabby::abi::FieldPair<
-                            stabby::abi::FieldPair<
-                                stabby::abi::FieldPair<
-                                    stabby::abi::FieldPair<
-                                        stabby::abi::FieldPair<
-                                            stabby::abi::FieldPair<
-                                                stabby::abi::FieldPair<
-                                                    stabby::abi::FieldPair<
-                                                        Option<VariableDataV0>,
-                                                        Option<NonZeroU16>,
-                                                    >,
-                                                    Option<NonZeroU16>,
-                                                >,
-                                                Option<NonZeroU16>,
-                                            >,
-                                            Option<NonZeroU16>,
-                                        >,
-                                        Option<NonZeroU16>,
-                                    >,
-                                    Option<NonZeroU16>,
-                                >,
-                                Option<NonZeroU16>,
-                            >,
-                            Option<NonZeroU16>,
-                        >,
-                        Option<NonZeroU16>,
-                    >,
-                > as stabby::abi::IStable>::Align;
-                type HasExactlyOneNiche = <stabby::abi::Struct<
-                    stabby::abi::FieldPair<
-                        stabby::abi::FieldPair<
-                            stabby::abi::FieldPair<
-                                stabby::abi::FieldPair<
-                                    stabby::abi::FieldPair<
-                                        stabby::abi::FieldPair<
-                                            stabby::abi::FieldPair<
-                                                stabby::abi::FieldPair<
-                                                    stabby::abi::FieldPair<
-                                                        Option<VariableDataV0>,
-                                                        Option<NonZeroU16>,
-                                                    >,
-                                                    Option<NonZeroU16>,
-                                                >,
-                                                Option<NonZeroU16>,
-                                            >,
-                                            Option<NonZeroU16>,
-                                        >,
-                                        Option<NonZeroU16>,
-                                    >,
-                                    Option<NonZeroU16>,
-                                >,
-                                Option<NonZeroU16>,
-                            >,
-                            Option<NonZeroU16>,
-                        >,
-                        Option<NonZeroU16>,
-                    >,
-                > as stabby::abi::IStable>::HasExactlyOneNiche;
-                type ContainsIndirections = <stabby::abi::Struct<
-                    stabby::abi::FieldPair<
-                        stabby::abi::FieldPair<
-                            stabby::abi::FieldPair<
-                                stabby::abi::FieldPair<
-                                    stabby::abi::FieldPair<
-                                        stabby::abi::FieldPair<
-                                            stabby::abi::FieldPair<
-                                                stabby::abi::FieldPair<
-                                                    stabby::abi::FieldPair<
-                                                        Option<VariableDataV0>,
-                                                        Option<NonZeroU16>,
-                                                    >,
-                                                    Option<NonZeroU16>,
-                                                >,
-                                                Option<NonZeroU16>,
-                                            >,
-                                            Option<NonZeroU16>,
-                                        >,
-                                        Option<NonZeroU16>,
-                                    >,
-                                    Option<NonZeroU16>,
-                                >,
-                                Option<NonZeroU16>,
-                            >,
-                            Option<NonZeroU16>,
-                        >,
-                        Option<NonZeroU16>,
-                    >,
-                > as stabby::abi::IStable>::ContainsIndirections;
-                const REPORT: &'static stabby::abi::report::TypeReport = &stabby::abi::report::TypeReport {
-                    name: stabby::abi::str::Str::new("FnStackV0"),
-                    module: stabby::abi::str::Str::new(
-                        "lrtexec_lib::commands::v0::structs",
-                    ),
-                    fields: unsafe {
-                        stabby::abi::StableLike::new(
-                            Some(
-                                &stabby::abi::report::FieldReport {
-                                    name: stabby::abi::str::Str::new("r8"),
-                                    ty: <Option<NonZeroU16> as stabby::abi::IStable>::REPORT,
-                                    next_field: stabby::abi::StableLike::new(
-                                        Some(
-                                            &stabby::abi::report::FieldReport {
-                                                name: stabby::abi::str::Str::new("r7"),
-                                                ty: <Option<NonZeroU16> as stabby::abi::IStable>::REPORT,
-                                                next_field: stabby::abi::StableLike::new(
-                                                    Some(
-                                                        &stabby::abi::report::FieldReport {
-                                                            name: stabby::abi::str::Str::new("r6"),
-                                                            ty: <Option<NonZeroU16> as stabby::abi::IStable>::REPORT,
-                                                            next_field: stabby::abi::StableLike::new(
-                                                                Some(
-                                                                    &stabby::abi::report::FieldReport {
-                                                                        name: stabby::abi::str::Str::new("r5"),
-                                                                        ty: <Option<NonZeroU16> as stabby::abi::IStable>::REPORT,
-                                                                        next_field: stabby::abi::StableLike::new(
-                                                                            Some(
-                                                                                &stabby::abi::report::FieldReport {
-                                                                                    name: stabby::abi::str::Str::new("r4"),
-                                                                                    ty: <Option<NonZeroU16> as stabby::abi::IStable>::REPORT,
-                                                                                    next_field: stabby::abi::StableLike::new(
-                                                                                        Some(
-                                                                                            &stabby::abi::report::FieldReport {
-                                                                                                name: stabby::abi::str::Str::new("r3"),
-                                                                                                ty: <Option<NonZeroU16> as stabby::abi::IStable>::REPORT,
-                                                                                                next_field: stabby::abi::StableLike::new(
-                                                                                                    Some(
-                                                                                                        &stabby::abi::report::FieldReport {
-                                                                                                            name: stabby::abi::str::Str::new("r2"),
-                                                                                                            ty: <Option<NonZeroU16> as stabby::abi::IStable>::REPORT,
-                                                                                                            next_field: stabby::abi::StableLike::new(
-                                                                                                                Some(
-                                                                                                                    &stabby::abi::report::FieldReport {
-                                                                                                                        name: stabby::abi::str::Str::new("r1"),
-                                                                                                                        ty: <Option<NonZeroU16> as stabby::abi::IStable>::REPORT,
-                                                                                                                        next_field: stabby::abi::StableLike::new(
-                                                                                                                            Some(
-                                                                                                                                &stabby::abi::report::FieldReport {
-                                                                                                                                    name: stabby::abi::str::Str::new("itself"),
-                                                                                                                                    ty: <Option<NonZeroU16> as stabby::abi::IStable>::REPORT,
-                                                                                                                                    next_field: stabby::abi::StableLike::new(
-                                                                                                                                        Some(
-                                                                                                                                            &stabby::abi::report::FieldReport {
-                                                                                                                                                name: stabby::abi::str::Str::new("ret"),
-                                                                                                                                                ty: <Option<
-                                                                                                                                                    VariableDataV0,
-                                                                                                                                                > as stabby::abi::IStable>::REPORT,
-                                                                                                                                                next_field: stabby::abi::StableLike::new(None),
-                                                                                                                                            },
-                                                                                                                                        ),
-                                                                                                                                    ),
-                                                                                                                                },
-                                                                                                                            ),
-                                                                                                                        ),
-                                                                                                                    },
-                                                                                                                ),
-                                                                                                            ),
-                                                                                                        },
-                                                                                                    ),
-                                                                                                ),
-                                                                                            },
-                                                                                        ),
-                                                                                    ),
-                                                                                },
-                                                                            ),
-                                                                        ),
-                                                                    },
-                                                                ),
-                                                            ),
-                                                        },
-                                                    ),
-                                                ),
-                                            },
-                                        ),
-                                    ),
-                                },
-                            ),
-                        )
-                    },
-                    version: 0u32,
-                    tyty: stabby::abi::report::TyTy::Struct,
-                };
-                const ID: u64 = {
-                    if core::mem::size_of::<Self>()
-                        != <<Self as stabby::abi::IStable>::Size as stabby::abi::Unsigned>::USIZE
-                    {
-                        {
-                            ::core::panicking::panic_fmt(
-                                format_args!(
-                                    "FnStackV0\'s size was mis-evaluated by stabby, this is definitely a bug and may cause UB, please file an issue",
-                                ),
-                            );
-                        }
-                    }
-                    if core::mem::align_of::<Self>()
-                        != <<Self as stabby::abi::IStable>::Align as stabby::abi::Unsigned>::USIZE
-                    {
-                        {
-                            ::core::panicking::panic_fmt(
-                                format_args!(
-                                    "FnStackV0\'s align was mis-evaluated by stabby, this is definitely a bug and may cause UB, please file an issue",
-                                ),
-                            );
-                        }
-                    }
-                    stabby::abi::report::gen_id(Self::REPORT)
-                };
-            }
-            #[allow(dead_code, missing_docs)]
-            struct OptimizedLayoutForFnStackV0 {
-                /// Return value (identifier in MemoryMap)
-                pub ret: Option<VariableDataV0>,
-                pub itself: Option<NonZeroU16>,
-                pub r1: Option<NonZeroU16>,
-                pub r2: Option<NonZeroU16>,
-                pub r3: Option<NonZeroU16>,
-                pub r4: Option<NonZeroU16>,
-                pub r5: Option<NonZeroU16>,
-                pub r6: Option<NonZeroU16>,
-                pub r7: Option<NonZeroU16>,
-                pub r8: Option<NonZeroU16>,
-            }
-            const _: () = {
-                if !<FnStackV0>::has_optimal_layout() {
-                    {
-                        ::core::panicking::panic_fmt(
-                            format_args!(
-                                "FnStackV0\'s layout is sub-optimal, reorder fields or use `#[stabby::stabby(no_opt)]`",
-                            ),
-                        );
-                    }
-                }
-            };
-            impl FnStackV0
-            where
-                stabby::abi::Struct<
-                    stabby::abi::FieldPair<
-                        stabby::abi::FieldPair<
-                            stabby::abi::FieldPair<
-                                stabby::abi::FieldPair<
-                                    stabby::abi::FieldPair<
-                                        stabby::abi::FieldPair<
-                                            stabby::abi::FieldPair<
-                                                stabby::abi::FieldPair<
-                                                    stabby::abi::FieldPair<
-                                                        Option<VariableDataV0>,
-                                                        Option<NonZeroU16>,
-                                                    >,
-                                                    Option<NonZeroU16>,
-                                                >,
-                                                Option<NonZeroU16>,
-                                            >,
-                                            Option<NonZeroU16>,
-                                        >,
-                                        Option<NonZeroU16>,
-                                    >,
-                                    Option<NonZeroU16>,
-                                >,
-                                Option<NonZeroU16>,
-                            >,
-                            Option<NonZeroU16>,
-                        >,
-                        Option<NonZeroU16>,
-                    >,
-                >: stabby::abi::IStable,
-                Option<NonZeroU16>: stabby::abi::IStable,
-                Option<VariableDataV0>: stabby::abi::IStable,
-            {
-                ///Returns true if the layout for [`FnStackV0`] is smaller or equal to that Rust would have generated for it.
-                pub const fn has_optimal_layout() -> bool {
-                    core::mem::size_of::<Self>()
-                        <= core::mem::size_of::<OptimizedLayoutForFnStackV0>()
-                }
-            }
-            pub struct FmtOutput<'a>(
-                stabby::abi::Result<BoxedStr, Str<'a>>,
-            )
-            where
-                Str<'a>: stabby::abi::IStable,
-                BoxedStr: stabby::abi::IStable,
-                BoxedStr: stabby::abi::IDeterminantProvider<Str<'a>>,
-                Str<'a>: stabby::abi::IStable;
-            #[allow(dead_code)]
-            #[repr(u8)]
-            enum ReprCLayoutForFmtOutput<'a>
-            where
-                BoxedStr: stabby::abi::IDeterminantProvider<Str<'a>>,
-                Str<'a>: stabby::abi::IStable,
-            {
-                String(BoxedStr),
-                Str(Str<'a>),
-            }
-            impl<'a> FmtOutput<'a>
-            where
-                Str<'a>: stabby::abi::IStable,
-                BoxedStr: stabby::abi::IStable,
-                BoxedStr: stabby::abi::IDeterminantProvider<Str<'a>>,
-                Str<'a>: stabby::abi::IStable,
-                stabby::abi::Result<BoxedStr, Str<'a>>: stabby::abi::IStable,
-            {
-                ///Returns true if the layout for [`FmtOutput`] is smaller than what `#[repr(C)]` would have generated for it.
-                pub const fn has_optimal_layout() -> bool {
-                    core::mem::size_of::<Self>()
-                        < core::mem::size_of::<ReprCLayoutForFmtOutput<'a>>()
-                }
-            }
-            #[automatically_derived]
-            unsafe impl<'a> stabby::abi::IStable for FmtOutput<'a>
-            where
-                Str<'a>: stabby::abi::IStable,
-                BoxedStr: stabby::abi::IStable,
-                BoxedStr: stabby::abi::IDeterminantProvider<Str<'a>>,
-                Str<'a>: stabby::abi::IStable,
-                stabby::abi::Result<BoxedStr, Str<'a>>: stabby::abi::IStable,
-            {
-                type ForbiddenValues = <stabby::abi::Result<
-                    BoxedStr,
-                    Str<'a>,
-                > as stabby::abi::IStable>::ForbiddenValues;
-                type UnusedBits = <stabby::abi::Result<
-                    BoxedStr,
-                    Str<'a>,
-                > as stabby::abi::IStable>::UnusedBits;
-                type Size = <stabby::abi::Result<
-                    BoxedStr,
-                    Str<'a>,
-                > as stabby::abi::IStable>::Size;
-                type Align = <stabby::abi::Result<
-                    BoxedStr,
-                    Str<'a>,
-                > as stabby::abi::IStable>::Align;
-                type HasExactlyOneNiche = stabby::abi::B0;
-                type ContainsIndirections = <stabby::abi::Result<
-                    BoxedStr,
-                    Str<'a>,
-                > as stabby::abi::IStable>::ContainsIndirections;
-                const REPORT: &'static stabby::abi::report::TypeReport = &stabby::abi::report::TypeReport {
-                    name: stabby::abi::str::Str::new("FmtOutput"),
-                    module: stabby::abi::str::Str::new(
-                        "lrtexec_lib::commands::v0::structs",
-                    ),
-                    fields: unsafe {
-                        stabby::abi::StableLike::new(
-                            Some(
-                                &stabby::abi::report::FieldReport {
-                                    name: stabby::abi::str::Str::new("Str"),
-                                    ty: <Str<'a> as stabby::abi::IStable>::REPORT,
-                                    next_field: stabby::abi::StableLike::new(
-                                        Some(
-                                            &stabby::abi::report::FieldReport {
-                                                name: stabby::abi::str::Str::new("String"),
-                                                ty: <BoxedStr as stabby::abi::IStable>::REPORT,
-                                                next_field: stabby::abi::StableLike::new(None),
-                                            },
-                                        ),
-                                    ),
-                                },
-                            ),
-                        )
-                    },
-                    version: 0u32,
-                    tyty: stabby::abi::report::TyTy::Enum(
-                        stabby::abi::str::Str::new("stabby"),
-                    ),
-                };
-                const ID: u64 = stabby::abi::report::gen_id(Self::REPORT);
-            }
-            #[automatically_derived]
-            impl<'a> FmtOutput<'a>
-            where
-                Str<'a>: stabby::abi::IStable,
-                BoxedStr: stabby::abi::IStable,
-                BoxedStr: stabby::abi::IDeterminantProvider<Str<'a>>,
-                Str<'a>: stabby::abi::IStable,
-            {
-                #[allow(non_snake_case)]
-                pub fn String(value: BoxedStr) -> Self {
-                    Self(stabby::abi::Result::Ok(value))
-                }
-                #[allow(non_snake_case)]
-                pub fn Str(value: Str<'a>) -> Self {
-                    Self(stabby::abi::Result::Err(value))
-                }
-                #[allow(non_snake_case)]
-                /// Equivalent to `match self`.
-                pub fn match_owned<
-                    StabbyOut,
-                    StringFn: FnOnce(BoxedStr) -> StabbyOut,
-                    StrFn: FnOnce(Str<'a>) -> StabbyOut,
-                >(self, String: StringFn, Str: StrFn) -> StabbyOut {
-                    self.0.match_owned(String, Str)
-                }
-                #[allow(non_snake_case)]
-                /// Equivalent to `match &self`.
-                pub fn match_ref<
-                    'st_lt,
-                    StabbyOut,
-                    StringFn: FnOnce(&'st_lt BoxedStr) -> StabbyOut,
-                    StrFn: FnOnce(&'st_lt Str<'a>) -> StabbyOut,
-                >(&'st_lt self, String: StringFn, Str: StrFn) -> StabbyOut {
-                    self.0.match_ref(String, Str)
-                }
-                #[allow(non_snake_case)]
-                /// Equivalent to `match &mut self`.
-                pub fn match_mut<
-                    'st_lt,
-                    StabbyOut,
-                    StringFn: FnOnce(&mut BoxedStr) -> StabbyOut,
-                    StrFn: FnOnce(&mut Str<'a>) -> StabbyOut,
-                >(&'st_lt mut self, String: StringFn, Str: StrFn) -> StabbyOut {
-                    self.0.match_mut(|mut a| String(&mut *a), |mut a| Str(&mut *a))
-                }
-                #[allow(non_snake_case)]
-                /// Equivalent to `match self`, but allows you to pass common arguments to all closures to make the borrow checker happy.
-                pub fn match_owned_ctx<
-                    StabbyOut,
-                    StabbyCtx,
-                    StringFn: FnOnce(StabbyCtx, BoxedStr) -> StabbyOut,
-                    StrFn: FnOnce(StabbyCtx, Str<'a>) -> StabbyOut,
-                >(
-                    self,
-                    stabby_ctx: StabbyCtx,
-                    String: StringFn,
-                    Str: StrFn,
-                ) -> StabbyOut {
-                    self.0.match_owned_ctx(stabby_ctx, String, Str)
-                }
-                #[allow(non_snake_case)]
-                /// Equivalent to `match &self`, but allows you to pass common arguments to all closures to make the borrow checker happy.
-                pub fn match_ref_ctx<
-                    'st_lt,
-                    StabbyCtx,
-                    StabbyOut,
-                    StringFn: FnOnce(StabbyCtx, &'st_lt BoxedStr) -> StabbyOut,
-                    StrFn: FnOnce(StabbyCtx, &'st_lt Str<'a>) -> StabbyOut,
-                >(
-                    &'st_lt self,
-                    stabby_ctx: StabbyCtx,
-                    String: StringFn,
-                    Str: StrFn,
-                ) -> StabbyOut {
-                    self.0.match_ref_ctx(stabby_ctx, String, Str)
-                }
-                #[allow(non_snake_case)]
-                /// Equivalent to `match &mut self`, but allows you to pass common arguments to all closures to make the borrow checker happy.
-                pub fn match_mut_ctx<
-                    'st_lt,
-                    StabbyCtx,
-                    StabbyOut,
-                    StringFn: FnOnce(StabbyCtx, &mut BoxedStr) -> StabbyOut,
-                    StrFn: FnOnce(StabbyCtx, &mut Str<'a>) -> StabbyOut,
-                >(
-                    &'st_lt mut self,
-                    stabby_ctx: StabbyCtx,
-                    String: StringFn,
-                    Str: StrFn,
-                ) -> StabbyOut {
-                    self.0
-                        .match_mut_ctx(
-                            stabby_ctx,
-                            |stabby_ctx, mut a| String(stabby_ctx, &mut *a),
-                            |stabby_ctx, mut a| Str(stabby_ctx, &mut *a),
-                        )
-                }
-            }
-            #[deny(improper_ctypes_definitions)]
-            pub trait ObjectV0 {
-                extern "C" fn debug_fmt<'a>(&'a self) -> Option<FmtOutput<'a>>;
-                extern "C" fn display_fmt<'a>(&'a self) -> Option<FmtOutput<'a>>;
-            }
-            #[allow(unknown_lints)]
-            #[allow(clippy::multiple_bound_locations)]
-            ///An stabby-generated item for [`ObjectV0`]
             #[repr(C)]
-            pub struct StabbyVtableObjectV0<'stabby_vt_lt> {
-                ///An stabby-generated item for [`ObjectV0`]
-                pub debug_fmt: stabby::abi::StableLike<
-                    for<'a> extern "C" fn(
-                        stabby::abi::AnonymRef<'a>,
-                        ::core::marker::PhantomData<&'a &'stabby_vt_lt ()>,
-                    ) -> Option<FmtOutput<'a>>,
-                    &'static (),
-                >,
-                ///An stabby-generated item for [`ObjectV0`]
-                pub display_fmt: stabby::abi::StableLike<
-                    for<'a> extern "C" fn(
-                        stabby::abi::AnonymRef<'a>,
-                        ::core::marker::PhantomData<&'a &'stabby_vt_lt ()>,
-                    ) -> Option<FmtOutput<'a>>,
-                    &'static (),
-                >,
+            pub struct Container {
+                pub data: *mut c_void,
+                pub drop: extern "C" fn(*mut c_void),
+                pub id: u8,
             }
-            #[automatically_derived]
-            unsafe impl<'stabby_vt_lt> stabby::abi::IStable
-            for StabbyVtableObjectV0<'stabby_vt_lt>
-            where
-                stabby::abi::Struct<
-                    stabby::abi::FieldPair<
-                        stabby::abi::StableLike<
-                            for<'a> extern "C" fn(
-                                stabby::abi::AnonymRef<'a>,
-                                ::core::marker::PhantomData<&'a &'stabby_vt_lt ()>,
-                            ) -> Option<FmtOutput<'a>>,
-                            &'static (),
-                        >,
-                        stabby::abi::StableLike<
-                            for<'a> extern "C" fn(
-                                stabby::abi::AnonymRef<'a>,
-                                ::core::marker::PhantomData<&'a &'stabby_vt_lt ()>,
-                            ) -> Option<FmtOutput<'a>>,
-                            &'static (),
-                        >,
-                    >,
-                >: stabby::abi::IStable,
-                stabby::abi::StableLike<
-                    for<'a> extern "C" fn(
-                        stabby::abi::AnonymRef<'a>,
-                        ::core::marker::PhantomData<&'a &'stabby_vt_lt ()>,
-                    ) -> Option<FmtOutput<'a>>,
-                    &'static (),
-                >: stabby::abi::IStable,
-            {
-                type ForbiddenValues = <stabby::abi::Struct<
-                    stabby::abi::FieldPair<
-                        stabby::abi::StableLike<
-                            for<'a> extern "C" fn(
-                                stabby::abi::AnonymRef<'a>,
-                                ::core::marker::PhantomData<&'a &'stabby_vt_lt ()>,
-                            ) -> Option<FmtOutput<'a>>,
-                            &'static (),
-                        >,
-                        stabby::abi::StableLike<
-                            for<'a> extern "C" fn(
-                                stabby::abi::AnonymRef<'a>,
-                                ::core::marker::PhantomData<&'a &'stabby_vt_lt ()>,
-                            ) -> Option<FmtOutput<'a>>,
-                            &'static (),
-                        >,
-                    >,
-                > as stabby::abi::IStable>::ForbiddenValues;
-                type UnusedBits = <stabby::abi::Struct<
-                    stabby::abi::FieldPair<
-                        stabby::abi::StableLike<
-                            for<'a> extern "C" fn(
-                                stabby::abi::AnonymRef<'a>,
-                                ::core::marker::PhantomData<&'a &'stabby_vt_lt ()>,
-                            ) -> Option<FmtOutput<'a>>,
-                            &'static (),
-                        >,
-                        stabby::abi::StableLike<
-                            for<'a> extern "C" fn(
-                                stabby::abi::AnonymRef<'a>,
-                                ::core::marker::PhantomData<&'a &'stabby_vt_lt ()>,
-                            ) -> Option<FmtOutput<'a>>,
-                            &'static (),
-                        >,
-                    >,
-                > as stabby::abi::IStable>::UnusedBits;
-                type Size = <stabby::abi::Struct<
-                    stabby::abi::FieldPair<
-                        stabby::abi::StableLike<
-                            for<'a> extern "C" fn(
-                                stabby::abi::AnonymRef<'a>,
-                                ::core::marker::PhantomData<&'a &'stabby_vt_lt ()>,
-                            ) -> Option<FmtOutput<'a>>,
-                            &'static (),
-                        >,
-                        stabby::abi::StableLike<
-                            for<'a> extern "C" fn(
-                                stabby::abi::AnonymRef<'a>,
-                                ::core::marker::PhantomData<&'a &'stabby_vt_lt ()>,
-                            ) -> Option<FmtOutput<'a>>,
-                            &'static (),
-                        >,
-                    >,
-                > as stabby::abi::IStable>::Size;
-                type Align = <stabby::abi::Struct<
-                    stabby::abi::FieldPair<
-                        stabby::abi::StableLike<
-                            for<'a> extern "C" fn(
-                                stabby::abi::AnonymRef<'a>,
-                                ::core::marker::PhantomData<&'a &'stabby_vt_lt ()>,
-                            ) -> Option<FmtOutput<'a>>,
-                            &'static (),
-                        >,
-                        stabby::abi::StableLike<
-                            for<'a> extern "C" fn(
-                                stabby::abi::AnonymRef<'a>,
-                                ::core::marker::PhantomData<&'a &'stabby_vt_lt ()>,
-                            ) -> Option<FmtOutput<'a>>,
-                            &'static (),
-                        >,
-                    >,
-                > as stabby::abi::IStable>::Align;
-                type HasExactlyOneNiche = <stabby::abi::Struct<
-                    stabby::abi::FieldPair<
-                        stabby::abi::StableLike<
-                            for<'a> extern "C" fn(
-                                stabby::abi::AnonymRef<'a>,
-                                ::core::marker::PhantomData<&'a &'stabby_vt_lt ()>,
-                            ) -> Option<FmtOutput<'a>>,
-                            &'static (),
-                        >,
-                        stabby::abi::StableLike<
-                            for<'a> extern "C" fn(
-                                stabby::abi::AnonymRef<'a>,
-                                ::core::marker::PhantomData<&'a &'stabby_vt_lt ()>,
-                            ) -> Option<FmtOutput<'a>>,
-                            &'static (),
-                        >,
-                    >,
-                > as stabby::abi::IStable>::HasExactlyOneNiche;
-                type ContainsIndirections = <stabby::abi::Struct<
-                    stabby::abi::FieldPair<
-                        stabby::abi::StableLike<
-                            for<'a> extern "C" fn(
-                                stabby::abi::AnonymRef<'a>,
-                                ::core::marker::PhantomData<&'a &'stabby_vt_lt ()>,
-                            ) -> Option<FmtOutput<'a>>,
-                            &'static (),
-                        >,
-                        stabby::abi::StableLike<
-                            for<'a> extern "C" fn(
-                                stabby::abi::AnonymRef<'a>,
-                                ::core::marker::PhantomData<&'a &'stabby_vt_lt ()>,
-                            ) -> Option<FmtOutput<'a>>,
-                            &'static (),
-                        >,
-                    >,
-                > as stabby::abi::IStable>::ContainsIndirections;
-                const REPORT: &'static stabby::abi::report::TypeReport = &stabby::abi::report::TypeReport {
-                    name: stabby::abi::str::Str::new("StabbyVtableObjectV0"),
-                    module: stabby::abi::str::Str::new(
-                        "lrtexec_lib::commands::v0::structs",
-                    ),
-                    fields: unsafe {
-                        stabby::abi::StableLike::new(
-                            Some(
-                                &stabby::abi::report::FieldReport {
-                                    name: stabby::abi::str::Str::new("display_fmt"),
-                                    ty: <stabby::abi::StableLike<
-                                        for<'a> extern "C" fn(
-                                            stabby::abi::AnonymRef<'a>,
-                                            ::core::marker::PhantomData<&'a &'stabby_vt_lt ()>,
-                                        ) -> Option<FmtOutput<'a>>,
-                                        &'static (),
-                                    > as stabby::abi::IStable>::REPORT,
-                                    next_field: stabby::abi::StableLike::new(
-                                        Some(
-                                            &stabby::abi::report::FieldReport {
-                                                name: stabby::abi::str::Str::new("debug_fmt"),
-                                                ty: <stabby::abi::StableLike<
-                                                    for<'a> extern "C" fn(
-                                                        stabby::abi::AnonymRef<'a>,
-                                                        ::core::marker::PhantomData<&'a &'stabby_vt_lt ()>,
-                                                    ) -> Option<FmtOutput<'a>>,
-                                                    &'static (),
-                                                > as stabby::abi::IStable>::REPORT,
-                                                next_field: stabby::abi::StableLike::new(None),
-                                            },
-                                        ),
-                                    ),
-                                },
-                            ),
-                        )
-                    },
-                    version: 0u32,
-                    tyty: stabby::abi::report::TyTy::Struct,
-                };
-                const ID: u64 = {
-                    if core::mem::size_of::<Self>()
-                        != <<Self as stabby::abi::IStable>::Size as stabby::abi::Unsigned>::USIZE
-                    {
-                        {
-                            ::core::panicking::panic_fmt(
-                                format_args!(
-                                    "StabbyVtableObjectV0\'s size was mis-evaluated by stabby, this is definitely a bug and may cause UB, please file an issue",
-                                ),
-                            );
-                        }
-                    }
-                    if core::mem::align_of::<Self>()
-                        != <<Self as stabby::abi::IStable>::Align as stabby::abi::Unsigned>::USIZE
-                    {
-                        {
-                            ::core::panicking::panic_fmt(
-                                format_args!(
-                                    "StabbyVtableObjectV0\'s align was mis-evaluated by stabby, this is definitely a bug and may cause UB, please file an issue",
-                                ),
-                            );
-                        }
-                    }
-                    stabby::abi::report::gen_id(Self::REPORT)
-                };
-            }
-            #[allow(dead_code, missing_docs)]
-            struct OptimizedLayoutForStabbyVtableObjectV0<'stabby_vt_lt> {
-                ///An stabby-generated item for [`ObjectV0`]
-                pub debug_fmt: stabby::abi::StableLike<
-                    for<'a> extern "C" fn(
-                        stabby::abi::AnonymRef<'a>,
-                        ::core::marker::PhantomData<&'a &'stabby_vt_lt ()>,
-                    ) -> Option<FmtOutput<'a>>,
-                    &'static (),
-                >,
-                ///An stabby-generated item for [`ObjectV0`]
-                pub display_fmt: stabby::abi::StableLike<
-                    for<'a> extern "C" fn(
-                        stabby::abi::AnonymRef<'a>,
-                        ::core::marker::PhantomData<&'a &'stabby_vt_lt ()>,
-                    ) -> Option<FmtOutput<'a>>,
-                    &'static (),
-                >,
-            }
-            impl<'stabby_vt_lt> StabbyVtableObjectV0<'stabby_vt_lt>
-            where
-                stabby::abi::Struct<
-                    stabby::abi::FieldPair<
-                        stabby::abi::StableLike<
-                            for<'a> extern "C" fn(
-                                stabby::abi::AnonymRef<'a>,
-                                ::core::marker::PhantomData<&'a &'stabby_vt_lt ()>,
-                            ) -> Option<FmtOutput<'a>>,
-                            &'static (),
-                        >,
-                        stabby::abi::StableLike<
-                            for<'a> extern "C" fn(
-                                stabby::abi::AnonymRef<'a>,
-                                ::core::marker::PhantomData<&'a &'stabby_vt_lt ()>,
-                            ) -> Option<FmtOutput<'a>>,
-                            &'static (),
-                        >,
-                    >,
-                >: stabby::abi::IStable,
-                stabby::abi::StableLike<
-                    for<'a> extern "C" fn(
-                        stabby::abi::AnonymRef<'a>,
-                        ::core::marker::PhantomData<&'a &'stabby_vt_lt ()>,
-                    ) -> Option<FmtOutput<'a>>,
-                    &'static (),
-                >: stabby::abi::IStable,
-            {
-                ///Returns true if the layout for [`StabbyVtableObjectV0`] is smaller or equal to that Rust would have generated for it.
-                pub const fn has_optimal_layout() -> bool {
-                    core::mem::size_of::<Self>()
-                        <= core::mem::size_of::<
-                            OptimizedLayoutForStabbyVtableObjectV0<'stabby_vt_lt>,
-                        >()
+            impl Drop for Container {
+                fn drop(&mut self) {
+                    (self.drop)(self.data)
                 }
             }
-            impl<'stabby_vt_lt> Clone for StabbyVtableObjectV0<'stabby_vt_lt> {
-                fn clone(&self) -> Self {
-                    *self
+            extern "C" fn general_drop<T>(ptrr: *mut c_void) {
+                unsafe {
+                    _ = Box::from_raw(ptrr);
                 }
             }
-            #[allow(unknown_lints)]
-            #[allow(clippy::multiple_bound_locations)]
-            impl<'stabby_vt_lt> Copy for StabbyVtableObjectV0<'stabby_vt_lt> {}
-            #[allow(unknown_lints)]
-            #[allow(clippy::multiple_bound_locations)]
-            impl<'stabby_vt_lt> core::cmp::PartialEq
-            for StabbyVtableObjectV0<'stabby_vt_lt> {
-                fn eq(&self, other: &Self) -> bool {
-                    core::ptr::eq(
-                        (*unsafe { self.debug_fmt.as_ref_unchecked() }) as *const (),
-                        (*unsafe { other.debug_fmt.as_ref_unchecked() }) as *const _,
-                    )
-                        && core::ptr::eq(
-                            (*unsafe { self.display_fmt.as_ref_unchecked() })
-                                as *const (),
-                            (*unsafe { other.display_fmt.as_ref_unchecked() })
-                                as *const _,
-                        ) && true
-                }
-            }
-            #[allow(unknown_lints)]
-            #[allow(clippy::multiple_bound_locations)]
-            impl<'stabby_vt_lt> core::hash::Hash
-            for StabbyVtableObjectV0<'stabby_vt_lt> {
-                fn hash<H: core::hash::Hasher>(&self, state: &mut H) {
-                    self.debug_fmt.hash(state);
-                    self.display_fmt.hash(state);
-                }
-            }
-            #[allow(unknown_lints)]
-            #[allow(clippy::multiple_bound_locations)]
-            impl<'stabby_vt_lt> core::fmt::Debug
-            for StabbyVtableObjectV0<'stabby_vt_lt> {
-                fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-                    let mut s = f.debug_struct("StabbyVtableObjectV0");
-                    s.field(
-                        "debug_fmt",
-                        &format_args!(
-                            "{0:p}",
-                            unsafe { self.debug_fmt.as_ref_unchecked() },
-                        ),
-                    );
-                    s.field(
-                        "display_fmt",
-                        &format_args!(
-                            "{0:p}",
-                            unsafe { self.display_fmt.as_ref_unchecked() },
-                        ),
-                    );
-                    s.finish()
-                }
-            }
-            #[allow(unknown_lints)]
-            #[allow(clippy::multiple_bound_locations)]
-            impl<
-                'stabby_vt_lt,
-                StabbyArbitraryType,
-            > stabby::abi::vtable::IConstConstructor<'stabby_vt_lt, StabbyArbitraryType>
-            for StabbyVtableObjectV0<'stabby_vt_lt>
-            where
-                StabbyArbitraryType: ObjectV0,
-            {
-                const VTABLE: StabbyVtableObjectV0<'stabby_vt_lt> = StabbyVtableObjectV0 {
-                    debug_fmt: unsafe {
-                        stabby::abi::StableLike::new({
-                            extern "C" fn ext_debug_fmt<
-                                'stabby_local_lt,
-                                'a,
-                                StabbyArbitraryType: 'stabby_local_lt,
-                            >(
-                                this: stabby::abi::AnonymRef<'a>,
-                                _lt_proof: ::core::marker::PhantomData<
-                                    &'a &'stabby_local_lt (),
-                                >,
-                            ) -> Option<FmtOutput<'a>>
-                            where
-                                StabbyArbitraryType: ObjectV0,
-                            {
-                                unsafe {
-                                    <StabbyArbitraryType as ObjectV0>::debug_fmt(
-                                        this.cast::<StabbyArbitraryType>().as_ref(),
-                                    )
-                                }
-                            }
-                            ext_debug_fmt::<StabbyArbitraryType>
-                                as for<'a> extern "C" fn(
-                                    stabby::abi::AnonymRef<'a>,
-                                    ::core::marker::PhantomData<&'a &'stabby_vt_lt ()>,
-                                ) -> Option<FmtOutput<'a>>
-                        })
-                    },
-                    display_fmt: unsafe {
-                        stabby::abi::StableLike::new({
-                            extern "C" fn ext_display_fmt<
-                                'stabby_local_lt,
-                                'a,
-                                StabbyArbitraryType: 'stabby_local_lt,
-                            >(
-                                this: stabby::abi::AnonymRef<'a>,
-                                _lt_proof: ::core::marker::PhantomData<
-                                    &'a &'stabby_local_lt (),
-                                >,
-                            ) -> Option<FmtOutput<'a>>
-                            where
-                                StabbyArbitraryType: ObjectV0,
-                            {
-                                unsafe {
-                                    <StabbyArbitraryType as ObjectV0>::display_fmt(
-                                        this.cast::<StabbyArbitraryType>().as_ref(),
-                                    )
-                                }
-                            }
-                            ext_display_fmt::<StabbyArbitraryType>
-                                as for<'a> extern "C" fn(
-                                    stabby::abi::AnonymRef<'a>,
-                                    ::core::marker::PhantomData<&'a &'stabby_vt_lt ()>,
-                                ) -> Option<FmtOutput<'a>>
-                        })
-                    },
-                };
-            }
-            #[allow(unknown_lints)]
-            #[allow(clippy::multiple_bound_locations)]
-            impl<'stabby_vt_lt> stabby::abi::vtable::CompoundVt<'stabby_vt_lt>
-            for dyn ObjectV0 {
-                ///An stabby-generated item for [`ObjectV0`]
-                type Vt<StabbyNextVtable> = stabby::abi::vtable::VTable<
-                    StabbyVtableObjectV0<'stabby_vt_lt>,
-                    StabbyNextVtable,
-                >;
-            }
-            #[allow(unknown_lints)]
-            #[allow(clippy::multiple_bound_locations)]
-            ///An stabby-generated item for [`ObjectV0`]
-            pub trait ObjectV0Dyn<StabbyTransitiveDerefN> {
-                ///An stabby-generated item for [`ObjectV0`]
-                extern "C" fn debug_fmt<'a>(&'a self) -> Option<FmtOutput<'a>>;
-                ///An stabby-generated item for [`ObjectV0`]
-                extern "C" fn display_fmt<'a>(&'a self) -> Option<FmtOutput<'a>>;
-            }
-            #[allow(unknown_lints)]
-            #[allow(clippy::multiple_bound_locations)]
-            impl<
-                'stabby_vt_lt,
-                StabbyVtProvider: stabby::abi::vtable::TransitiveDeref<
-                        StabbyVtableObjectV0<'stabby_vt_lt>,
-                        StabbyTransitiveDerefN,
-                    > + Copy,
-                StabbyTransitiveDerefN,
-            > ObjectV0Dyn<StabbyTransitiveDerefN>
-            for stabby::abi::DynRef<'_, StabbyVtProvider> {
-                ///An stabby-generated item for [`ObjectV0`]
-                extern "C" fn debug_fmt<'a>(&'a self) -> Option<FmtOutput<'a>> {
-                    unsafe {
-                        (self
-                            .vtable()
-                            .tderef()
-                            .debug_fmt
-                            .as_ref_unchecked())(self.ptr(), ::core::marker::PhantomData)
-                    }
-                }
-                ///An stabby-generated item for [`ObjectV0`]
-                extern "C" fn display_fmt<'a>(&'a self) -> Option<FmtOutput<'a>> {
-                    unsafe {
-                        (self
-                            .vtable()
-                            .tderef()
-                            .display_fmt
-                            .as_ref_unchecked())(self.ptr(), ::core::marker::PhantomData)
+            impl Into<Container> for u8 {
+                fn into(self) -> Container {
+                    let data = Box::new(self);
+                    let d = Box::into_raw(data);
+                    Container {
+                        data: d as *mut c_void,
+                        drop: general_drop::<u8>,
+                        id: 0,
                     }
                 }
             }
-            #[allow(unknown_lints)]
-            #[allow(clippy::multiple_bound_locations)]
-            impl<
-                'stabby_vt_lt,
-                StabbyPtrProvider: stabby::abi::IPtrOwned + stabby::abi::IPtr,
-                StabbyVtProvider: stabby::abi::vtable::HasDropVt + Copy
-                    + stabby::abi::vtable::TransitiveDeref<
-                        StabbyVtableObjectV0<'stabby_vt_lt>,
-                        StabbyTransitiveDerefN,
-                    >,
-                StabbyTransitiveDerefN,
-            > ObjectV0Dyn<StabbyTransitiveDerefN>
-            for stabby::abi::Dyn<'_, StabbyPtrProvider, StabbyVtProvider> {
-                ///An stabby-generated item for [`ObjectV0`]
-                extern "C" fn debug_fmt<'a>(&'a self) -> Option<FmtOutput<'a>> {
-                    unsafe {
-                        (self
-                            .vtable()
-                            .tderef()
-                            .debug_fmt
-                            .as_ref_unchecked())(
-                            self.ptr().as_ref(),
-                            ::core::marker::PhantomData,
-                        )
+            impl Container {
+                /// Returns `None` is types do not match
+                pub fn as_u8(&self) -> Option<&u8> {
+                    if self.id != 0 {
+                        return None;
                     }
+                    unsafe { Some(&*(self.data as *mut u8)) }
                 }
-                ///An stabby-generated item for [`ObjectV0`]
-                extern "C" fn display_fmt<'a>(&'a self) -> Option<FmtOutput<'a>> {
-                    unsafe {
-                        (self
-                            .vtable()
-                            .tderef()
-                            .display_fmt
-                            .as_ref_unchecked())(
-                            self.ptr().as_ref(),
-                            ::core::marker::PhantomData,
-                        )
+                /// Returns `None` is types do not match
+                pub fn as_u8_mut(&self) -> Option<&mut u8> {
+                    if self.id != 0 {
+                        return None;
+                    }
+                    unsafe { Some(&mut *(self.data as *mut u8)) }
+                }
+            }
+            impl Into<Container> for u16 {
+                fn into(self) -> Container {
+                    let data = Box::new(self);
+                    let d = Box::into_raw(data);
+                    Container {
+                        data: d as *mut c_void,
+                        drop: general_drop::<u16>,
+                        id: 1,
                     }
                 }
             }
-            #[allow(unknown_lints)]
-            #[allow(clippy::multiple_bound_locations)]
-            ///An stabby-generated item for [`ObjectV0`]
-            pub trait ObjectV0DynMut<
-                StabbyTransitiveDerefN,
-            >: ObjectV0Dyn<StabbyTransitiveDerefN> {}
-            #[allow(unknown_lints)]
-            #[allow(clippy::multiple_bound_locations)]
-            impl<
-                'stabby_vt_lt,
-                StabbyPtrProvider,
-                StabbyVtProvider,
-                StabbyTransitiveDerefN,
-            > ObjectV0DynMut<StabbyTransitiveDerefN>
-            for stabby::abi::Dyn<'_, StabbyPtrProvider, StabbyVtProvider>
-            where
-                StabbyPtrProvider: stabby::abi::IPtrOwned + stabby::abi::IPtrMut,
-                StabbyVtProvider: stabby::abi::vtable::HasDropVt + Copy
-                    + stabby::abi::vtable::TransitiveDeref<
-                        StabbyVtableObjectV0<'stabby_vt_lt>,
-                        StabbyTransitiveDerefN,
-                    >,
-            {}
-            pub struct VariableDataV0(
-                stabby::abi::Result<
-                    Arc<
-                        stabby::abi::Dyn<
-                            'static,
-                            RBox<()>,
-                            <dyn ObjectV0 as stabby::abi::vtable::CompoundVt<
-                                'static,
-                            >>::Vt<stabby::abi::vtable::VtDrop>,
-                        >,
-                    >,
-                    stabby::abi::Dyn<
-                        'static,
-                        RBox<()>,
-                        <dyn ObjectV0 as stabby::abi::vtable::CompoundVt<
-                            'static,
-                        >>::Vt<stabby::abi::vtable::VtDrop>,
-                    >,
-                >,
-            )
-            where
-                stabby::abi::Dyn<
-                    'static,
-                    RBox<()>,
-                    <dyn ObjectV0 as stabby::abi::vtable::CompoundVt<
-                        'static,
-                    >>::Vt<stabby::abi::vtable::VtDrop>,
-                >: stabby::abi::IStable,
-                Arc<
-                    stabby::abi::Dyn<
-                        'static,
-                        RBox<()>,
-                        <dyn ObjectV0 as stabby::abi::vtable::CompoundVt<
-                            'static,
-                        >>::Vt<stabby::abi::vtable::VtDrop>,
-                    >,
-                >: stabby::abi::IStable,
-                Arc<
-                    stabby::abi::Dyn<
-                        'static,
-                        RBox<()>,
-                        <dyn ObjectV0 as stabby::abi::vtable::CompoundVt<
-                            'static,
-                        >>::Vt<stabby::abi::vtable::VtDrop>,
-                    >,
-                >: stabby::abi::IDeterminantProvider<
-                    stabby::abi::Dyn<
-                        'static,
-                        RBox<()>,
-                        <dyn ObjectV0 as stabby::abi::vtable::CompoundVt<
-                            'static,
-                        >>::Vt<stabby::abi::vtable::VtDrop>,
-                    >,
-                >,
-                stabby::abi::Dyn<
-                    'static,
-                    RBox<()>,
-                    <dyn ObjectV0 as stabby::abi::vtable::CompoundVt<
-                        'static,
-                    >>::Vt<stabby::abi::vtable::VtDrop>,
-                >: stabby::abi::IStable;
-            #[allow(dead_code)]
-            #[repr(u8)]
-            enum ReprCLayoutForVariableDataV0
-            where
-                Arc<
-                    stabby::abi::Dyn<
-                        'static,
-                        RBox<()>,
-                        <dyn ObjectV0 as stabby::abi::vtable::CompoundVt<
-                            'static,
-                        >>::Vt<stabby::abi::vtable::VtDrop>,
-                    >,
-                >: stabby::abi::IDeterminantProvider<
-                    stabby::abi::Dyn<
-                        'static,
-                        RBox<()>,
-                        <dyn ObjectV0 as stabby::abi::vtable::CompoundVt<
-                            'static,
-                        >>::Vt<stabby::abi::vtable::VtDrop>,
-                    >,
-                >,
-                stabby::abi::Dyn<
-                    'static,
-                    RBox<()>,
-                    <dyn ObjectV0 as stabby::abi::vtable::CompoundVt<
-                        'static,
-                    >>::Vt<stabby::abi::vtable::VtDrop>,
-                >: stabby::abi::IStable,
-            {
-                Arc(
-                    Arc<
-                        stabby::abi::Dyn<
-                            'static,
-                            RBox<()>,
-                            <dyn ObjectV0 as stabby::abi::vtable::CompoundVt<
-                                'static,
-                            >>::Vt<stabby::abi::vtable::VtDrop>,
-                        >,
-                    >,
-                ),
-                Object(
-                    stabby::abi::Dyn<
-                        'static,
-                        RBox<()>,
-                        <dyn ObjectV0 as stabby::abi::vtable::CompoundVt<
-                            'static,
-                        >>::Vt<stabby::abi::vtable::VtDrop>,
-                    >,
-                ),
-            }
-            impl VariableDataV0
-            where
-                stabby::abi::Dyn<
-                    'static,
-                    RBox<()>,
-                    <dyn ObjectV0 as stabby::abi::vtable::CompoundVt<
-                        'static,
-                    >>::Vt<stabby::abi::vtable::VtDrop>,
-                >: stabby::abi::IStable,
-                Arc<
-                    stabby::abi::Dyn<
-                        'static,
-                        RBox<()>,
-                        <dyn ObjectV0 as stabby::abi::vtable::CompoundVt<
-                            'static,
-                        >>::Vt<stabby::abi::vtable::VtDrop>,
-                    >,
-                >: stabby::abi::IStable,
-                Arc<
-                    stabby::abi::Dyn<
-                        'static,
-                        RBox<()>,
-                        <dyn ObjectV0 as stabby::abi::vtable::CompoundVt<
-                            'static,
-                        >>::Vt<stabby::abi::vtable::VtDrop>,
-                    >,
-                >: stabby::abi::IDeterminantProvider<
-                    stabby::abi::Dyn<
-                        'static,
-                        RBox<()>,
-                        <dyn ObjectV0 as stabby::abi::vtable::CompoundVt<
-                            'static,
-                        >>::Vt<stabby::abi::vtable::VtDrop>,
-                    >,
-                >,
-                stabby::abi::Dyn<
-                    'static,
-                    RBox<()>,
-                    <dyn ObjectV0 as stabby::abi::vtable::CompoundVt<
-                        'static,
-                    >>::Vt<stabby::abi::vtable::VtDrop>,
-                >: stabby::abi::IStable,
-                stabby::abi::Result<
-                    Arc<
-                        stabby::abi::Dyn<
-                            'static,
-                            RBox<()>,
-                            <dyn ObjectV0 as stabby::abi::vtable::CompoundVt<
-                                'static,
-                            >>::Vt<stabby::abi::vtable::VtDrop>,
-                        >,
-                    >,
-                    stabby::abi::Dyn<
-                        'static,
-                        RBox<()>,
-                        <dyn ObjectV0 as stabby::abi::vtable::CompoundVt<
-                            'static,
-                        >>::Vt<stabby::abi::vtable::VtDrop>,
-                    >,
-                >: stabby::abi::IStable,
-            {
-                ///Returns true if the layout for [`VariableDataV0`] is smaller than what `#[repr(C)]` would have generated for it.
-                pub const fn has_optimal_layout() -> bool {
-                    core::mem::size_of::<Self>()
-                        < core::mem::size_of::<ReprCLayoutForVariableDataV0>()
+            impl Container {
+                /// Returns `None` is types do not match
+                pub fn as_u16(&self) -> Option<&u16> {
+                    if self.id != 1 {
+                        return None;
+                    }
+                    unsafe { Some(&*(self.data as *mut u16)) }
+                }
+                /// Returns `None` is types do not match
+                pub fn as_u16_mut(&self) -> Option<&mut u16> {
+                    if self.id != 1 {
+                        return None;
+                    }
+                    unsafe { Some(&mut *(self.data as *mut u16)) }
                 }
             }
-            const _: () = {
-                if !<VariableDataV0>::has_optimal_layout() {
-                    {
-                        ::core::panicking::panic_fmt(
-                            format_args!(
-                                "VariableDataV0\'s layout is sub-optimal, reorder fields or use `#[repr(stabby)]` to silence this error.",
-                            ),
-                        );
+            impl Into<Container> for u32 {
+                fn into(self) -> Container {
+                    let data = Box::new(self);
+                    let d = Box::into_raw(data);
+                    Container {
+                        data: d as *mut c_void,
+                        drop: general_drop::<u32>,
+                        id: 2,
                     }
                 }
-                if core::mem::size_of::<VariableDataV0>()
-                    != <<VariableDataV0 as stabby::abi::IStable>::Size as stabby::abi::Unsigned>::USIZE
-                {
-                    {
-                        ::core::panicking::panic_fmt(
-                            format_args!(
-                                "VariableDataV0\'s size was mis-evaluated by stabby, this is definitely a bug and may cause UB, please fill an issue",
-                            ),
-                        );
+            }
+            impl Container {
+                /// Returns `None` is types do not match
+                pub fn as_u32(&self) -> Option<&u32> {
+                    if self.id != 2 {
+                        return None;
+                    }
+                    unsafe { Some(&*(self.data as *mut u32)) }
+                }
+                /// Returns `None` is types do not match
+                pub fn as_u32_mut(&self) -> Option<&mut u32> {
+                    if self.id != 2 {
+                        return None;
+                    }
+                    unsafe { Some(&mut *(self.data as *mut u32)) }
+                }
+            }
+            impl Into<Container> for u64 {
+                fn into(self) -> Container {
+                    let data = Box::new(self);
+                    let d = Box::into_raw(data);
+                    Container {
+                        data: d as *mut c_void,
+                        drop: general_drop::<u64>,
+                        id: 3,
                     }
                 }
-                if core::mem::align_of::<VariableDataV0>()
-                    != <<VariableDataV0 as stabby::abi::IStable>::Align as stabby::abi::Unsigned>::USIZE
-                {
-                    {
-                        ::core::panicking::panic_fmt(
-                            format_args!(
-                                "VariableDataV0\'s align was mis-evaluated by stabby, this is definitely a bug and may cause UB, please fill an issue",
-                            ),
-                        );
+            }
+            impl Container {
+                /// Returns `None` is types do not match
+                pub fn as_u64(&self) -> Option<&u64> {
+                    if self.id != 3 {
+                        return None;
+                    }
+                    unsafe { Some(&*(self.data as *mut u64)) }
+                }
+                /// Returns `None` is types do not match
+                pub fn as_u64_mut(&self) -> Option<&mut u64> {
+                    if self.id != 3 {
+                        return None;
+                    }
+                    unsafe { Some(&mut *(self.data as *mut u64)) }
+                }
+            }
+            impl Into<Container> for u128 {
+                fn into(self) -> Container {
+                    let data = Box::new(self);
+                    let d = Box::into_raw(data);
+                    Container {
+                        data: d as *mut c_void,
+                        drop: general_drop::<u128>,
+                        id: 4,
                     }
                 }
-            };
-            #[automatically_derived]
-            unsafe impl stabby::abi::IStable for VariableDataV0
-            where
-                stabby::abi::Dyn<
-                    'static,
-                    RBox<()>,
-                    <dyn ObjectV0 as stabby::abi::vtable::CompoundVt<
-                        'static,
-                    >>::Vt<stabby::abi::vtable::VtDrop>,
-                >: stabby::abi::IStable,
-                Arc<
-                    stabby::abi::Dyn<
-                        'static,
-                        RBox<()>,
-                        <dyn ObjectV0 as stabby::abi::vtable::CompoundVt<
-                            'static,
-                        >>::Vt<stabby::abi::vtable::VtDrop>,
-                    >,
-                >: stabby::abi::IStable,
-                Arc<
-                    stabby::abi::Dyn<
-                        'static,
-                        RBox<()>,
-                        <dyn ObjectV0 as stabby::abi::vtable::CompoundVt<
-                            'static,
-                        >>::Vt<stabby::abi::vtable::VtDrop>,
-                    >,
-                >: stabby::abi::IDeterminantProvider<
-                    stabby::abi::Dyn<
-                        'static,
-                        RBox<()>,
-                        <dyn ObjectV0 as stabby::abi::vtable::CompoundVt<
-                            'static,
-                        >>::Vt<stabby::abi::vtable::VtDrop>,
-                    >,
-                >,
-                stabby::abi::Dyn<
-                    'static,
-                    RBox<()>,
-                    <dyn ObjectV0 as stabby::abi::vtable::CompoundVt<
-                        'static,
-                    >>::Vt<stabby::abi::vtable::VtDrop>,
-                >: stabby::abi::IStable,
-                stabby::abi::Result<
-                    Arc<
-                        stabby::abi::Dyn<
-                            'static,
-                            RBox<()>,
-                            <dyn ObjectV0 as stabby::abi::vtable::CompoundVt<
-                                'static,
-                            >>::Vt<stabby::abi::vtable::VtDrop>,
-                        >,
-                    >,
-                    stabby::abi::Dyn<
-                        'static,
-                        RBox<()>,
-                        <dyn ObjectV0 as stabby::abi::vtable::CompoundVt<
-                            'static,
-                        >>::Vt<stabby::abi::vtable::VtDrop>,
-                    >,
-                >: stabby::abi::IStable,
-            {
-                type ForbiddenValues = <stabby::abi::Result<
-                    Arc<
-                        stabby::abi::Dyn<
-                            'static,
-                            RBox<()>,
-                            <dyn ObjectV0 as stabby::abi::vtable::CompoundVt<
-                                'static,
-                            >>::Vt<stabby::abi::vtable::VtDrop>,
-                        >,
-                    >,
-                    stabby::abi::Dyn<
-                        'static,
-                        RBox<()>,
-                        <dyn ObjectV0 as stabby::abi::vtable::CompoundVt<
-                            'static,
-                        >>::Vt<stabby::abi::vtable::VtDrop>,
-                    >,
-                > as stabby::abi::IStable>::ForbiddenValues;
-                type UnusedBits = <stabby::abi::Result<
-                    Arc<
-                        stabby::abi::Dyn<
-                            'static,
-                            RBox<()>,
-                            <dyn ObjectV0 as stabby::abi::vtable::CompoundVt<
-                                'static,
-                            >>::Vt<stabby::abi::vtable::VtDrop>,
-                        >,
-                    >,
-                    stabby::abi::Dyn<
-                        'static,
-                        RBox<()>,
-                        <dyn ObjectV0 as stabby::abi::vtable::CompoundVt<
-                            'static,
-                        >>::Vt<stabby::abi::vtable::VtDrop>,
-                    >,
-                > as stabby::abi::IStable>::UnusedBits;
-                type Size = <stabby::abi::Result<
-                    Arc<
-                        stabby::abi::Dyn<
-                            'static,
-                            RBox<()>,
-                            <dyn ObjectV0 as stabby::abi::vtable::CompoundVt<
-                                'static,
-                            >>::Vt<stabby::abi::vtable::VtDrop>,
-                        >,
-                    >,
-                    stabby::abi::Dyn<
-                        'static,
-                        RBox<()>,
-                        <dyn ObjectV0 as stabby::abi::vtable::CompoundVt<
-                            'static,
-                        >>::Vt<stabby::abi::vtable::VtDrop>,
-                    >,
-                > as stabby::abi::IStable>::Size;
-                type Align = <stabby::abi::Result<
-                    Arc<
-                        stabby::abi::Dyn<
-                            'static,
-                            RBox<()>,
-                            <dyn ObjectV0 as stabby::abi::vtable::CompoundVt<
-                                'static,
-                            >>::Vt<stabby::abi::vtable::VtDrop>,
-                        >,
-                    >,
-                    stabby::abi::Dyn<
-                        'static,
-                        RBox<()>,
-                        <dyn ObjectV0 as stabby::abi::vtable::CompoundVt<
-                            'static,
-                        >>::Vt<stabby::abi::vtable::VtDrop>,
-                    >,
-                > as stabby::abi::IStable>::Align;
-                type HasExactlyOneNiche = stabby::abi::B0;
-                type ContainsIndirections = <stabby::abi::Result<
-                    Arc<
-                        stabby::abi::Dyn<
-                            'static,
-                            RBox<()>,
-                            <dyn ObjectV0 as stabby::abi::vtable::CompoundVt<
-                                'static,
-                            >>::Vt<stabby::abi::vtable::VtDrop>,
-                        >,
-                    >,
-                    stabby::abi::Dyn<
-                        'static,
-                        RBox<()>,
-                        <dyn ObjectV0 as stabby::abi::vtable::CompoundVt<
-                            'static,
-                        >>::Vt<stabby::abi::vtable::VtDrop>,
-                    >,
-                > as stabby::abi::IStable>::ContainsIndirections;
-                const REPORT: &'static stabby::abi::report::TypeReport = &stabby::abi::report::TypeReport {
-                    name: stabby::abi::str::Str::new("VariableDataV0"),
-                    module: stabby::abi::str::Str::new(
-                        "lrtexec_lib::commands::v0::structs",
-                    ),
-                    fields: unsafe {
-                        stabby::abi::StableLike::new(
-                            Some(
-                                &stabby::abi::report::FieldReport {
-                                    name: stabby::abi::str::Str::new("Object"),
-                                    ty: <stabby::abi::Dyn<
-                                        'static,
-                                        RBox<()>,
-                                        <dyn ObjectV0 as stabby::abi::vtable::CompoundVt<
-                                            'static,
-                                        >>::Vt<stabby::abi::vtable::VtDrop>,
-                                    > as stabby::abi::IStable>::REPORT,
-                                    next_field: stabby::abi::StableLike::new(
-                                        Some(
-                                            &stabby::abi::report::FieldReport {
-                                                name: stabby::abi::str::Str::new("Arc"),
-                                                ty: <Arc<
-                                                    stabby::abi::Dyn<
-                                                        'static,
-                                                        RBox<()>,
-                                                        <dyn ObjectV0 as stabby::abi::vtable::CompoundVt<
-                                                            'static,
-                                                        >>::Vt<stabby::abi::vtable::VtDrop>,
-                                                    >,
-                                                > as stabby::abi::IStable>::REPORT,
-                                                next_field: stabby::abi::StableLike::new(None),
-                                            },
-                                        ),
-                                    ),
-                                },
-                            ),
-                        )
-                    },
-                    version: 0u32,
-                    tyty: stabby::abi::report::TyTy::Enum(
-                        stabby::abi::str::Str::new("stabby"),
-                    ),
-                };
-                const ID: u64 = stabby::abi::report::gen_id(Self::REPORT);
             }
-            #[automatically_derived]
-            impl VariableDataV0
-            where
-                stabby::abi::Dyn<
-                    'static,
-                    RBox<()>,
-                    <dyn ObjectV0 as stabby::abi::vtable::CompoundVt<
-                        'static,
-                    >>::Vt<stabby::abi::vtable::VtDrop>,
-                >: stabby::abi::IStable,
-                Arc<
-                    stabby::abi::Dyn<
-                        'static,
-                        RBox<()>,
-                        <dyn ObjectV0 as stabby::abi::vtable::CompoundVt<
-                            'static,
-                        >>::Vt<stabby::abi::vtable::VtDrop>,
-                    >,
-                >: stabby::abi::IStable,
-                Arc<
-                    stabby::abi::Dyn<
-                        'static,
-                        RBox<()>,
-                        <dyn ObjectV0 as stabby::abi::vtable::CompoundVt<
-                            'static,
-                        >>::Vt<stabby::abi::vtable::VtDrop>,
-                    >,
-                >: stabby::abi::IDeterminantProvider<
-                    stabby::abi::Dyn<
-                        'static,
-                        RBox<()>,
-                        <dyn ObjectV0 as stabby::abi::vtable::CompoundVt<
-                            'static,
-                        >>::Vt<stabby::abi::vtable::VtDrop>,
-                    >,
-                >,
-                stabby::abi::Dyn<
-                    'static,
-                    RBox<()>,
-                    <dyn ObjectV0 as stabby::abi::vtable::CompoundVt<
-                        'static,
-                    >>::Vt<stabby::abi::vtable::VtDrop>,
-                >: stabby::abi::IStable,
-            {
-                #[allow(non_snake_case)]
-                pub fn Arc(
-                    value: Arc<
-                        stabby::abi::Dyn<
-                            'static,
-                            RBox<()>,
-                            <dyn ObjectV0 as stabby::abi::vtable::CompoundVt<
-                                'static,
-                            >>::Vt<stabby::abi::vtable::VtDrop>,
-                        >,
-                    >,
-                ) -> Self {
-                    Self(stabby::abi::Result::Ok(value))
+            impl Container {
+                /// Returns `None` is types do not match
+                pub fn as_u128(&self) -> Option<&u128> {
+                    if self.id != 4 {
+                        return None;
+                    }
+                    unsafe { Some(&*(self.data as *mut u128)) }
                 }
-                #[allow(non_snake_case)]
-                pub fn Object(
-                    value: stabby::abi::Dyn<
-                        'static,
-                        RBox<()>,
-                        <dyn ObjectV0 as stabby::abi::vtable::CompoundVt<
-                            'static,
-                        >>::Vt<stabby::abi::vtable::VtDrop>,
-                    >,
-                ) -> Self {
-                    Self(stabby::abi::Result::Err(value))
-                }
-                #[allow(non_snake_case)]
-                /// Equivalent to `match self`.
-                pub fn match_owned<
-                    StabbyOut,
-                    ArcFn: FnOnce(
-                            Arc<
-                                stabby::abi::Dyn<
-                                    'static,
-                                    RBox<()>,
-                                    <dyn ObjectV0 as stabby::abi::vtable::CompoundVt<
-                                        'static,
-                                    >>::Vt<stabby::abi::vtable::VtDrop>,
-                                >,
-                            >,
-                        ) -> StabbyOut,
-                    ObjectFn: FnOnce(
-                            stabby::abi::Dyn<
-                                'static,
-                                RBox<()>,
-                                <dyn ObjectV0 as stabby::abi::vtable::CompoundVt<
-                                    'static,
-                                >>::Vt<stabby::abi::vtable::VtDrop>,
-                            >,
-                        ) -> StabbyOut,
-                >(self, Arc: ArcFn, Object: ObjectFn) -> StabbyOut {
-                    self.0.match_owned(Arc, Object)
-                }
-                #[allow(non_snake_case)]
-                /// Equivalent to `match &self`.
-                pub fn match_ref<
-                    'st_lt,
-                    StabbyOut,
-                    ArcFn: FnOnce(
-                            &'st_lt Arc<
-                                stabby::abi::Dyn<
-                                    'static,
-                                    RBox<()>,
-                                    <dyn ObjectV0 as stabby::abi::vtable::CompoundVt<
-                                        'static,
-                                    >>::Vt<stabby::abi::vtable::VtDrop>,
-                                >,
-                            >,
-                        ) -> StabbyOut,
-                    ObjectFn: FnOnce(
-                            &'st_lt stabby::abi::Dyn<
-                                'static,
-                                RBox<()>,
-                                <dyn ObjectV0 as stabby::abi::vtable::CompoundVt<
-                                    'static,
-                                >>::Vt<stabby::abi::vtable::VtDrop>,
-                            >,
-                        ) -> StabbyOut,
-                >(&'st_lt self, Arc: ArcFn, Object: ObjectFn) -> StabbyOut {
-                    self.0.match_ref(Arc, Object)
-                }
-                #[allow(non_snake_case)]
-                /// Equivalent to `match &mut self`.
-                pub fn match_mut<
-                    'st_lt,
-                    StabbyOut,
-                    ArcFn: FnOnce(
-                            &mut Arc<
-                                stabby::abi::Dyn<
-                                    'static,
-                                    RBox<()>,
-                                    <dyn ObjectV0 as stabby::abi::vtable::CompoundVt<
-                                        'static,
-                                    >>::Vt<stabby::abi::vtable::VtDrop>,
-                                >,
-                            >,
-                        ) -> StabbyOut,
-                    ObjectFn: FnOnce(
-                            &mut stabby::abi::Dyn<
-                                'static,
-                                RBox<()>,
-                                <dyn ObjectV0 as stabby::abi::vtable::CompoundVt<
-                                    'static,
-                                >>::Vt<stabby::abi::vtable::VtDrop>,
-                            >,
-                        ) -> StabbyOut,
-                >(&'st_lt mut self, Arc: ArcFn, Object: ObjectFn) -> StabbyOut {
-                    self.0.match_mut(|mut a| Arc(&mut *a), |mut a| Object(&mut *a))
-                }
-                #[allow(non_snake_case)]
-                /// Equivalent to `match self`, but allows you to pass common arguments to all closures to make the borrow checker happy.
-                pub fn match_owned_ctx<
-                    StabbyOut,
-                    StabbyCtx,
-                    ArcFn: FnOnce(
-                            StabbyCtx,
-                            Arc<
-                                stabby::abi::Dyn<
-                                    'static,
-                                    RBox<()>,
-                                    <dyn ObjectV0 as stabby::abi::vtable::CompoundVt<
-                                        'static,
-                                    >>::Vt<stabby::abi::vtable::VtDrop>,
-                                >,
-                            >,
-                        ) -> StabbyOut,
-                    ObjectFn: FnOnce(
-                            StabbyCtx,
-                            stabby::abi::Dyn<
-                                'static,
-                                RBox<()>,
-                                <dyn ObjectV0 as stabby::abi::vtable::CompoundVt<
-                                    'static,
-                                >>::Vt<stabby::abi::vtable::VtDrop>,
-                            >,
-                        ) -> StabbyOut,
-                >(
-                    self,
-                    stabby_ctx: StabbyCtx,
-                    Arc: ArcFn,
-                    Object: ObjectFn,
-                ) -> StabbyOut {
-                    self.0.match_owned_ctx(stabby_ctx, Arc, Object)
-                }
-                #[allow(non_snake_case)]
-                /// Equivalent to `match &self`, but allows you to pass common arguments to all closures to make the borrow checker happy.
-                pub fn match_ref_ctx<
-                    'st_lt,
-                    StabbyCtx,
-                    StabbyOut,
-                    ArcFn: FnOnce(
-                            StabbyCtx,
-                            &'st_lt Arc<
-                                stabby::abi::Dyn<
-                                    'static,
-                                    RBox<()>,
-                                    <dyn ObjectV0 as stabby::abi::vtable::CompoundVt<
-                                        'static,
-                                    >>::Vt<stabby::abi::vtable::VtDrop>,
-                                >,
-                            >,
-                        ) -> StabbyOut,
-                    ObjectFn: FnOnce(
-                            StabbyCtx,
-                            &'st_lt stabby::abi::Dyn<
-                                'static,
-                                RBox<()>,
-                                <dyn ObjectV0 as stabby::abi::vtable::CompoundVt<
-                                    'static,
-                                >>::Vt<stabby::abi::vtable::VtDrop>,
-                            >,
-                        ) -> StabbyOut,
-                >(
-                    &'st_lt self,
-                    stabby_ctx: StabbyCtx,
-                    Arc: ArcFn,
-                    Object: ObjectFn,
-                ) -> StabbyOut {
-                    self.0.match_ref_ctx(stabby_ctx, Arc, Object)
-                }
-                #[allow(non_snake_case)]
-                /// Equivalent to `match &mut self`, but allows you to pass common arguments to all closures to make the borrow checker happy.
-                pub fn match_mut_ctx<
-                    'st_lt,
-                    StabbyCtx,
-                    StabbyOut,
-                    ArcFn: FnOnce(
-                            StabbyCtx,
-                            &mut Arc<
-                                stabby::abi::Dyn<
-                                    'static,
-                                    RBox<()>,
-                                    <dyn ObjectV0 as stabby::abi::vtable::CompoundVt<
-                                        'static,
-                                    >>::Vt<stabby::abi::vtable::VtDrop>,
-                                >,
-                            >,
-                        ) -> StabbyOut,
-                    ObjectFn: FnOnce(
-                            StabbyCtx,
-                            &mut stabby::abi::Dyn<
-                                'static,
-                                RBox<()>,
-                                <dyn ObjectV0 as stabby::abi::vtable::CompoundVt<
-                                    'static,
-                                >>::Vt<stabby::abi::vtable::VtDrop>,
-                            >,
-                        ) -> StabbyOut,
-                >(
-                    &'st_lt mut self,
-                    stabby_ctx: StabbyCtx,
-                    Arc: ArcFn,
-                    Object: ObjectFn,
-                ) -> StabbyOut {
-                    self.0
-                        .match_mut_ctx(
-                            stabby_ctx,
-                            |stabby_ctx, mut a| Arc(stabby_ctx, &mut *a),
-                            |stabby_ctx, mut a| Object(stabby_ctx, &mut *a),
-                        )
+                /// Returns `None` is types do not match
+                pub fn as_u128_mut(&self) -> Option<&mut u128> {
+                    if self.id != 4 {
+                        return None;
+                    }
+                    unsafe { Some(&mut *(self.data as *mut u128)) }
                 }
             }
-            pub extern "C" fn create_v0<T: ObjectV0>(data: T) -> VariableDataV0 {
-                let _ = stabby::abi::AssertStable::<
-                    VariableDataV0,
-                >(::core::marker::PhantomData);
-                let _ = stabby::abi::AssertStable::<T>(::core::marker::PhantomData);
-                { VariableDataV0::Object(RBox::new(data)) }
-            }
-            impl<T: Debug> ObjectV0 for T {
-                extern "C" fn debug_fmt<'a>(&'a self) -> Option<FmtOutput<'a>> {
-                    Some(
-                        FmtOutput::String(
-                            ::alloc::__export::must_use({
-                                    let res = ::alloc::fmt::format(format_args!("{0:?}", self));
-                                    res
-                                })
-                                .into_boxed_str(),
-                        ),
-                    )
+            impl Into<Container> for i8 {
+                fn into(self) -> Container {
+                    let data = Box::new(self);
+                    let d = Box::into_raw(data);
+                    Container {
+                        data: d as *mut c_void,
+                        drop: general_drop::<i8>,
+                        id: 5,
+                    }
                 }
-                extern "C" fn display_fmt<'a>(&'a self) -> Option<FmtOutput<'a>> {
-                    None
+            }
+            impl Container {
+                /// Returns `None` is types do not match
+                pub fn as_i8(&self) -> Option<&i8> {
+                    if self.id != 5 {
+                        return None;
+                    }
+                    unsafe { Some(&*(self.data as *mut i8)) }
+                }
+                /// Returns `None` is types do not match
+                pub fn as_i8_mut(&self) -> Option<&mut i8> {
+                    if self.id != 5 {
+                        return None;
+                    }
+                    unsafe { Some(&mut *(self.data as *mut i8)) }
+                }
+            }
+            impl Into<Container> for i16 {
+                fn into(self) -> Container {
+                    let data = Box::new(self);
+                    let d = Box::into_raw(data);
+                    Container {
+                        data: d as *mut c_void,
+                        drop: general_drop::<i16>,
+                        id: 6,
+                    }
+                }
+            }
+            impl Container {
+                /// Returns `None` is types do not match
+                pub fn as_i16(&self) -> Option<&i16> {
+                    if self.id != 6 {
+                        return None;
+                    }
+                    unsafe { Some(&*(self.data as *mut i16)) }
+                }
+                /// Returns `None` is types do not match
+                pub fn as_i16_mut(&self) -> Option<&mut i16> {
+                    if self.id != 6 {
+                        return None;
+                    }
+                    unsafe { Some(&mut *(self.data as *mut i16)) }
+                }
+            }
+            impl Into<Container> for i32 {
+                fn into(self) -> Container {
+                    let data = Box::new(self);
+                    let d = Box::into_raw(data);
+                    Container {
+                        data: d as *mut c_void,
+                        drop: general_drop::<i32>,
+                        id: 7,
+                    }
+                }
+            }
+            impl Container {
+                /// Returns `None` is types do not match
+                pub fn as_i32(&self) -> Option<&i32> {
+                    if self.id != 7 {
+                        return None;
+                    }
+                    unsafe { Some(&*(self.data as *mut i32)) }
+                }
+                /// Returns `None` is types do not match
+                pub fn as_i32_mut(&self) -> Option<&mut i32> {
+                    if self.id != 7 {
+                        return None;
+                    }
+                    unsafe { Some(&mut *(self.data as *mut i32)) }
+                }
+            }
+            impl Into<Container> for i64 {
+                fn into(self) -> Container {
+                    let data = Box::new(self);
+                    let d = Box::into_raw(data);
+                    Container {
+                        data: d as *mut c_void,
+                        drop: general_drop::<i64>,
+                        id: 8,
+                    }
+                }
+            }
+            impl Container {
+                /// Returns `None` is types do not match
+                pub fn as_i64(&self) -> Option<&i64> {
+                    if self.id != 8 {
+                        return None;
+                    }
+                    unsafe { Some(&*(self.data as *mut i64)) }
+                }
+                /// Returns `None` is types do not match
+                pub fn as_i64_mut(&self) -> Option<&mut i64> {
+                    if self.id != 8 {
+                        return None;
+                    }
+                    unsafe { Some(&mut *(self.data as *mut i64)) }
+                }
+            }
+            impl Into<Container> for i128 {
+                fn into(self) -> Container {
+                    let data = Box::new(self);
+                    let d = Box::into_raw(data);
+                    Container {
+                        data: d as *mut c_void,
+                        drop: general_drop::<i128>,
+                        id: 9,
+                    }
+                }
+            }
+            impl Container {
+                /// Returns `None` is types do not match
+                pub fn as_i128(&self) -> Option<&i128> {
+                    if self.id != 9 {
+                        return None;
+                    }
+                    unsafe { Some(&*(self.data as *mut i128)) }
+                }
+                /// Returns `None` is types do not match
+                pub fn as_i128_mut(&self) -> Option<&mut i128> {
+                    if self.id != 9 {
+                        return None;
+                    }
+                    unsafe { Some(&mut *(self.data as *mut i128)) }
+                }
+            }
+            impl Into<Container> for f32 {
+                fn into(self) -> Container {
+                    let data = Box::new(self);
+                    let d = Box::into_raw(data);
+                    Container {
+                        data: d as *mut c_void,
+                        drop: general_drop::<f32>,
+                        id: 10,
+                    }
+                }
+            }
+            impl Container {
+                /// Returns `None` is types do not match
+                pub fn as_f32(&self) -> Option<&f32> {
+                    if self.id != 10 {
+                        return None;
+                    }
+                    unsafe { Some(&*(self.data as *mut f32)) }
+                }
+                /// Returns `None` is types do not match
+                pub fn as_f32_mut(&self) -> Option<&mut f32> {
+                    if self.id != 10 {
+                        return None;
+                    }
+                    unsafe { Some(&mut *(self.data as *mut f32)) }
+                }
+            }
+            impl Into<Container> for f64 {
+                fn into(self) -> Container {
+                    let data = Box::new(self);
+                    let d = Box::into_raw(data);
+                    Container {
+                        data: d as *mut c_void,
+                        drop: general_drop::<f64>,
+                        id: 11,
+                    }
+                }
+            }
+            impl Container {
+                /// Returns `None` is types do not match
+                pub fn as_f64(&self) -> Option<&f64> {
+                    if self.id != 11 {
+                        return None;
+                    }
+                    unsafe { Some(&*(self.data as *mut f64)) }
+                }
+                /// Returns `None` is types do not match
+                pub fn as_f64_mut(&self) -> Option<&mut f64> {
+                    if self.id != 11 {
+                        return None;
+                    }
+                    unsafe { Some(&mut *(self.data as *mut f64)) }
+                }
+            }
+            impl Into<Container> for bool {
+                fn into(self) -> Container {
+                    let data = Box::new(self);
+                    let d = Box::into_raw(data);
+                    Container {
+                        data: d as *mut c_void,
+                        drop: general_drop::<bool>,
+                        id: 12,
+                    }
+                }
+            }
+            impl Container {
+                /// Returns `None` is types do not match
+                pub fn as_bool(&self) -> Option<&bool> {
+                    if self.id != 12 {
+                        return None;
+                    }
+                    unsafe { Some(&*(self.data as *mut bool)) }
+                }
+                /// Returns `None` is types do not match
+                pub fn as_bool_mut(&self) -> Option<&mut bool> {
+                    if self.id != 12 {
+                        return None;
+                    }
+                    unsafe { Some(&mut *(self.data as *mut bool)) }
                 }
             }
         }
@@ -1890,5 +430,168 @@ pub mod commands {
             }
         }
         pub fn handle_line(s: &mut Script) {}
+    }
+}
+pub mod common {
+    use std::{
+        ffi::{CStr, CString, c_char, c_void},
+        fmt::{Debug, Display},
+        marker::PhantomData,
+    };
+    pub mod variables {
+        pub mod v0 {}
+    }
+    #[repr(C)]
+    pub struct CommonString {
+        data: *mut c_char,
+        drop: extern "C" fn(*mut c_char),
+    }
+    extern "C" fn common_string_drop(ptr: *mut c_char) {
+        unsafe {
+            drop(CString::from_raw(ptr));
+        }
+    }
+    impl Into<CommonString> for String {
+        fn into(self) -> CommonString {
+            let cstring = CString::new(self).unwrap();
+            let data = cstring.into_raw();
+            CommonString {
+                data,
+                drop: common_string_drop,
+            }
+        }
+    }
+    impl AsRef<CStr> for CommonString {
+        fn as_ref(&self) -> &CStr {
+            unsafe { CStr::from_ptr(self.data) }
+        }
+    }
+    impl Drop for CommonString {
+        fn drop(&mut self) {
+            (self.drop)(self.data)
+        }
+    }
+    #[repr(C)]
+    pub struct FFIableObject {
+        data: *mut c_void,
+        drop: extern "C" fn(*mut c_void),
+        fmt: extern "C" fn(*mut c_void) -> CommonString,
+        display: extern "C" fn(*mut c_void) -> CommonString,
+    }
+    #[repr(C)]
+    pub struct WrappedFFIableObject<'a, T> {
+        object: *mut FFIableObject,
+        r#type: PhantomData<&'a T>,
+    }
+    impl<'a, T> WrappedFFIableObject<'a, T> {
+        pub fn create_using_box<E: Debug + Display>(data: E) -> (Self, FFIableObject) {
+            let mut object = FFIableObject::create_using_box(data);
+            let data = Self::create_from_object(&mut object);
+            (data, object)
+        }
+        pub fn create_using_box_no_display<E: Debug>(data: E) -> (Self, FFIableObject) {
+            let mut object = FFIableObject::create_using_box_no_display(data);
+            let data = Self::create_from_object(&mut object);
+            (data, object)
+        }
+        pub fn create_from_object<'e>(object: &'e mut FFIableObject) -> Self {
+            Self {
+                object,
+                r#type: PhantomData,
+            }
+        }
+        fn get_ptr(&self) -> &mut FFIableObject {
+            unsafe { &mut *self.object }
+        }
+        pub unsafe fn get(&'a self) -> &'a T {
+            unsafe { self.get_ptr().get() }
+        }
+        pub unsafe fn get_mut(&'a mut self) -> &'a T {
+            unsafe { self.get_ptr().get_mut() }
+        }
+    }
+    extern "C" fn general_drop<T>(ptr: *mut c_void) {
+        unsafe {
+            drop(Box::from_raw(ptr as *mut T));
+        }
+    }
+    extern "C" fn general_display<T: Display>(ptr: *mut c_void) -> CommonString {
+        unsafe {
+            let data = &*(ptr as *mut T);
+            let fmt = ::alloc::__export::must_use({
+                ::alloc::fmt::format(format_args!("{0}", data))
+            });
+            fmt.into()
+        }
+    }
+    extern "C" fn general_debug<T: Debug>(ptr: *mut c_void) -> CommonString {
+        unsafe {
+            let data = &*(ptr as *mut T);
+            let fmt = ::alloc::__export::must_use({
+                ::alloc::fmt::format(format_args!("{0:?}", data))
+            });
+            fmt.into()
+        }
+    }
+    extern "C" fn no_display(_: *mut c_void) -> CommonString {
+        ::alloc::__export::must_use({
+                ::alloc::fmt::format(format_args!("<cannot display type>"))
+            })
+            .into()
+    }
+    impl FFIableObject {
+        pub unsafe fn get_mut<'a, T>(&'a mut self) -> &'a mut T {
+            unsafe { &mut *(self.data as *mut T) }
+        }
+        pub unsafe fn get<'a, T>(&'a self) -> &'a T {
+            unsafe { &*(self.data as *mut T) }
+        }
+        pub fn create_using_box<T: Debug + Display>(data: T) -> Self {
+            let data = Box::new(data);
+            let data = Box::into_raw(data);
+            Self {
+                data: data as *mut c_void,
+                display: general_display::<T>,
+                drop: general_drop::<T>,
+                fmt: general_debug::<T>,
+            }
+        }
+        pub fn create_using_box_no_display<T: Debug>(data: T) -> Self {
+            let data = Box::new(data);
+            let data = Box::into_raw(data);
+            Self {
+                data: data as *mut c_void,
+                display: no_display,
+                drop: general_drop::<T>,
+                fmt: general_debug::<T>,
+            }
+        }
+    }
+    impl Display for FFIableObject {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            let data = (self.display)(self.data);
+            let data = data.as_ref();
+            let data = data.to_str();
+            let Ok(data) = data else {
+                return Err(std::fmt::Error::default());
+            };
+            f.write_str(data)
+        }
+    }
+    impl Debug for FFIableObject {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            let data = (self.fmt)(self.data);
+            let data = data.as_ref();
+            let data = data.to_str();
+            let Ok(data) = data else {
+                return Err(std::fmt::Error::default());
+            };
+            f.write_str(data)
+        }
+    }
+    impl Drop for FFIableObject {
+        fn drop(&mut self) {
+            (self.drop)(self.data)
+        }
     }
 }
