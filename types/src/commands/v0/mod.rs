@@ -2,13 +2,17 @@ use lrt_macros::declare;
 
 pub mod compat;
 pub mod structs;
-pub struct ScriptV0 {}
 
-pub type Script = ScriptV0;
-
+// Declare the assembly syntax of lrtexec
+// This function will generate the bytecode and the compiler; interpreter implementations
 declare! {
+  v0;
   {
-    extend,
+    set,
+    drop,
+    regload,
+    regdrop,
+
     set,
     loadfromreg,
     regset,
@@ -17,6 +21,6 @@ declare! {
     drop,
   },
   {
-    hello
+    hi
   }
 }

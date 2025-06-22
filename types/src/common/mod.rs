@@ -4,7 +4,7 @@ use std::{
   marker::PhantomData,
 };
 
-pub mod variables;
+pub mod others;
 
 #[repr(C)]
 pub struct CommonString {
@@ -49,6 +49,7 @@ pub struct FFIableObject {
   drop: extern "C" fn(*mut c_void),
   fmt: extern "C" fn(*mut c_void) -> CommonString,
   display: extern "C" fn(*mut c_void) -> CommonString,
+  poisoned: bool,
 }
 
 #[repr(C)]
@@ -125,10 +126,65 @@ extern "C" fn no_display(_: *mut c_void) -> CommonString {
 }
 
 impl FFIableObject {
+  /// (Un)safely consumes the FFIableObject and returns the original owned `T`.
+  ///
+  /// This method transfers ownership of the raw data pointer from this FFIableObject
+  /// to the returned `T`. It sets this FFIableObject's `poisoned` flag to `true`
+  /// to prevent its `drop` implementation from freeing the memory it no longer owns.
+  ///
+  /// # Panics
+  /// Panics if this FFIableObject is poisoned.
+  ///
+  /// # Safety
+  ///
+  /// This function is unsafe because the caller must ensure that:
+  /// 1. This `FFIableObject` instance currently owns the data (i.e., `self.is_poisoned()` is `false`).
+  ///    Calling this on a poisoned object will lead to a panic.
+  /// 2. The `FFIableObject` actually contains a value of type `T`. Mis-casting `T` will lead to Undefined Behavior.
+  /// 3. This `FFIableObject` is not used further after this call, as its internal pointer
+  ///    will effectively be consumed.
+  pub unsafe fn reconstruct<T: Debug>(mut self) -> T {
+    if self.poisoned {
+      panic!("FFIableObject is poisoned");
+    }
+
+    self.poisoned = true;
+
+    *(unsafe { Box::from_raw(self.data as *mut T) })
+  }
+
+  /// Transfers the ownership to the new data and sets the `poisoned` field to `true` of this structure
+  pub unsafe fn transfer_ownership(&mut self) -> FFIableObject {
+    let data = self.data;
+    self.poisoned = true;
+
+    FFIableObject {
+      data,
+      drop: self.drop,
+      fmt: self.fmt,
+      display: self.display,
+      poisoned: false,
+    }
+  }
+
+  /// Returns whether this FFIableObject is poisoned or not. This is usually used to check whether
+  /// `reconstruct` or `transfer_ownership` has been called on this instance before calling any other methods.
+  pub fn is_poisoned(&self) -> bool {
+    self.poisoned
+  }
+
+  /// Get a mutable reference to the inner `FFIableObject`
+  ///
+  /// # Safety
+  /// Do no use this is the struct is poisoned
   pub unsafe fn get_mut<'a, T>(&'a mut self) -> &'a mut T {
     unsafe { &mut *(self.data as *mut T) }
   }
 
+  /// Get a mutable reference to the inner `FFIableObject`
+  ///
+  /// # Safety
+  /// Do no use this is the struct is poisoned
   pub unsafe fn get<'a, T>(&'a self) -> &'a T {
     unsafe { &*(self.data as *mut T) }
   }
@@ -142,6 +198,7 @@ impl FFIableObject {
       display: general_display::<T>,
       drop: general_drop::<T>,
       fmt: general_debug::<T>,
+      poisoned: false,
     }
   }
 
@@ -154,6 +211,7 @@ impl FFIableObject {
       display: no_display,
       drop: general_drop::<T>,
       fmt: general_debug::<T>,
+      poisoned: false,
     }
   }
 }
@@ -190,6 +248,8 @@ impl Debug for FFIableObject {
 
 impl Drop for FFIableObject {
   fn drop(&mut self) {
-    (self.drop)(self.data)
+    if !self.poisoned {
+      (self.drop)(self.data)
+    }
   }
 }
