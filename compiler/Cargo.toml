@@ -1,11 +1,13 @@
 [package]
-name = "compiler"
-version = "0.1.0"
+name = "lrtc"
+version = "0.0.0-replace-me"
 edition = "2024"
 
 [lib]
 name = "lrt_compiler"
 
 [dependencies]
-tokio = "1.45.1"
-zip = "4.1.0"
+tokio = "1"
+zip = "4"
+
+

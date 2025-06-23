@@ -1,0 +1,157 @@
+name: Build LRT
+
+on:
+  push:
+
+jobs:
+  getver:
+    name: Get version
+
+    runs-on: ubuntu-latest
+
+    outputs:
+      version: ${{ steps.release_data.outputs.result.version }}
+      id: ${{ steps.release.outputs.id }}
+      upload_url: ${{ steps.release.outputs.upload_url }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Get version
+        shell: pwsh
+        run: ./version.ps1
+
+      - name: Get Data
+        id: release_data
+        uses: actions/github-script@v7
+        with:
+          result-encoding: json
+          script: |
+            const { readFileSync } = require("fs");
+
+            const version = readFileSync("./.version").toString();
+            const tag = readFileSync("./.tag").toString();
+
+            return { version, tag };
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        id: release
+        with:
+          tag_name: ${{ steps.release_data.outputs.result.tag }}
+          name: LRT ${{ steps.release_data.outputs.result.tag }}
+          generate_release_notes: true
+          body_path: ./CHANGELOG.md
+          append_body: true
+          files: |
+            ./.build
+          draft: true
+
+  build-gui:
+    name: Build with GUI (Dialog)
+
+    needs: [getver]
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            arch: [x86_64, aarch64, i686]
+            suffix: "-pc-windows-msvc"
+
+          - os: windows-latest
+            arch: [x86_64, i686]
+            suffix: "-win7-windows-msvc"
+
+          - os: macos-latest
+            arch: [x86_64, aarch64]
+            suffix: "-apple-darwin"
+
+          - os: ubuntu-latest
+            arch: [x86_64, aarch64]
+            suffix: "-unknown-linux-gnu"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Get Build target
+        id: target
+        shell: pwsh
+        run: |
+          echo "target=${{ matrix.arch }}${{ matrix.suffix }}" >> $env:GITHUB_OUTPUT
+
+      - name: Prerequisites
+        shell: pwsh
+        run: |
+          rustup default nightly
+          rustup toolchain install nightly
+
+          rustup target add --toolchain nightly ${{ steps.target.outputs.target }}
+
+          "${{ needs.getver.outputs.version }}" > .version
+
+      - name: Run build script
+        shell: pwsh
+        env:
+          RELEASE: "true"
+          BUILD_TARGET: ${{ steps.target.outputs.target }}
+        run: |
+          ./build.ps1
+
+  build-nogui:
+    name: Build without GUI
+
+    needs: [getver]
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            arch: [x86_64, i686]
+            suffix: "-unknown-linux-gnu"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Load new version
+        shell: pwsh
+        run: |
+          "${{ needs.getver.outputs.version }}" > .version
+
+  handle:
+    name: Handle artifacts
+    needs: [getver, build-gui, build-nogui]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Delete Release if failure
+        if: needs.build-gui.result != 'success' || needs.build-nogui.result != 'success'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.repos.deleteRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              release_id: ${{ needs.getver.outputs.id }}
+            });
+
+      - name: Undraft release if success
+        if: needs.build-gui.result == 'success' && needs.build-nogui.result == 'success'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.repos.updateRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              release_id: ${{ needs.getver.outputs.id }},
+              draft: false
+            });

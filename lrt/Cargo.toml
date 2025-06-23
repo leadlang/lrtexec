@@ -1,9 +1,11 @@
 [package]
 name = "lrt"
-version = "0.1.0"
+version = "0.0.0-replace-me"
 edition = "2024"
 
 [dependencies]
 
 [features]
 no_gui = []
+
+

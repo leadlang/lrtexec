@@ -30,7 +30,7 @@ switch ($special) {
       cross +nightly $($buildType) $($typeof) $($targetFlag) $($buildTarget) --features no_gui
     }
     else {
-      cargo build $($buildType) $($typeof) $($targetFlag) $($buildTarget) --features no_gui
+      rustup run nightly cargo build $($buildType) $($typeof) $($targetFlag) $($buildTarget) --features no_gui
     }
   }
   default {
@@ -39,7 +39,7 @@ switch ($special) {
       cross +nightly $($buildType) $($typeof) $($targetFlag) $($buildTarget)
     }
     else {
-      cargo build $($buildType) $($typeof) $($targetFlag) $($buildTarget)
+      rustup run nightly cargo build $($buildType) $($typeof) $($targetFlag) $($buildTarget)
     }
   }
 }

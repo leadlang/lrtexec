@@ -107,6 +107,7 @@ implement! {
   10 => f32,
   11 => f64,
   12 => bool
+  // 13 => FFISafeString
 }
 
 impl Into<ContainerV0> for String {

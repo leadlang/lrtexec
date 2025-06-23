@@ -40,7 +40,12 @@ if ($env:GUI -ne "false") {
 $buildTarget = $env:BUILD_TARGET
 $buildTarget = if ($buildTarget) { "/$($buildTarget)" } else {}
 
-Copy-Item -Path "./compiler/target$($buildTarget)/$($buildType)/*" -Filter compiler* -Destination "./dist/" -Recurse
+# Copy the lrtcompiler
+Copy-Item -Path "./compiler/target$($buildTarget)/$($buildType)/*" -Filter lrtc* -Destination "./dist/" -Recurse
+
+# Copy the lrt
+Copy-Item -Path "./lrt/target$($buildTarget)/$($buildType)/*" -Filter lrt* -Destination "./dist/" -Recurse
+
 if ($env:GUI -ne "false") {
   Copy-Item -Path "./dialog/target$($buildTarget)/$($buildType)/*" -Filter intl_dialog* -Destination "./dist/dialog/" -Recurse
   Copy-Item -Path "./dialog/target$($buildTarget)/$($buildType)/*" -Filter libintl_dialog* -Destination "./dist/dialog/" -Recurse

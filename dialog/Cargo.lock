@@ -103,7 +103,7 @@ dependencies = [
 
 [[package]]
 name = "intl_dialog"
-version = "0.0.1"
+version = "0.0.0-replace-me"
 dependencies = [
  "native-dialog",
 ]

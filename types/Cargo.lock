@@ -10,7 +10,7 @@ checksum = "1171693293099992e19cddea4e8b849964e9846f4acee11b3948bcc337be8776"
 
 [[package]]
 name = "lrt_macros"
-version = "0.1.0"
+version = "0.0.0-replace-me"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -19,7 +19,7 @@ dependencies = [
 
 [[package]]
 name = "lrtexec_lib"
-version = "0.1.0"
+version = "0.0.0-replace-me"
 dependencies = [
  "libc",
  "lrt_macros",
