@@ -9,7 +9,7 @@ jobs:
   getver:
     name: Get version
 
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     outputs:
       version: ${{ steps.release_data.outputs.result.version }}
@@ -60,20 +60,42 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          # windows-latest + -pc-windows-msvc
           - os: windows-latest
-            arch: [x86_64, aarch64, i686]
+            arch: x86_64
+            suffix: "-pc-windows-msvc"
+          - os: windows-latest
+            arch: aarch64
+            suffix: "-pc-windows-msvc"
+          - os: windows-latest
+            arch: i686
             suffix: "-pc-windows-msvc"
 
+          # windows-latest + -win7-windows-msvc
           - os: windows-latest
-            arch: [x86_64, i686]
+            arch: x86_64
+            suffix: "-win7-windows-msvc"
+          - os: windows-latest
+            arch: i686
             suffix: "-win7-windows-msvc"
 
+          # macos-latest
           - os: macos-latest
-            arch: [x86_64, aarch64]
+            arch: x86_64
             suffix: "-apple-darwin"
 
-          - os: ubuntu-latest
-            arch: [x86_64, aarch64]
+          - os: macos-latest
+            arch: aarch64
+            suffix: "-apple-darwin"
+
+          # ubuntu-22.04 (x86_64)
+          - os: ubuntu-22.04
+            arch: x86_64
+            suffix: "-unknown-linux-gnu"
+
+          # ubuntu-22.04-arm (aarch64)
+          - os: ubuntu-22.04-arm
+            arch: aarch64
             suffix: "-unknown-linux-gnu"
 
     steps:
@@ -114,8 +136,16 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: ubuntu-latest
-            arch: [x86_64, i686]
+          - os: ubuntu-22.04
+            arch: x86_64
+            suffix: "-unknown-linux-gnu"
+
+          - os: ubuntu-22.04
+            arch: i686
+            suffix: "-unknown-linux-gnu"
+
+          - os: ubuntu-22.04-arm
+            arch: aarch64
             suffix: "-unknown-linux-gnu"
 
     steps:
@@ -130,7 +160,7 @@ jobs:
   handle:
     name: Handle artifacts
     needs: [getver, build-gui, build-nogui]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - name: Checkout
         uses: actions/checkout@v4
