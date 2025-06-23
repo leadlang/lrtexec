@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-22.04
 
     outputs:
-      version: ${{ steps.release_data.outputs.result.version }}
+      version: ${{ steps.release_data.outputs.result }}
       id: ${{ steps.release.outputs.id }}
       upload_url: ${{ steps.release.outputs.upload_url }}
 
@@ -24,25 +24,36 @@ jobs:
         shell: pwsh
         run: ./version.ps1
 
-      - name: Get Data
+      - name: Get Version
         id: release_data
         uses: actions/github-script@v7
         with:
-          result-encoding: json
+          result-encoding: string
           script: |
             const { readFileSync } = require("fs");
 
             const version = readFileSync("./.version").toString();
+
+            return version;
+
+      - name: Get Tag
+        id: tag
+        uses: actions/github-script@v7
+        with:
+          result-encoding: string
+          script: |
+            const { readFileSync } = require("fs");
+
             const tag = readFileSync("./.tag").toString();
 
-            return { version, tag };
+            return tag;
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         id: release
         with:
-          tag_name: ${{ steps.release_data.outputs.result.tag }}
-          name: LRT ${{ steps.release_data.outputs.result.tag }}
+          tag_name: ${{ steps.tag.outputs.result }}
+          name: LRT ${{ steps.tag.outputs.result }}
           generate_release_notes: true
           body_path: ./RELEASE.md
           append_body: true
