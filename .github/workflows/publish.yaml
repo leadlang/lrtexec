@@ -82,14 +82,6 @@ jobs:
             arch: i686
             suffix: "-pc-windows-msvc"
 
-          # windows-latest + -win7-windows-msvc
-          - os: windows-latest
-            arch: x86_64
-            suffix: "-win7-windows-msvc"
-          - os: windows-latest
-            arch: i686
-            suffix: "-win7-windows-msvc"
-
           # macos-latest
           - os: macos-latest
             arch: x86_64
@@ -137,6 +129,14 @@ jobs:
         run: |
           ./build.ps1
 
+      - name: Upload binary
+        uses: AButler/upload-release-assets@v3.0
+        with:
+          files: |
+            ${{ steps.target.outputs.target }}.zip
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          release-id: ${{ needs.getver.outputs.id }}
+
   build-nogui:
     name: Build without GUI
 
@@ -147,6 +147,15 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          # windows-latest + -win7-windows-msvc
+          - os: windows-latest
+            arch: x86_64
+            suffix: "-win7-windows-msvc"
+
+          - os: windows-latest
+            arch: i686
+            suffix: "-win7-windows-msvc"
+
           - os: ubuntu-22.04
             arch: x86_64
             suffix: "-unknown-linux-gnu"
@@ -172,6 +181,9 @@ jobs:
     name: Handle artifacts
     needs: [getver, build-gui, build-nogui]
     runs-on: ubuntu-22.04
+
+    if: always()
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4

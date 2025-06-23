@@ -60,4 +60,4 @@ New-Item -Path packages -ItemType Directory > $null
 
 Set-Location ..
 
-Compress-Archive -Path dist/* -DestinationPath $($env:BUILD_TARGET).zip
+Compress-Archive -Path dist/* -DestinationPath "$($env:BUILD_TARGET)$($env::BUILD_SUFFIX).zip"
