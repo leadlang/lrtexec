@@ -3,6 +3,8 @@ name: Build LRT
 on:
   push:
 
+permissions: write-all
+
 jobs:
   getver:
     name: Get version
@@ -42,7 +44,7 @@ jobs:
           tag_name: ${{ steps.release_data.outputs.result.tag }}
           name: LRT ${{ steps.release_data.outputs.result.tag }}
           generate_release_notes: true
-          body_path: ./CHANGELOG.md
+          body_path: ./RELEASE.md
           append_body: true
           files: |
             ./.build
