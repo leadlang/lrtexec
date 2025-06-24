@@ -121,13 +121,13 @@ jobs:
 
           "${{ needs.getver.outputs.version }}" > .version
 
-      - name: Run build script
+      - name: Run package script
         shell: pwsh
         env:
           RELEASE: "true"
           BUILD_TARGET: ${{ steps.target.outputs.target }}
         run: |
-          ./build.ps1
+          ./package.ps1
 
       - name: Upload binary
         uses: AButler/upload-release-assets@v3.0
