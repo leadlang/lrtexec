@@ -1,13 +1,11 @@
 [package]
-name = "lrtc"
+name = "smelt"
 version = "0.0.0-replace-me"
 edition = "2024"
-
-[lib]
-name = "lrt_compiler"
 
 [dependencies]
 tokio = "1"
 zip = "4"
-
-
+terminal = { path = "../terminal" }
+pastey = "0.1.0"
+cursive = "0.21.1"

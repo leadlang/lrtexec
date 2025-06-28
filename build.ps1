@@ -21,10 +21,10 @@ Write-Host "Building lrt ($($buildType))"
 ../compiler $buildType --bins $($nogui)
 ""
 
-Set-Location ../compiler
+Set-Location ../smelt
 
-# Build compiler
-Write-Host "Building compiler ($($buildType))"
+# Build smelt
+Write-Host "Building smelt ($($buildType))"
 ../compiler $buildType --bins
 ""
 
@@ -40,8 +40,8 @@ if ($env:GUI -ne "false") {
 $buildTarget = $env:BUILD_TARGET
 $buildTarget = if ($buildTarget) { "/$($buildTarget)" } else {}
 
-# Copy the lrtcompiler
-Copy-Item -Path "./compiler/target$($buildTarget)/$($buildType)/*" -Filter lrtc* -Destination "./dist/" -Recurse
+# Copy smelt.exe
+Copy-Item -Path "./smelt/target$($buildTarget)/$($buildType)/*" -Filter lrtc* -Destination "./dist/" -Recurse
 
 # Copy the lrt
 Copy-Item -Path "./lrt/target$($buildTarget)/$($buildType)/*" -Filter lrt* -Destination "./dist/" -Recurse
