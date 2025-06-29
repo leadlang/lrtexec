@@ -16,7 +16,6 @@ declare! {
     set,
     loadfromreg,
     regset,
-    regload,
     dlopen,
     drop,
   },

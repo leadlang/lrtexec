@@ -134,7 +134,10 @@ flagmanager! {
   }
 }
 
+mod config;
+
 mod new;
+mod build;
 
 fn main() {
   init_colors();
@@ -175,6 +178,9 @@ fn main() {
       };
 
       new::create(dir);
+    }
+    "build" => {
+      build::build(man.release, man.host, man.out);
     }
     e => {
       // Invalid comment error, recommend smelt --help
