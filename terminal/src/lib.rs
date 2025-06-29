@@ -173,10 +173,10 @@ macro_rules! forge_help {
 
                 /* optional per-command flags */
                 $(
-                    writeln!(s, "    {}", "Options:".dimmed()).unwrap();
+                    writeln!(s, "   {}", "Options:".dimmed()).unwrap();
                     $(
                         /* flag line */
-                        writeln!(s, "      {:<22} {}", $cflag.yellow(), $cfdesc.dimmed()).unwrap();
+                        writeln!(s, "    {:<23} {}", $cflag.yellow(), $cfdesc.dimmed()).unwrap();
                     )*
                     writeln!(s).unwrap();
                 )?

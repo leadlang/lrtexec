@@ -41,7 +41,7 @@ $buildTarget = $env:BUILD_TARGET
 $buildTarget = if ($buildTarget) { "/$($buildTarget)" } else {}
 
 # Copy smelt.exe
-Copy-Item -Path "./smelt/target$($buildTarget)/$($buildType)/*" -Filter lrtc* -Destination "./dist/" -Recurse
+Copy-Item -Path "./smelt/target$($buildTarget)/$($buildType)/*" -Filter smelt* -Destination "./dist/" -Recurse
 
 # Copy the lrt
 Copy-Item -Path "./lrt/target$($buildTarget)/$($buildType)/*" -Filter lrt* -Destination "./dist/" -Recurse

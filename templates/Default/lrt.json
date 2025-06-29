@@ -1,0 +1,13 @@
+{
+  "name": "My Cool Project",
+  "version": "0.0.0",
+  "description": "Hello World",
+  "authors": ["You"],
+  "dependencies": [],
+  "platforms": "auto",
+  "platform": {
+    "x86_64-pc-windows-msvc": {
+      "dependencies": []
+    }
+  }
+}

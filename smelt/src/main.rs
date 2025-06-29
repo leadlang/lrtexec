@@ -34,7 +34,7 @@ macro_rules! flagmanager {
               $(stringify!($flag) => { man.$flag = true })*
               $(stringify!($data) => {
                 let Some(x) = data_iter.next() else {
-                  println!("{} missing value for flag '--{}'", "error:".red(), stringify!($data).yellow().bold());
+                  println!("{} missing value for flag '--{}'", "error:".red().bold(), stringify!($data).yellow().bold());
                   println!("\n{} run '{}' for help menu", "Tip:".blue().bold(), "smelt --help".yellow().bold());
                   std::process::exit(1);
                 };
@@ -42,7 +42,7 @@ macro_rules! flagmanager {
                 man.$data = Some(x);
               })*
               flag => {
-                println!("{} unexpected flag '--{}' found", "error:".red(), flag.yellow().bold());
+                println!("{} unexpected flag '--{}' found", "error:".red().bold(), flag.yellow().bold());
                 println!("\n{} run '{}' for help menu", "Tip:".blue().bold(), "smelt --help".yellow().bold());
               }
             }
@@ -108,9 +108,9 @@ forge_help! {
         ],
         note: "`smelt run --out dist` is default"
       },
-      "forge" => {
-        desc: "Runs a TUI for full project management",
-        usage: "smelt forge",
+      "docs" => {
+        desc: "Runs a TUI that shows library docs",
+        usage: "smelt docs",
         note: "This command utilizes a full TUI with mouse support"
       }
     }
@@ -133,6 +133,8 @@ flagmanager! {
     --out
   }
 }
+
+mod new;
 
 fn main() {
   init_colors();
@@ -162,6 +164,24 @@ fn main() {
   if man.args.len() == 0 || man.args[0] == "help" {
     show_help();
     process::exit(0);
+  }
+
+  match man.args[0] {
+    "new" => {
+      let Some(dir) = man.args.get(1) else {
+        println!("{} missing argument for command '{}'", "error:".red().bold(), "new".yellow().bold());
+        println!("\n{} run '{}' for help menu", "Tip:".blue().bold(), "smelt --help".yellow().bold());
+        process::exit(1);
+      };
+
+      new::create(dir);
+    }
+    e => {
+      // Invalid comment error, recommend smelt --help
+      println!("{} unexpected command '{}' found", "error:".red().bold(), e.yellow().bold());
+      println!("\n{} run '{}' for help menu", "Tip:".blue().bold(), "smelt --help".yellow().bold());
+      process::exit(1);
+    }
   }
 }
 
