@@ -1,0 +1,1 @@
+dotnet build /p:Platform=$env:ARCH -c Release

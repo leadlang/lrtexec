@@ -1,0 +1,10 @@
+<Project Sdk="WixToolset.Sdk/5.0.2">
+  <PropertyGroup>
+    <OutputName>installer</OutputName>
+    <OutputExtension>.msi</OutputExtension>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <WixSource Include="Package.wxs" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://wixtoolset.org/schemas/v4/wxs wix.xsd"
+>
+  <!--
+    Define a preprocessor variable 'Platform' which will be set during compilation.
+    Example: candle.exe -dPlatform=x64 YourInstaller.wxs
+    This allows the installer to be built specifically for x86, x64, or Arm64.
+  -->
+  <?if $(var.Platform) = "x64"?>
+  <?define ProductPlatform = "x64"?>
+  <?define IsWin64Component = "yes"?>
+  <?elseif $(var.Platform) = "Arm64"?>
+  <?define ProductPlatform = "Arm64"?>
+  <?define IsWin64Component = "yes"?>
+  <?else?>
+  <?define ProductPlatform = "x86"?>
+  <?define IsWin64Component = "no"?>
+  <?endif?>
+
+  <Package
+    Name="Lead Executable Runtime"
+    Manufacturer="The Lead Programming Language"
+    Version="0.0.1.0"
+    UpgradeCode="6f0e67d8-51fb-4232-9506-443cc9c9b5d9"
+    Codepage="1252"
+    InstallerVersion="500"
+    Compressed="yes"
+    Scope="perMachine"
+  >
+    <StandardDirectory Id="ProgramFiles6432Folder">
+      <Directory
+        Id="INSTALLFOLDER"
+        Name="Lead Runtime Exec"
+      />
+    </StandardDirectory>
+
+    <MediaTemplate EmbedCab="yes" />
+
+    <Feature Id="ProductFeature" Title="Installing" Level="1">
+      <ComponentGroupRef Id="Deploy" />
+    </Feature>
+  </Package>
+
+  <Fragment>
+    <ComponentGroup Id="Deploy">
+      <!-- Deploy Files -->
+      <Files Include="$(var.ProjectDir)\build\**\*" Directory="INSTALLFOLDER">
+        <Exclude Files="$(var.ProjectDir)\build\lrt.exe" />
+      </Files>
+
+      <!-- File Associations -->
+      <Component Id="FileAssociation" Guid="5da93a3f-996d-4d12-baac-b1a62b6b8d89">
+        <File Id="LRTFILE" Name="lrt.exe" Source="$(var.ProjectDir)\build\lrt.exe" />
+        <File
+          Id="LRTLOGO" Name="lrt.ico" Source="$(var.ProjectDir)\lrtexec.ico" />
+        <File Id="LRTINST" Name="lrtinst.ico" Source="$(var.ProjectDir)\lrtinst.ico"
+        />
+
+        <ProgId
+          Id="Lrt.Executable" Description="LRT Executable File"
+          Icon="LRTLOGO">
+          <Extension Id="lrtexec" ContentType="application/lrtexec">
+            <Verb Id="open" Command="open" TargetFile="LRTFILE"
+              Argument="&quot;%1&quot;" />
+          </Extension>
+        </ProgId>
+
+        <RegistryKey
+          Root="HKCR" Key="LRT.lrtexec\shell\open\command">
+          <RegistryValue Type="string" Value="[INSTALLFOLDER]lrt.exe &quot;%1&quot;" />
+        </RegistryKey>
+
+        <ProgId
+          Id="Lrt.Installer" Description="LRT Installer File"
+          Icon="LRTINST">
+          <Extension Id="lrtinst" ContentType="application/lrtinst">
+            <Verb Id="open" Command="open" TargetFile="LRTINST"
+              Argument="&quot;%1&quot;" />
+          </Extension>
+        </ProgId>
+
+        <RegistryKey
+          Root="HKCR" Key="LRT.lrtinst\shell\open\command">
+          <RegistryValue Type="string" Value="[INSTALLFOLDER]lrt.exe &quot;%1&quot;" />
+        </RegistryKey>
+      </Component>
+
+      <!-- Set Environment Variables -->
+      <Component Id="Env" Guid="50ce38f5-ca52-4001-8919-0512565fcb59">
+        <Environment
+          Id="PATH"
+          Name="PATH"
+          Value="[INSTALLFOLDER]"
+          Permanent="no"
+          Part="last"
+          Action="set"
+          System="yes" />
+      </Component>
+    </ComponentGroup>
+  </Fragment>
+</Wix>
