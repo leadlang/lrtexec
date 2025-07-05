@@ -157,33 +157,18 @@ jobs:
           - os: windows-latest
             arch: x86_64
             suffix: "-win7-windows-msvc"
-            extra: ""
             cross: "false"
 
           - os: windows-latest
             arch: i686
             suffix: "-win7-windows-msvc"
-            extra: ""
             cross: "false"
 
           # Linux Builds
           - os: ubuntu-22.04
-            arch: x86_64
-            suffix: "-unknown-linux-gnu"
-            extra: "-nogui"
-            cross: "false"
-
-          - os: ubuntu-22.04
             arch: i686
             suffix: "-unknown-linux-gnu"
-            extra: "-nogui"
-            cross: "false"
-
-          - os: ubuntu-22.04-arm
-            arch: aarch64
-            suffix: "-unknown-linux-gnu"
-            extra: "-nogui"
-            cross: "false"
+            cross: "true"
 
     steps:
       - name: Checkout
@@ -200,6 +185,7 @@ jobs:
         run: |
           rustup default nightly
           rustup toolchain install nightly
+          rustup component add rust-src
 
           rustup target add --toolchain nightly ${{ steps.target.outputs.target }}
 
@@ -219,14 +205,14 @@ jobs:
         uses: AButler/upload-release-assets@v3.0
         with:
           files: |
-            ${{ steps.target.outputs.target }}${{ matrix.extra }}.zip
+            ${{ steps.target.outputs.target }}.zip
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           release-id: ${{ needs.getver.outputs.id }}
 
       - name: Upload as Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ steps.target.outputs.target }}${{ matrix.extra }}.zip
+          name: ${{ steps.target.outputs.target }}.zip
           path: ${{ steps.target.outputs.target }}.zip
 
   win-installers:
