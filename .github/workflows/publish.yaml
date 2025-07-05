@@ -154,15 +154,15 @@ jobs:
       matrix:
         include:
           # windows-latest + -win7-windows-msvc
-          - os: windows-latest
-            arch: x86_64
-            suffix: "-win7-windows-msvc"
-            cross: "false"
+          # - os: windows-latest
+          #   arch: x86_64
+          #   suffix: "-win7-windows-msvc"
+          #   cross: "false"
 
-          - os: windows-latest
-            arch: i686
-            suffix: "-win7-windows-msvc"
-            cross: "false"
+          # - os: windows-latest
+          #   arch: i686
+          #   suffix: "-win7-windows-msvc"
+          #   cross: "false"
 
           # Linux Builds
           - os: ubuntu-22.04
@@ -190,8 +190,11 @@ jobs:
           "${{ needs.getver.outputs.version }}" > .version
 
       - name: Install cross
-        if: ${{ matrix.cross }} == 'true'
-        run: cargo install cross --git https://github.com/cross-rs/cross
+        if: matrix.cross == 'true'
+        run: |
+          sudo apt-get update
+          sudo apt-get -y install podman
+          cargo install cross --git https://github.com/cross-rs/cross
 
       - name: Run package script
         shell: pwsh
@@ -236,11 +239,11 @@ jobs:
           - target: aarch64-pc-windows-msvc
             arch: Arm64
 
-          - target: x86_64-win7-windows-msvc
-            arch: X64
+          # - target: x86_64-win7-windows-msvc
+          #   arch: X64
 
-          - target: i686-win7-windows-msvc
-            arch: X86
+          # - target: i686-win7-windows-msvc
+          #   arch: X86
 
     steps:
       - name: Checkout
