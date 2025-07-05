@@ -222,7 +222,7 @@ jobs:
               repo: context.repo.repo,
             });
 
-            console.log(release.assets);
+            console.log(release, release.assets);
 
             const url = release.assets
               .find((asset) => asset.name == `${process.env.TARGET}.zip`)
