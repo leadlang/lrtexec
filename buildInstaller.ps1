@@ -1,8 +1,3 @@
-$token = $env:TOKEN
-$token = ConvertTo-SecureString $token -AsPlainText -Force
-
-Invoke-WebRequest -Uri "$env:URL" -OutFile "$env:TARGET.zip" -Authentication Bearer -Token $token
-
 Expand-Archive -Path "$env:TARGET.zip" -DestinationPath .\installers\windows\build\ -Force -Verbose
 
 Set-Location .\installers\windows

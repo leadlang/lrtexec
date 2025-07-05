@@ -137,6 +137,12 @@ jobs:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           release-id: ${{ needs.getver.outputs.id }}
 
+      - name: Upload as Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.target.outputs.target }}.zip
+          path: ${{ steps.target.outputs.target }}.zip
+
   build-nogui:
     name: Build without GUI
 
@@ -205,34 +211,14 @@ jobs:
         with:
           dotnet-version: "9.x"
 
-      - name: Get Binary Path
-        id: bin
-        uses: actions/github-script@v7
-        env:
-          RELEASE_ID: ${{ needs.getver.outputs.id }}
-          TARGET: ${{ matrix.target }}
+      - name: Download Artifact
+        uses: actions/download-artifact@v4
         with:
-          result-encoding: string
-          script: |
-            const release = await github.rest.repos.getRelease({
-              release_id: Number(process.env.RELEASE_ID),
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-            });
-
-            const url = release.data.assets
-              .find((asset) => asset.name == `${process.env.TARGET}.zip`)
-              .browser_download_url;
-
-            console.log(`Found url: ${url}`);
-
-            return url;
+          name: ${{ matrix.target }}.zip
 
       - name: Build installer
         shell: pwsh
         env:
-          TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          URL: ${{ steps.bin.outputs.result }}
           ARCH: ${{ matrix.arch }}
           TARGET: ${{ matrix.target }}
         run: ./buildInstaller.ps1
