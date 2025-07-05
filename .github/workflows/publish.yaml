@@ -157,31 +157,77 @@ jobs:
           - os: windows-latest
             arch: x86_64
             suffix: "-win7-windows-msvc"
+            extra: ""
+            cross: "false"
 
           - os: windows-latest
             arch: i686
             suffix: "-win7-windows-msvc"
+            extra: ""
+            cross: "false"
 
+          # Linux Builds
           - os: ubuntu-22.04
             arch: x86_64
             suffix: "-unknown-linux-gnu"
+            extra: "-nogui"
+            cross: "false"
 
           - os: ubuntu-22.04
             arch: i686
             suffix: "-unknown-linux-gnu"
+            extra: "-nogui"
+            cross: "false"
 
           - os: ubuntu-22.04-arm
             arch: aarch64
             suffix: "-unknown-linux-gnu"
+            extra: "-nogui"
+            cross: "false"
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Load new version
+      - name: Get Build target
+        id: target
         shell: pwsh
         run: |
+          echo "target=${{ matrix.arch }}${{ matrix.suffix }}" >> $env:GITHUB_OUTPUT
+
+      - name: Prerequisites
+        shell: pwsh
+        run: |
+          rustup default nightly
+          rustup toolchain install nightly
+
+          rustup target add --toolchain nightly ${{ steps.target.outputs.target }}
+
           "${{ needs.getver.outputs.version }}" > .version
+
+      - name: Run package script
+        shell: pwsh
+        env:
+          RELEASE: "true"
+          BUILD_TARGET: ${{ steps.target.outputs.target }}
+          GUI: "false"
+          USE_CROSS: ${{ matrix.cross }}
+        run: |
+          ./package.ps1
+
+      - name: Upload binary
+        uses: AButler/upload-release-assets@v3.0
+        with:
+          files: |
+            ${{ steps.target.outputs.target }}${{ matrix.extra }}.zip
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          release-id: ${{ needs.getver.outputs.id }}
+
+      - name: Upload as Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.target.outputs.target }}${{ matrix.extra }}.zip
+          path: ${{ steps.target.outputs.target }}.zip
 
   win-installers:
     name: Build Windows Installers
@@ -201,6 +247,12 @@ jobs:
 
           - target: aarch64-pc-windows-msvc
             arch: Arm64
+
+          - target: x86_64-win7-windows-msvc
+            arch: X64
+
+          - target: i686-win7-windows-msvc
+            arch: X86
 
     steps:
       - name: Checkout
