@@ -76,10 +76,10 @@ jobs:
             arch: x86_64
             suffix: "-pc-windows-msvc"
           - os: windows-latest
-            arch: aarch64
+            arch: i686
             suffix: "-pc-windows-msvc"
           - os: windows-latest
-            arch: i686
+            arch: aarch64
             suffix: "-pc-windows-msvc"
 
           # macos-latest
@@ -177,9 +177,71 @@ jobs:
         run: |
           "${{ needs.getver.outputs.version }}" > .version
 
+  win-installers:
+    name: Build Windows Installers
+    runs-on: windows-latest
+
+    # Needs all the targets to be built
+    needs: [getver, build-gui, build-nogui]
+
+    strategy:
+      matrix:
+        include:
+          - target: x86_64-pc-windows-msvc
+            arch: X64
+
+          - target: i686-pc-windows-msvc
+            arch: X86
+
+          - target: aarch64-pc-windows-msvc
+            arch: Arm64
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Get Binary Path
+        id: bin
+        uses: actions/github-script@v7
+        env:
+          RELEASE_ID: ${{ needs.getver.outputs.id }}
+          TARGET: ${{ matrix.target }}
+        with:
+          result-encoding: string
+          script: |
+            const release = await github.rest.repos.getRelease({
+              release_id: Number(process.env.RELEASE_ID),
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+            });
+
+            const url = release.assets
+              .find((asset) => asset.name == `${process.env.RELEASE_ID}.zip`)
+              .browser_download_url;
+
+            console.log(`Found url: ${url}`);
+
+            return url;
+
+      - name: Build installer
+        shell: pwsh
+        env:
+          URL: ${{ steps.bin.outputs.result }}
+          ARCH: ${{ matrix.arch }}
+          TARGET: ${{ matrix.target }}
+        run: ./buildInstaller.ps1
+
+      - name: Upload binary
+        uses: AButler/upload-release-assets@v3.0
+        with:
+          files: |
+            lrtexec_${{ matrix.target }}_installer.msi
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          release-id: ${{ needs.getver.outputs.id }}
+
   handle:
     name: Handle artifacts
-    needs: [getver, build-gui, build-nogui]
+    needs: [getver, build-gui, build-nogui, win-installers]
     runs-on: ubuntu-22.04
 
     if: always()

@@ -21,7 +21,7 @@ pub fn build(_release: bool, _host: bool, out: Option<&str>) {
     .build()
     .expect("Runtime");
 
-  let pkg = runtime.block_on(async move {
+  let _pkg = runtime.block_on(async move {
     let mut set = JoinSet::new();
 
     let progress = MultiProgress::new();
