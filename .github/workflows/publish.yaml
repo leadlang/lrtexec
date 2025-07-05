@@ -200,6 +200,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Setup .NET 9.x
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "9.x"
+
       - name: Get Binary Path
         id: bin
         uses: actions/github-script@v7
