@@ -249,14 +249,14 @@ jobs:
     needs: [getver, build-gui, build-nogui, win-installers]
     runs-on: ubuntu-22.04
 
-    if: always()
+    if: always() && needs.getver.result == 'success'
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: Delete Release if failure
-        if: needs.build-gui.result != 'success' || needs.build-nogui.result != 'success'
+        if: needs.build-gui.result != 'success' || needs.build-nogui.result != 'success' || needs.win-installers.result != 'success'
         uses: actions/github-script@v7
         with:
           script: |
@@ -267,7 +267,7 @@ jobs:
             });
 
       - name: Undraft release if success
-        if: needs.build-gui.result == 'success' && needs.build-nogui.result == 'success'
+        if: needs.build-gui.result == 'success' && needs.build-nogui.result == 'success' && needs.win-installers.result == 'success'
         uses: actions/github-script@v7
         with:
           script: |
