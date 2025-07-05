@@ -187,8 +187,6 @@ jobs:
           rustup toolchain install nightly
           rustup component add rust-src
 
-          rustup target add --toolchain nightly ${{ steps.target.outputs.target }}
-
           "${{ needs.getver.outputs.version }}" > .version
 
       - name: Run package script
