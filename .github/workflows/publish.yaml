@@ -182,9 +182,7 @@ jobs:
     runs-on: windows-latest
 
     # Needs all the targets to be built
-    needs: [getver]
-
-    #, build-gui, build-nogui
+    needs: [getver, build-gui, build-nogui]
 
     strategy:
       matrix:
@@ -222,9 +220,7 @@ jobs:
               repo: context.repo.repo,
             });
 
-            console.log(release, release.assets);
-
-            const url = release.assets
+            const url = release.data.assets
               .find((asset) => asset.name == `${process.env.TARGET}.zip`)
               .browser_download_url;
 
