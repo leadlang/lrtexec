@@ -189,6 +189,10 @@ jobs:
 
           "${{ needs.getver.outputs.version }}" > .version
 
+      - name: Install cross
+        if: ${{ matrix.cross }} == 'true'
+        run: cargo install cross --git https://github.com/cross-rs/cross
+
       - name: Run package script
         shell: pwsh
         env:
