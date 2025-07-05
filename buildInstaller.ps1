@@ -1,4 +1,4 @@
-Invoke-WebRequest -Uri "$env:URL" -OutFile "$env:TARGET.zip"
+Invoke-WebRequest -Uri "$env:URL" -OutFile "$env:TARGET.zip" -Authentication Bearer -Token $env:TOKEN
 
 Expand-Archive -Path "$env:TARGET.zip" -DestinationPath .\installers\windows\build\ -Force -Verbose
 

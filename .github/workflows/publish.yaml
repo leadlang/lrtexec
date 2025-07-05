@@ -72,13 +72,13 @@ jobs:
       matrix:
         include:
           # windows-latest + -pc-windows-msvc
-          - os: windows-11-arm
+          - os: windows-latest
             arch: x86_64
             suffix: "-pc-windows-msvc"
-          - os: windows-11-arm
+          - os: windows-latest
             arch: i686
             suffix: "-pc-windows-msvc"
-          - os: windows-11-arm
+          - os: windows-latest
             arch: aarch64
             suffix: "-pc-windows-msvc"
 
@@ -179,7 +179,7 @@ jobs:
 
   win-installers:
     name: Build Windows Installers
-    runs-on: windows-11-arm
+    runs-on: windows-latest
 
     # Needs all the targets to be built
     needs: [getver, build-gui, build-nogui]
@@ -231,6 +231,7 @@ jobs:
       - name: Build installer
         shell: pwsh
         env:
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
           URL: ${{ steps.bin.outputs.result }}
           ARCH: ${{ matrix.arch }}
           TARGET: ${{ matrix.target }}
