@@ -221,7 +221,7 @@ jobs:
             });
 
             const url = release.assets
-              .find((asset) => asset.name == `${process.env.RELEASE_ID}.zip`)
+              .find((asset) => asset.name == `${process.env.TARGET}.zip`)
               .browser_download_url;
 
             console.log(`Found url: ${url}`);
