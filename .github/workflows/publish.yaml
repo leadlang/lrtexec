@@ -72,13 +72,13 @@ jobs:
       matrix:
         include:
           # windows-latest + -pc-windows-msvc
-          - os: windows-latest
+          - os: windows-11-arm
             arch: x86_64
             suffix: "-pc-windows-msvc"
-          - os: windows-latest
+          - os: windows-11-arm
             arch: i686
             suffix: "-pc-windows-msvc"
-          - os: windows-latest
+          - os: windows-11-arm
             arch: aarch64
             suffix: "-pc-windows-msvc"
 
@@ -179,7 +179,7 @@ jobs:
 
   win-installers:
     name: Build Windows Installers
-    runs-on: windows-latest
+    runs-on: windows-11-arm
 
     # Needs all the targets to be built
     needs: [getver, build-gui, build-nogui]
