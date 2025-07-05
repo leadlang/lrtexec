@@ -182,7 +182,9 @@ jobs:
     runs-on: windows-latest
 
     # Needs all the targets to be built
-    # needs: [getver, build-gui, build-nogui]
+    needs: [getver]
+
+    #, build-gui, build-nogui
 
     strategy:
       matrix:
