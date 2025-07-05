@@ -30,7 +30,8 @@ switch ($special) {
       cross +nightly $($buildType) $($typeof) $($targetFlag) $($buildTarget) --features no_gui
     }
     else {
-      rustup run nightly cargo build -Z build-std $($buildType) $($typeof) $($targetFlag) $($buildTarget) --features no_gui
+      "Using -Zbuild-std"
+      rustup run nightly cargo build -Zbuild-std $($buildType) $($typeof) $($targetFlag) $($buildTarget) --features no_gui
     }
   }
   default {
@@ -39,6 +40,7 @@ switch ($special) {
       cross +nightly $($buildType) $($typeof) $($targetFlag) $($buildTarget)
     }
     else {
+      "Using normal build"
       rustup run nightly cargo build $($buildType) $($typeof) $($targetFlag) $($buildTarget)
     }
   }
