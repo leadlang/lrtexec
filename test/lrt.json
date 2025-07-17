@@ -3,16 +3,7 @@
   "version": "0.0.0",
   "description": "Hello World",
   "authors": ["You"],
-  "dependencies": {
-    "ahq": {
-      "source": "github",
-      "tag_name": "0.0"
-    },
-    "uhq": {
-      "source": "github",
-      "tag_name": "0.0"
-    }
-  },
+  "dependencies": {},
   "platforms": "auto",
   "platform": {
     "x86_64-pc-windows-msvc": {

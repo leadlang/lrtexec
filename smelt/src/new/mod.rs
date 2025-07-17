@@ -1,5 +1,5 @@
-use std::{env::current_exe, fs};
 use std::path::PathBuf;
+use std::{env::current_exe, fs};
 
 use terminal::owo_colors::OwoColorize;
 
@@ -31,7 +31,8 @@ pub fn create(chosen_dir: &str) {
   let mut templates = pack_dir();
   templates.push("templates");
 
-  let dir = fs::read_dir(&templates).unwrap()
+  let dir = fs::read_dir(&templates)
+    .unwrap()
     .map(|x| x.unwrap())
     .map(|x| x.file_name().into_string().unwrap())
     .collect::<Vec<_>>();

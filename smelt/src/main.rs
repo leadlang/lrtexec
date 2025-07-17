@@ -58,63 +58,63 @@ macro_rules! flagmanager {
 }
 
 forge_help! {
-    name = "smelt",
-    version = env!("CARGO_PKG_VERSION"),
-    about = "Lead Runtime Smelter - The one tool for lead runtime management",
-    usage = "smelt [options]",
-    flags {
-      "--version" => "Prints the version",
-      "--help" => "Prints this help menu"
+  name = "smelt",
+  version = env!("CARGO_PKG_VERSION"),
+  about = "Lead Runtime Smelter - The one tool for lead runtime management",
+  usage = "smelt [options]",
+  flags {
+    "--version" => "Prints the version",
+    "--help" => "Prints this help menu"
+  },
+  commands {
+    "new" => {
+      desc: "Creates a new project",
+      usage: "smelt new <directory>"
     },
-    commands {
-      "new" => {
-        desc: "Creates a new project",
-        usage: "smelt new <directory>"
+    "addpkg" => {
+      desc: "Adds a package to the project",
+      usage: "smelt addpkg <package>"
+    },
+    "removepkg" => {
+      desc: "Removes a package from the project",
+      usage: "smelt removepkg <package>"
+    },
+    "list" => {
+      desc: "Lists all packages in the project",
+      usage: "smelt list"
+    },
+    "build" => {
+      desc: "Build the project",
+      usage: "smelt build [OPTIONS]",
+      flags: {
+        "--out <directory>" => "Change the output directory",
+        "--release" => "Builds the binary for release mode",
+        "--host" => "Compile only for this target",
       },
-      "addpkg" => {
-        desc: "Adds a package to the project",
-        usage: "smelt addpkg <package>"
-      },
-      "removepkg" => {
-        desc: "Removes a package from the project",
-        usage: "smelt removepkg <package>"
-      },
-      "list" => {
-        desc: "Lists all packages in the project",
-        usage: "smelt list"
-      },
-      "build" => {
-        desc: "Build the project",
-        usage: "smelt build [OPTIONS]",
-        flags: {
-          "--out <directory>" => "Change the output directory",
-          "--release" => "Builds the binary for release mode",
-          "--host" => "Compile only for this target",
-        },
-        examples: [
-          "smelt build",
-          "smelt build --host",
-          "smelt build --out dist --release"
-        ],
-        note: "`smelt build --out dist` is default"
-      },
-      "run" => {
-        desc: "Builds and then runs the project (same options as build)",
-        usage: "smelt run [OPTIONS]",
-        examples: [
-          "smelt run",
-          "smelt run --host",
-          "smelt run --out dist --release"
-        ],
-        note: "`smelt run --out dist` is default"
-      },
-      "docs" => {
-        desc: "Runs a TUI that shows library docs",
-        usage: "smelt docs",
-        note: "This command utilizes a full TUI with mouse support"
-      }
+      examples: [
+        "smelt build",
+        "smelt build --host",
+        "smelt build --out dist --release"
+      ],
+      note: "`smelt build --out dist` is default"
+    },
+    "run" => {
+      desc: "Builds and then runs the project (same options as build)",
+      usage: "smelt run [OPTIONS]",
+      examples: [
+        "smelt run",
+        "smelt run --host",
+        "smelt run --out dist --release"
+      ],
+      note: "`smelt run --out dist` is default"
+    },
+    "docs" => {
+      desc: "Runs a TUI that shows library docs",
+      usage: "smelt docs",
+      note: "This command utilizes a full TUI with mouse support"
     }
   }
+}
 
 fn show_help() {
   let help = help_string();
@@ -136,8 +136,8 @@ flagmanager! {
 
 mod config;
 
-mod new;
 mod build;
+mod new;
 
 fn main() {
   init_colors();
@@ -172,8 +172,16 @@ fn main() {
   match man.args[0] {
     "new" => {
       let Some(dir) = man.args.get(1) else {
-        println!("{} missing argument for command '{}'", "error:".red().bold(), "new".yellow().bold());
-        println!("\n{} run '{}' for help menu", "Tip:".blue().bold(), "smelt --help".yellow().bold());
+        println!(
+          "{} missing argument for command '{}'",
+          "error:".red().bold(),
+          "new".yellow().bold()
+        );
+        println!(
+          "\n{} run '{}' for help menu",
+          "Tip:".blue().bold(),
+          "smelt --help".yellow().bold()
+        );
         process::exit(1);
       };
 
@@ -184,10 +192,17 @@ fn main() {
     }
     e => {
       // Invalid comment error, recommend smelt --help
-      println!("{} unexpected command '{}' found", "error:".red().bold(), e.yellow().bold());
-      println!("\n{} run '{}' for help menu", "Tip:".blue().bold(), "smelt --help".yellow().bold());
+      println!(
+        "{} unexpected command '{}' found",
+        "error:".red().bold(),
+        e.yellow().bold()
+      );
+      println!(
+        "\n{} run '{}' for help menu",
+        "Tip:".blue().bold(),
+        "smelt --help".yellow().bold()
+      );
       process::exit(1);
     }
   }
 }
-

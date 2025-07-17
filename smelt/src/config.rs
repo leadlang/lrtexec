@@ -1,6 +1,10 @@
-use std::{collections::HashMap, fs, io::{Error, ErrorKind, Result}};
+use std::{
+  collections::HashMap,
+  fs,
+  io::{Error, ErrorKind, Result},
+};
 
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 use serde_json::from_str;
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -9,36 +13,39 @@ pub struct Package {
   pub version: String,
   pub description: String,
   pub authors: Vec<String>,
+  #[serde(default = "main")]
+  pub main: String,
   pub dependencies: HashMap<String, Dependency>,
   pub platforms: String,
-  pub platform: HashMap<String, Platform>
+  pub platform: HashMap<String, Platform>,
+}
+
+fn main() -> String {
+  format!("main.lrt")
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Platform {
-  pub dependencies: HashMap<String, Dependency>
+  pub dependencies: HashMap<String, Dependency>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Dependency {
   pub source: Source,
-  pub tag_name: String
+  pub tag_name: String,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 pub enum Source {
   #[serde(rename = "github")]
-  GitHub
+  GitHub,
 }
 
 impl Package {
   pub fn get() -> Result<Self> {
     Ok(
-      from_str(
-        fs::read_to_string("./lrt.json")?.as_str()
-      ).map_err(|_| 
-        Error::new(ErrorKind::InvalidData, "Invalid Data")
-      )?
+      from_str(fs::read_to_string("./lrt.json")?.as_str())
+        .map_err(|_| Error::new(ErrorKind::InvalidData, "Invalid Data"))?,
     )
   }
 }
@@ -49,10 +56,11 @@ impl Default for Package {
       name: String::from(""),
       version: String::from(""),
       description: String::from(""),
+      main: main(),
       authors: vec![],
       dependencies: HashMap::new(),
       platforms: String::from(""),
-      platform: HashMap::new()
+      platform: HashMap::new(),
     }
   }
 }
