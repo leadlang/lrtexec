@@ -1,1 +1,12 @@
 !asm 0
+
+---@define
+# Define your structs, compiletime macros, etc here
+import { myFunction } from "package or an inline module path"
+
+import Module from "non inline module path"
+---
+
+---@
+@calls myFunction
+---

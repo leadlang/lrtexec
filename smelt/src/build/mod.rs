@@ -11,6 +11,7 @@ use tokio::{runtime::Builder, task::JoinSet};
 use rayon::prelude::*;
 
 mod downloader;
+mod builder;
 
 pub(super) mod codegen;
 pub(super) mod foldergen;

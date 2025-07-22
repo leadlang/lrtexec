@@ -190,6 +190,28 @@ pub struct FnStackV0 {
   pub r8: WrapperRegValueV0,
 }
 
+macro_rules! fnstack {
+    (
+      $($t:ident => $x:expr),*
+    ) => {
+      $(
+        pub static $t: u16 = $x;
+      )*
+    };
+}
+
+fnstack! {
+  REGISTER_R1 => 0,
+  REGISTER_R2 => 1,
+  REGISTER_R3 => 2,
+  REGISTER_R4 => 3,
+  REGISTER_R5 => 4,
+  REGISTER_R6 => 5,
+  REGISTER_R7 => 6,
+  REGISTER_R8 => 7,
+  REGISTER_RET => 8
+}
+
 #[repr(C)]
 #[derive(Default)]
 pub enum RegValueV0 {
