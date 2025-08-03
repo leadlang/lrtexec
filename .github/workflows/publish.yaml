@@ -232,6 +232,11 @@ jobs:
             suffix: "-linux-android"
             cross: "true"
 
+          - os: ubuntu-22.04
+            arch: i686
+            suffix: "-linux-android"
+            cross: "true"
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
