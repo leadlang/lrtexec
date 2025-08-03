@@ -195,6 +195,7 @@ jobs:
             suffix: "-unknown-linux-gnu"
             cross: "true"
 
+          # BSD
           - os: ubuntu-22.04
             arch: x86_64
             suffix: "-unknown-freebsd"
@@ -202,7 +203,28 @@ jobs:
 
           - os: ubuntu-22.04
             arch: x86_64
+            suffix: "-unknown-netbsd"
+            cross: "true"
+
+          - os: ubuntu-22.04
+            arch: x86_64
             suffix: "-unknown-illumos"
+            cross: "true"
+
+          # Android (via NDK)
+          - os: ubuntu-22.04
+            arch: aarch64
+            suffix: "-linux-android"
+            cross: "true"
+
+          - os: ubuntu-22.04
+            arch: armv7
+            suffix: "-linux-androideabi"
+            cross: "true"
+
+          - os: ubuntu-22.04
+            arch: x86_64
+            suffix: "-linux-android"
             cross: "true"
 
     steps:
