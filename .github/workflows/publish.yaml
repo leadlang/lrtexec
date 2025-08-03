@@ -170,6 +170,31 @@ jobs:
             suffix: "-unknown-linux-gnu"
             cross: "true"
 
+          - os: ubuntu-22.04
+            arch: arm
+            suffix: "-unknown-linux-gnueabi"
+            cross: "true"
+
+          - os: ubuntu-22.04
+            arch: arm
+            suffix: "-unknown-linux-gnueabihf"
+            cross: "true"
+
+          - os: ubuntu-22.04
+            arch: armv7
+            suffix: "-unknown-linux-gnueabi"
+            cross: "true"
+
+          - os: ubuntu-22.04
+            arch: armv7
+            suffix: "-unknown-linux-gnueabihf"
+            cross: "true"
+
+          - os: ubuntu-22.04
+            arch: loongarch64
+            suffix: "-unknown-linux-gnu"
+            cross: "true"
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
