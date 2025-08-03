@@ -153,18 +153,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # windows-latest + -win7-windows-msvc
-          # - os: windows-latest
-          #   arch: x86_64
-          #   suffix: "-win7-windows-msvc"
-          #   cross: "false"
-
-          # - os: windows-latest
-          #   arch: i686
-          #   suffix: "-win7-windows-msvc"
-          #   cross: "false"
-
-          # Linux Builds
+          # Cursed Linux Targets
           - os: ubuntu-22.04
             arch: i686
             suffix: "-unknown-linux-gnu"
@@ -190,14 +179,35 @@ jobs:
             suffix: "-unknown-linux-gnueabihf"
             cross: "true"
 
+          # Even more cursed (obscure) Linux Targets
           - os: ubuntu-22.04
             arch: loongarch64
+            suffix: "-unknown-linux-gnu"
+            cross: "true"
+
+          - os: ubuntu-22.04
+            arch: mips64
+            suffix: "-unknown-linux-gnuabi64"
+            cross: "true"
+
+          - os: ubuntu-22.04
+            arch: powerpc64
+            suffix: "-unknown-linux-gnu"
+            cross: "true"
+
+          - os: ubuntu-22.04
+            arch: riscv64gc
             suffix: "-unknown-linux-gnu"
             cross: "true"
 
           # BSD
           - os: ubuntu-22.04
             arch: x86_64
+            suffix: "-unknown-freebsd"
+            cross: "true"
+
+          - os: ubuntu-22.04
+            arch: i686
             suffix: "-unknown-freebsd"
             cross: "true"
 
