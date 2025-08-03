@@ -27,7 +27,7 @@ switch ($special) {
   "nogui" {
     if ($cross) {
       "Using Cross"
-      cross +nightly build -Z build-std="core,alloc,std,proc_macro" $($buildType) $($typeof) $($targetFlag) $($buildTarget) --features no_gui
+      cross +nightly build $($buildType) $($typeof) $($targetFlag) $($buildTarget) --features no_gui
     }
     else {
       "Using -Zbuild-std"

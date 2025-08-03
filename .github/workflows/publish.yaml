@@ -186,11 +186,6 @@ jobs:
             cross: "true"
 
           - os: ubuntu-22.04
-            arch: mips64
-            suffix: "-unknown-linux-gnuabi64"
-            cross: "true"
-
-          - os: ubuntu-22.04
             arch: powerpc64
             suffix: "-unknown-linux-gnu"
             cross: "true"
