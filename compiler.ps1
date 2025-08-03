@@ -12,7 +12,7 @@ if ($buildType -eq "debug") {
   $buildType = $null
 }
 else {
-  $buildType = "--$($buildType)"
+  $buildType = "--release"
 }
 
 $cross = $False
@@ -27,7 +27,7 @@ switch ($special) {
   "nogui" {
     if ($cross) {
       "Using Cross"
-      cross +nightly $($buildType) $($typeof) $($targetFlag) $($buildTarget) --features no_gui
+      cross +nightly build $($buildType) $($typeof) $($targetFlag) $($buildTarget) --features no_gui
     }
     else {
       "Using -Zbuild-std"
@@ -37,7 +37,7 @@ switch ($special) {
   default {
     if ($cross) {
       "Using Cross"
-      cross +nightly $($buildType) $($typeof) $($targetFlag) $($buildTarget)
+      cross +nightly build $($buildType) $($typeof) $($targetFlag) $($buildTarget)
     }
     else {
       "Using normal build"
