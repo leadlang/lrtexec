@@ -290,6 +290,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ matrix.arch }}${{ matrix.suffix }}-cache
+          workspaces: |
+            smelt -> target
+            lrt -> target
+
       - name: Get Build target
         id: target
         shell: pwsh
