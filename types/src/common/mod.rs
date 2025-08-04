@@ -1,56 +1,24 @@
 use std::{
-  ffi::{CStr, CString, c_char, c_void},
+  ffi::c_void,
   fmt::{Debug, Display},
   marker::PhantomData,
 };
 
+use crate::{commands::FFISafeContainer, common::others::FFISafeString};
+
 pub mod others;
-
-#[repr(C)]
-pub struct CommonString {
-  data: *mut c_char,
-  drop: extern "C" fn(*mut c_char),
-}
-
-extern "C" fn common_string_drop(ptr: *mut c_char) {
-  unsafe {
-    drop(CString::from_raw(ptr));
-  }
-}
-
-impl Into<CommonString> for String {
-  fn into(self) -> CommonString {
-    let cstring = CString::new(self).unwrap();
-
-    let data = cstring.into_raw();
-
-    CommonString {
-      data,
-      drop: common_string_drop,
-    }
-  }
-}
-
-impl AsRef<CStr> for CommonString {
-  fn as_ref(&self) -> &CStr {
-    unsafe { CStr::from_ptr(self.data) }
-  }
-}
-
-impl Drop for CommonString {
-  fn drop(&mut self) {
-    (self.drop)(self.data)
-  }
-}
+pub mod r#async;
 
 #[repr(C)]
 pub struct FFIableObject {
   data: *mut c_void,
   drop: extern "C" fn(*mut c_void),
-  fmt: extern "C" fn(*mut c_void) -> CommonString,
-  display: extern "C" fn(*mut c_void) -> CommonString,
+  fmt: extern "C" fn(*mut c_void) -> FFISafeString,
+  display: extern "C" fn(*mut c_void) -> FFISafeString,
   poisoned: bool,
 }
+
+impl FFISafeContainer for FFIableObject {}
 
 #[repr(C)]
 pub struct WrappedFFIableObject<'a, T> {
@@ -90,7 +58,7 @@ impl<'a, T> WrappedFFIableObject<'a, T> {
     unsafe { self.get_ptr().get() }
   }
 
-  pub unsafe fn get_mut(&'a mut self) -> &'a T {
+  pub unsafe fn get_mut(&'a mut self) -> &'a mut T {
     unsafe { self.get_ptr().get_mut() }
   }
 }
@@ -101,28 +69,28 @@ extern "C" fn general_drop<T>(ptr: *mut c_void) {
   }
 }
 
-extern "C" fn general_display<T: Display>(ptr: *mut c_void) -> CommonString {
+extern "C" fn general_display<T: Display>(ptr: *mut c_void) -> FFISafeString {
   unsafe {
     let data = &*(ptr as *mut T);
 
     let fmt = format!("{}", data);
 
-    fmt.into()
+    FFISafeString::from(fmt)
   }
 }
 
-extern "C" fn general_debug<T: Debug>(ptr: *mut c_void) -> CommonString {
+extern "C" fn general_debug<T: Debug>(ptr: *mut c_void) -> FFISafeString {
   unsafe {
     let data = &*(ptr as *mut T);
 
     let fmt = format!("{:?}", data);
 
-    fmt.into()
+    FFISafeString::from(fmt)
   }
 }
 
-extern "C" fn no_display(_: *mut c_void) -> CommonString {
-  format!("<cannot display type>").into()
+extern "C" fn no_display(_: *mut c_void) -> FFISafeString {
+  FFISafeString::from(format!("<cannot display type>"))
 }
 
 impl FFIableObject {
@@ -220,10 +188,9 @@ impl Display for FFIableObject {
   fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
     let data = (self.display)(self.data);
 
-    let data = data.as_ref();
-    let data = data.to_str();
+    let data = data.as_str();
 
-    let Ok(data) = data else {
+    let Some(data) = data else {
       return Err(std::fmt::Error::default());
     };
 
@@ -235,10 +202,9 @@ impl Debug for FFIableObject {
   fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
     let data = (self.fmt)(self.data);
 
-    let data = data.as_ref();
-    let data = data.to_str();
+    let data = data.as_str();
 
-    let Ok(data) = data else {
+    let Some(data) = data else {
       return Err(std::fmt::Error::default());
     };
 

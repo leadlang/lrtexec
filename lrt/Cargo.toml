@@ -4,6 +4,9 @@ version = "0.0.0-replace-me"
 edition = "2024"
 
 [dependencies]
+libloading = "0.8.8"
+lrt_macros = { version = "0.0.0-replace-me", path = "../macros" }
+tokio = { version = "1.47.1", features = ["rt", "rt-multi-thread"] }
 
 [features]
 no_gui = []

@@ -30,7 +30,7 @@ impl FFISafeString {
   /// Creates an `FFISafeString` from a Rust `&str`.
   ///
   /// This allocates a new C-compatible string and copies the content.
-  pub fn from_str(s: &str) -> Self {
+  pub fn from<T: Into<Vec<u8>>>(s: T) -> Self {
     let cstring = CString::new(s).expect("String contains null bytes");
     let len = cstring.as_bytes().len(); // Length without null terminator
     let capacity = len + 1; // Capacity including null terminator

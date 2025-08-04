@@ -6,6 +6,7 @@
 use std::{fmt::Debug, os::raw::c_void};
 
 use crate::common::{others::FFISafeString, FFIableObject};
+use super::FFISafeContainer;
 
 #[repr(C)]
 pub enum VariableDataV0 {
@@ -19,6 +20,8 @@ pub struct ContainerV0 {
   pub drop: extern "C" fn(*mut c_void),
   pub id: u8
 }
+
+impl FFISafeContainer for ContainerV0 {}
 
 impl Drop for ContainerV0 {
   fn drop(&mut self) {
@@ -112,13 +115,13 @@ implement! {
 
 impl Into<ContainerV0> for String {
   fn into(self) -> ContainerV0 {
-    FFISafeString::from_str(&self).into()
+    FFISafeString::from(self).into()
   }
 }
 
 impl Into<ContainerV0> for &str {
   fn into(self) -> ContainerV0 {
-    FFISafeString::from_str(self).into()
+    FFISafeString::from(self).into()
   }
 }
 
