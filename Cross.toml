@@ -1,2 +1,2 @@
-[target.mips-unknown-linux-gnu]
+[build]
 build-std = ["core", "std", "alloc", "proc_macro"]

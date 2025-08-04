@@ -176,6 +176,11 @@ jobs:
 
           - os: ubuntu-22.04
             arch: arm
+            suffix: "-unknown-linux-musleabi"
+            cross: "true"
+
+          - os: ubuntu-22.04
+            arch: arm
             suffix: "-unknown-linux-gnueabihf"
             cross: "true"
 
@@ -189,6 +194,21 @@ jobs:
             suffix: "-unknown-linux-gnueabihf"
             cross: "true"
 
+          - os: ubuntu-22.04
+            arch: armv7
+            suffix: "-unknown-linux-musleabihf"
+            cross: "true"
+
+          - os: ubuntu-22.04
+            arch: armv5te
+            suffix: -unknown-linux-gnueabi
+            cross: "true"
+
+          - os: ubuntu-22.04
+            arch: armv5te
+            suffix: -unknown-linux-musleabi
+            cross: "true"
+
           # Even more cursed (obscure) Linux Targets
           - os: ubuntu-22.04
             arch: loongarch64
@@ -200,6 +220,7 @@ jobs:
             suffix: "-unknown-linux-musl"
             cross: "true"
 
+          # PowerPC
           - os: ubuntu-22.04
             arch: powerpc
             suffix: "-unknown-linux-gnu"
@@ -215,18 +236,30 @@ jobs:
             suffix: "-unknown-linux-gnu"
             cross: "true"
 
+          # RISC
           - os: ubuntu-22.04
             arch: riscv64gc
             suffix: "-unknown-linux-gnu"
             cross: "true"
 
+          # MIPS
           - os: ubuntu-22.04
-            arch: armv5te
-            suffix: -unknown-linux-gnueabi
+            arch: mips
+            suffix: -unknown-linux-gnu
             cross: "true"
 
           - os: ubuntu-22.04
-            arch: mips
+            arch: mipsel
+            suffix: -unknown-linux-gnu
+            cross: "true"
+
+          - os: ubuntu-22.04
+            arch: mips64
+            suffix: -unknown-linux-gnu
+            cross: "true"
+
+          - os: ubuntu-22.04
+            arch: mips64el
             suffix: -unknown-linux-gnu
             cross: "true"
 
@@ -239,6 +272,11 @@ jobs:
           - os: ubuntu-22.04
             arch: i686
             suffix: "-unknown-freebsd"
+            cross: "true"
+
+          - os: ubuntu-22.04
+            arch: x86_64
+            suffix: "-unknown-dragonfly"
             cross: "true"
 
           - os: ubuntu-22.04
