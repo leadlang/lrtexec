@@ -350,7 +350,7 @@ jobs:
     runs-on: windows-latest
 
     # Needs all the targets to be built
-    needs: [getver, build-gui, build-nogui]
+    needs: [getver, build-gui]
 
     strategy:
       matrix:
@@ -363,12 +363,6 @@ jobs:
 
           - target: aarch64-pc-windows-msvc
             arch: Arm64
-
-          # - target: x86_64-win7-windows-msvc
-          #   arch: X64
-
-          # - target: i686-win7-windows-msvc
-          #   arch: X86
 
     steps:
       - name: Checkout
