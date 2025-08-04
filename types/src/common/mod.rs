@@ -6,8 +6,8 @@ use std::{
 
 use crate::{commands::FFISafeContainer, common::others::FFISafeString};
 
-pub mod others;
 pub mod r#async;
+pub mod others;
 
 #[repr(C)]
 pub struct FFIableObject {
