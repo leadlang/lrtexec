@@ -220,6 +220,16 @@ jobs:
             suffix: "-unknown-linux-gnu"
             cross: "true"
 
+          - os: ubuntu-22.04
+            arch: armv5te
+            suffix: -unknown-linux-gnueabi
+            cross: "true"
+
+          - os: ubuntu-22.04
+            arch: mips
+            suffix: -unknown-linux-gnu
+            cross: "true"
+
           # BSD
           - os: ubuntu-22.04
             arch: x86_64
@@ -295,6 +305,7 @@ jobs:
           BUILD_TARGET: ${{ steps.target.outputs.target }}
           GUI: "false"
           USE_CROSS: ${{ matrix.cross }}
+          CROSS_CONFIG: ${{ github.workspace }}/Cross.toml
         run: |
           ./package.ps1
 
