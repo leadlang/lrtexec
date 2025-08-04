@@ -150,7 +150,8 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     strategy:
-      fail-fast: true
+      # To test which targets fail
+      fail-fast: false
       matrix:
         include:
           # Cursed Linux Targets
@@ -176,11 +177,6 @@ jobs:
 
           - os: ubuntu-22.04
             arch: arm
-            suffix: "-unknown-linux-musleabi"
-            cross: "true"
-
-          - os: ubuntu-22.04
-            arch: arm
             suffix: "-unknown-linux-gnueabihf"
             cross: "true"
 
@@ -195,18 +191,8 @@ jobs:
             cross: "true"
 
           - os: ubuntu-22.04
-            arch: armv7
-            suffix: "-unknown-linux-musleabihf"
-            cross: "true"
-
-          - os: ubuntu-22.04
             arch: armv5te
             suffix: -unknown-linux-gnueabi
-            cross: "true"
-
-          - os: ubuntu-22.04
-            arch: armv5te
-            suffix: -unknown-linux-musleabi
             cross: "true"
 
           # Even more cursed (obscure) Linux Targets
@@ -259,18 +245,8 @@ jobs:
             cross: "true"
 
           - os: ubuntu-22.04
-            arch: mips64
-            suffix: -unknown-linux-muslabi64
-            cross: "true"
-
-          - os: ubuntu-22.04
             arch: mips64el
             suffix: -unknown-linux-gnuabi64
-            cross: "true"
-
-          - os: ubuntu-22.04
-            arch: mips64el
-            suffix: -unknown-linux-muslabi64
             cross: "true"
 
           # BSD
