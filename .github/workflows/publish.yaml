@@ -255,7 +255,12 @@ jobs:
 
           - os: ubuntu-22.04
             arch: mips64
-            suffix: -unknown-linux-gnu
+            suffix: -unknown-linux-gnuabi64
+            cross: "true"
+
+          - os: ubuntu-22.04
+            arch: mips64
+            suffix: -unknown-linux-muslabi64
             cross: "true"
 
           - os: ubuntu-22.04
