@@ -161,16 +161,6 @@ jobs:
             cross: "true"
 
           - os: ubuntu-22.04
-            arch: i686
-            suffix: "-unknown-linux-musl"
-            cross: "true"
-
-          - os: ubuntu-22.04
-            arch: x86_64
-            suffix: "-unknown-linux-musl"
-            cross: "true"
-
-          - os: ubuntu-22.04
             arch: arm
             suffix: "-unknown-linux-gnueabi"
             cross: "true"
