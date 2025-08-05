@@ -24,7 +24,7 @@ Write-Host "Building lrt, lgui ($($buildType))"
 Set-Location ../linst
 
 Write-Host "Building linst ($($buildType))"
-../compiler $buildType --bins $($nogui)
+../compiler $buildType --bins
 ""
 
 Set-Location ../smelt
