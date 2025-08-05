@@ -73,6 +73,20 @@
         </RegistryKey>
 
         <ProgId
+          Id="Lrt.GUIExecutable" Description="LRT GUI Executable File"
+          Icon="LRTLOGO">
+          <Extension Id="lrtgui" ContentType="application/lrtgui">
+            <Verb Id="open" Command="open" TargetFile="LRTFILE"
+              Argument="&quot;%1&quot;" />
+          </Extension>
+        </ProgId>
+
+        <RegistryKey
+          Root="HKCR" Key="LRT.lrtgui\shell\open\command">
+          <RegistryValue Type="string" Value="[INSTALLFOLDER]lgui.exe &quot;%1&quot;" />
+        </RegistryKey>
+
+        <ProgId
           Id="Lrt.Installer" Description="LRT Installer File"
           Icon="LRTINST">
           <Extension Id="lrtinst" ContentType="application/lrtinst">
@@ -83,7 +97,7 @@
 
         <RegistryKey
           Root="HKCR" Key="LRT.lrtinst\shell\open\command">
-          <RegistryValue Type="string" Value="[INSTALLFOLDER]lrt.exe &quot;%1&quot;" />
+          <RegistryValue Type="string" Value="[INSTALLFOLDER]linst.exe &quot;%1&quot;" />
         </RegistryKey>
       </Component>
 

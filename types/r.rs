@@ -1,32 +1,38 @@
 #![feature(prelude_import)]
 #![feature(trivial_bounds)]
-#[prelude_import]
-use std::prelude::rust_2024::*;
 #[macro_use]
 extern crate std;
+#[prelude_import]
+use std::prelude::rust_2024::*;
 pub mod commands {
     use lrt_macros::ver;
+    pub trait FFISafeContainer {}
     pub mod v0 {
         use lrt_macros::declare;
         pub mod compat {
             //! **v0** Provides no compatibility
         }
         pub mod structs {
-            //! Structs related to v0 commands
+            //! # v0
+            //! This crate defines the `v0` of the Assembly Syntax of LRTEXEC Bytecode (also mentioned as assembly in many places)
+            //!
+            //! Structs related to v0 Assembly Syntax
             use std::{fmt::Debug, os::raw::c_void};
             use crate::common::{others::FFISafeString, FFIableObject};
+            use super::FFISafeContainer;
             #[repr(C)]
             pub enum VariableDataV0 {
-                Inbuilt(Container),
+                Inbuilt(ContainerV0),
                 Object(FFIableObject),
             }
             #[repr(C)]
-            pub struct Container {
+            pub struct ContainerV0 {
                 pub data: *mut c_void,
                 pub drop: extern "C" fn(*mut c_void),
                 pub id: u8,
             }
-            impl Drop for Container {
+            impl FFISafeContainer for ContainerV0 {}
+            impl Drop for ContainerV0 {
                 fn drop(&mut self) {
                     (self.drop)(self.data)
                 }
@@ -36,18 +42,18 @@ pub mod commands {
                     _ = Box::from_raw(ptrr as *mut T);
                 }
             }
-            impl Into<Container> for u8 {
-                fn into(self) -> Container {
+            impl Into<ContainerV0> for u8 {
+                fn into(self) -> ContainerV0 {
                     let data = Box::new(self);
                     let d = Box::into_raw(data);
-                    Container {
+                    ContainerV0 {
                         data: d as *mut c_void,
                         drop: general_drop::<u8>,
                         id: 0,
                     }
                 }
             }
-            impl Container {
+            impl ContainerV0 {
                 /// Returns `None` is types do not match
                 pub fn as_u8(&self) -> Option<&u8> {
                     if self.id != 0 {
@@ -71,18 +77,18 @@ pub mod commands {
                     unsafe { &mut *(self.data as *mut u8) }
                 }
             }
-            impl Into<Container> for u16 {
-                fn into(self) -> Container {
+            impl Into<ContainerV0> for u16 {
+                fn into(self) -> ContainerV0 {
                     let data = Box::new(self);
                     let d = Box::into_raw(data);
-                    Container {
+                    ContainerV0 {
                         data: d as *mut c_void,
                         drop: general_drop::<u16>,
                         id: 1,
                     }
                 }
             }
-            impl Container {
+            impl ContainerV0 {
                 /// Returns `None` is types do not match
                 pub fn as_u16(&self) -> Option<&u16> {
                     if self.id != 1 {
@@ -106,18 +112,18 @@ pub mod commands {
                     unsafe { &mut *(self.data as *mut u16) }
                 }
             }
-            impl Into<Container> for u32 {
-                fn into(self) -> Container {
+            impl Into<ContainerV0> for u32 {
+                fn into(self) -> ContainerV0 {
                     let data = Box::new(self);
                     let d = Box::into_raw(data);
-                    Container {
+                    ContainerV0 {
                         data: d as *mut c_void,
                         drop: general_drop::<u32>,
                         id: 2,
                     }
                 }
             }
-            impl Container {
+            impl ContainerV0 {
                 /// Returns `None` is types do not match
                 pub fn as_u32(&self) -> Option<&u32> {
                     if self.id != 2 {
@@ -141,18 +147,18 @@ pub mod commands {
                     unsafe { &mut *(self.data as *mut u32) }
                 }
             }
-            impl Into<Container> for u64 {
-                fn into(self) -> Container {
+            impl Into<ContainerV0> for u64 {
+                fn into(self) -> ContainerV0 {
                     let data = Box::new(self);
                     let d = Box::into_raw(data);
-                    Container {
+                    ContainerV0 {
                         data: d as *mut c_void,
                         drop: general_drop::<u64>,
                         id: 3,
                     }
                 }
             }
-            impl Container {
+            impl ContainerV0 {
                 /// Returns `None` is types do not match
                 pub fn as_u64(&self) -> Option<&u64> {
                     if self.id != 3 {
@@ -176,18 +182,18 @@ pub mod commands {
                     unsafe { &mut *(self.data as *mut u64) }
                 }
             }
-            impl Into<Container> for u128 {
-                fn into(self) -> Container {
+            impl Into<ContainerV0> for u128 {
+                fn into(self) -> ContainerV0 {
                     let data = Box::new(self);
                     let d = Box::into_raw(data);
-                    Container {
+                    ContainerV0 {
                         data: d as *mut c_void,
                         drop: general_drop::<u128>,
                         id: 4,
                     }
                 }
             }
-            impl Container {
+            impl ContainerV0 {
                 /// Returns `None` is types do not match
                 pub fn as_u128(&self) -> Option<&u128> {
                     if self.id != 4 {
@@ -211,18 +217,18 @@ pub mod commands {
                     unsafe { &mut *(self.data as *mut u128) }
                 }
             }
-            impl Into<Container> for i8 {
-                fn into(self) -> Container {
+            impl Into<ContainerV0> for i8 {
+                fn into(self) -> ContainerV0 {
                     let data = Box::new(self);
                     let d = Box::into_raw(data);
-                    Container {
+                    ContainerV0 {
                         data: d as *mut c_void,
                         drop: general_drop::<i8>,
                         id: 5,
                     }
                 }
             }
-            impl Container {
+            impl ContainerV0 {
                 /// Returns `None` is types do not match
                 pub fn as_i8(&self) -> Option<&i8> {
                     if self.id != 5 {
@@ -246,18 +252,18 @@ pub mod commands {
                     unsafe { &mut *(self.data as *mut i8) }
                 }
             }
-            impl Into<Container> for i16 {
-                fn into(self) -> Container {
+            impl Into<ContainerV0> for i16 {
+                fn into(self) -> ContainerV0 {
                     let data = Box::new(self);
                     let d = Box::into_raw(data);
-                    Container {
+                    ContainerV0 {
                         data: d as *mut c_void,
                         drop: general_drop::<i16>,
                         id: 6,
                     }
                 }
             }
-            impl Container {
+            impl ContainerV0 {
                 /// Returns `None` is types do not match
                 pub fn as_i16(&self) -> Option<&i16> {
                     if self.id != 6 {
@@ -281,18 +287,18 @@ pub mod commands {
                     unsafe { &mut *(self.data as *mut i16) }
                 }
             }
-            impl Into<Container> for i32 {
-                fn into(self) -> Container {
+            impl Into<ContainerV0> for i32 {
+                fn into(self) -> ContainerV0 {
                     let data = Box::new(self);
                     let d = Box::into_raw(data);
-                    Container {
+                    ContainerV0 {
                         data: d as *mut c_void,
                         drop: general_drop::<i32>,
                         id: 7,
                     }
                 }
             }
-            impl Container {
+            impl ContainerV0 {
                 /// Returns `None` is types do not match
                 pub fn as_i32(&self) -> Option<&i32> {
                     if self.id != 7 {
@@ -316,18 +322,18 @@ pub mod commands {
                     unsafe { &mut *(self.data as *mut i32) }
                 }
             }
-            impl Into<Container> for i64 {
-                fn into(self) -> Container {
+            impl Into<ContainerV0> for i64 {
+                fn into(self) -> ContainerV0 {
                     let data = Box::new(self);
                     let d = Box::into_raw(data);
-                    Container {
+                    ContainerV0 {
                         data: d as *mut c_void,
                         drop: general_drop::<i64>,
                         id: 8,
                     }
                 }
             }
-            impl Container {
+            impl ContainerV0 {
                 /// Returns `None` is types do not match
                 pub fn as_i64(&self) -> Option<&i64> {
                     if self.id != 8 {
@@ -351,18 +357,18 @@ pub mod commands {
                     unsafe { &mut *(self.data as *mut i64) }
                 }
             }
-            impl Into<Container> for i128 {
-                fn into(self) -> Container {
+            impl Into<ContainerV0> for i128 {
+                fn into(self) -> ContainerV0 {
                     let data = Box::new(self);
                     let d = Box::into_raw(data);
-                    Container {
+                    ContainerV0 {
                         data: d as *mut c_void,
                         drop: general_drop::<i128>,
                         id: 9,
                     }
                 }
             }
-            impl Container {
+            impl ContainerV0 {
                 /// Returns `None` is types do not match
                 pub fn as_i128(&self) -> Option<&i128> {
                     if self.id != 9 {
@@ -386,18 +392,18 @@ pub mod commands {
                     unsafe { &mut *(self.data as *mut i128) }
                 }
             }
-            impl Into<Container> for f32 {
-                fn into(self) -> Container {
+            impl Into<ContainerV0> for f32 {
+                fn into(self) -> ContainerV0 {
                     let data = Box::new(self);
                     let d = Box::into_raw(data);
-                    Container {
+                    ContainerV0 {
                         data: d as *mut c_void,
                         drop: general_drop::<f32>,
                         id: 10,
                     }
                 }
             }
-            impl Container {
+            impl ContainerV0 {
                 /// Returns `None` is types do not match
                 pub fn as_f32(&self) -> Option<&f32> {
                     if self.id != 10 {
@@ -421,18 +427,18 @@ pub mod commands {
                     unsafe { &mut *(self.data as *mut f32) }
                 }
             }
-            impl Into<Container> for f64 {
-                fn into(self) -> Container {
+            impl Into<ContainerV0> for f64 {
+                fn into(self) -> ContainerV0 {
                     let data = Box::new(self);
                     let d = Box::into_raw(data);
-                    Container {
+                    ContainerV0 {
                         data: d as *mut c_void,
                         drop: general_drop::<f64>,
                         id: 11,
                     }
                 }
             }
-            impl Container {
+            impl ContainerV0 {
                 /// Returns `None` is types do not match
                 pub fn as_f64(&self) -> Option<&f64> {
                     if self.id != 11 {
@@ -456,18 +462,18 @@ pub mod commands {
                     unsafe { &mut *(self.data as *mut f64) }
                 }
             }
-            impl Into<Container> for bool {
-                fn into(self) -> Container {
+            impl Into<ContainerV0> for bool {
+                fn into(self) -> ContainerV0 {
                     let data = Box::new(self);
                     let d = Box::into_raw(data);
-                    Container {
+                    ContainerV0 {
                         data: d as *mut c_void,
                         drop: general_drop::<bool>,
                         id: 12,
                     }
                 }
             }
-            impl Container {
+            impl ContainerV0 {
                 /// Returns `None` is types do not match
                 pub fn as_bool(&self) -> Option<&bool> {
                     if self.id != 12 {
@@ -491,28 +497,28 @@ pub mod commands {
                     unsafe { &mut *(self.data as *mut bool) }
                 }
             }
-            impl Into<Container> for String {
-                fn into(self) -> Container {
-                    FFISafeString::from_str(&self).into()
+            impl Into<ContainerV0> for String {
+                fn into(self) -> ContainerV0 {
+                    FFISafeString::from(self).into()
                 }
             }
-            impl Into<Container> for &str {
-                fn into(self) -> Container {
-                    FFISafeString::from_str(self).into()
+            impl Into<ContainerV0> for &str {
+                fn into(self) -> ContainerV0 {
+                    FFISafeString::from(self).into()
                 }
             }
-            impl Into<Container> for FFISafeString {
-                fn into(self) -> Container {
+            impl Into<ContainerV0> for FFISafeString {
+                fn into(self) -> ContainerV0 {
                     let data = Box::new(self);
                     let d = Box::into_raw(data);
-                    Container {
+                    ContainerV0 {
                         data: d as *mut c_void,
                         drop: general_drop::<FFISafeString>,
                         id: 13,
                     }
                 }
             }
-            impl Container {
+            impl ContainerV0 {
                 /// Returns `None` is types do not match
                 pub fn as_string(&self) -> Option<&FFISafeString> {
                     if self.id != 13 {
@@ -541,14 +547,14 @@ pub mod commands {
                 /// Return value (identifier in MemoryMap)
                 pub ret: Option<VariableDataV0>,
                 /// Registers
-                pub r1: WrapperRegValue,
-                pub r2: WrapperRegValue,
-                pub r3: WrapperRegValue,
-                pub r4: WrapperRegValue,
-                pub r5: WrapperRegValue,
-                pub r6: WrapperRegValue,
-                pub r7: WrapperRegValue,
-                pub r8: WrapperRegValue,
+                pub r1: WrapperRegValueV0,
+                pub r2: WrapperRegValueV0,
+                pub r3: WrapperRegValueV0,
+                pub r4: WrapperRegValueV0,
+                pub r5: WrapperRegValueV0,
+                pub r6: WrapperRegValueV0,
+                pub r7: WrapperRegValueV0,
+                pub r8: WrapperRegValueV0,
             }
             #[automatically_derived]
             impl ::core::default::Default for FnStackV0 {
@@ -567,8 +573,17 @@ pub mod commands {
                     }
                 }
             }
+            pub static REGISTER_R1: u16 = 0;
+            pub static REGISTER_R2: u16 = 1;
+            pub static REGISTER_R3: u16 = 2;
+            pub static REGISTER_R4: u16 = 3;
+            pub static REGISTER_R5: u16 = 4;
+            pub static REGISTER_R6: u16 = 5;
+            pub static REGISTER_R7: u16 = 6;
+            pub static REGISTER_R8: u16 = 7;
+            pub static REGISTER_RET: u16 = 8;
             #[repr(C)]
-            pub enum RegValue {
+            pub enum RegValueV0 {
                 Moved(*mut FFIableObject),
                 Mut(*mut FFIableObject),
                 Ref(*const FFIableObject),
@@ -576,31 +591,31 @@ pub mod commands {
                 Null,
             }
             #[automatically_derived]
-            impl ::core::default::Default for RegValue {
+            impl ::core::default::Default for RegValueV0 {
                 #[inline]
-                fn default() -> RegValue {
+                fn default() -> RegValueV0 {
                     Self::Null
                 }
             }
             #[repr(C)]
-            pub struct WrapperRegValue {
-                _inner: RegValue,
+            pub struct WrapperRegValueV0 {
+                _inner: RegValueV0,
             }
             #[automatically_derived]
-            impl ::core::default::Default for WrapperRegValue {
+            impl ::core::default::Default for WrapperRegValueV0 {
                 #[inline]
-                fn default() -> WrapperRegValue {
-                    WrapperRegValue {
+                fn default() -> WrapperRegValueV0 {
+                    WrapperRegValueV0 {
                         _inner: ::core::default::Default::default(),
                     }
                 }
             }
-            impl WrapperRegValue {
+            impl WrapperRegValueV0 {
                 /// Get a shared reference to the inner `FFIableObject` if it isn't null.
                 ///
                 /// # Safety
                 ///
-                /// This function is unsafe because it relies on the correctness of the `RegValue` enum
+                /// This function is unsafe because it relies on the correctness of the `RegValueV0` enum
                 /// instance and the provided type `T` by the caller. If the enum instance is `Null`, this function will return `None`. If it is
                 /// not `Null`, this function will return a shared reference to the `FFIableObject`
                 /// stored in the enum instance.
@@ -608,10 +623,10 @@ pub mod commands {
                     unsafe {
                         Some(
                             match self._inner {
-                                RegValue::Moved(ptr) => (&*ptr).get(),
-                                RegValue::Mut(ptr) => (&*ptr).get(),
-                                RegValue::Ref(ptr) => (&*ptr).get(),
-                                RegValue::Null => return None,
+                                RegValueV0::Moved(ptr) => (&*ptr).get(),
+                                RegValueV0::Mut(ptr) => (&*ptr).get(),
+                                RegValueV0::Ref(ptr) => (&*ptr).get(),
+                                RegValueV0::Null => return None,
                             },
                         )
                     }
@@ -620,7 +635,7 @@ pub mod commands {
                 ///
                 /// # Safety
                 ///
-                /// This function is unsafe because it relies on the correctness of the `RegValue` enum
+                /// This function is unsafe because it relies on the correctness of the `RegValueV0` enum
                 /// instance and the provided type `T` by the caller. If the enum instance is `Null`, this function will return `None`. If it is
                 /// not `Null`, this function will return a mutable reference to the `FFIableObject`
                 /// stored in the enum instance.
@@ -628,8 +643,8 @@ pub mod commands {
                     unsafe {
                         Some(
                             match self._inner {
-                                RegValue::Moved(ptr) => &mut *ptr,
-                                RegValue::Mut(ptr) => &mut *ptr,
+                                RegValueV0::Moved(ptr) => &mut *ptr,
+                                RegValueV0::Mut(ptr) => &mut *ptr,
                                 _ => return None,
                             }
                                 .get_mut(),
@@ -643,7 +658,7 @@ pub mod commands {
                 ///
                 /// # Safety
                 ///
-                /// This function is unsafe because it relies on the correctness of the `RegValue` enum
+                /// This function is unsafe because it relies on the correctness of the `RegValueV0` enum
                 /// instance and the provided type `T` by the caller. If the enum instance is `Null`, this function will return `None`. If it is
                 /// not `Null`, this function will return a mutable reference to the `FFIableObject`
                 /// stored in the enum instance.
@@ -651,7 +666,7 @@ pub mod commands {
                     unsafe {
                         Some(
                             match self._inner {
-                                RegValue::Moved(ptr) => &mut *ptr,
+                                RegValueV0::Moved(ptr) => &mut *ptr,
                                 _ => return None,
                             }
                                 .transfer_ownership(),
@@ -665,7 +680,7 @@ pub mod commands {
                 ///
                 /// # Safety
                 ///
-                /// This function is unsafe because it relies on the correctness of the `RegValue` enum
+                /// This function is unsafe because it relies on the correctness of the `RegValueV0` enum
                 /// instance and the provided type `T` by the caller. If the enum instance is `Null`, this function will return `None`. If it is
                 /// not `Null`, this function will return a mutable reference to the `FFIableObject`
                 /// stored in the enum instance.
@@ -674,6 +689,7 @@ pub mod commands {
                 }
             }
         }
+        pub use super::FFISafeContainer;
         pub fn cmd_to_int(cmd: &str, vect: &mut Vec<u8>) -> Option<()> {
             match cmd {
                 "set" => {
@@ -704,16 +720,12 @@ pub mod commands {
                     vect.push(7u8);
                     Some(())
                 }
-                "regload" => {
+                "dlopen" => {
                     vect.push(8u8);
                     Some(())
                 }
-                "dlopen" => {
-                    vect.push(9u8);
-                    Some(())
-                }
                 "drop" => {
-                    vect.push(10u8);
+                    vect.push(9u8);
                     Some(())
                 }
                 "hi" => {
@@ -729,10 +741,188 @@ pub mod commands {
 }
 pub mod common {
     use std::{
-        ffi::{CStr, CString, c_char, c_void},
-        fmt::{Debug, Display},
+        ffi::c_void, fmt::{Debug, Display},
         marker::PhantomData,
     };
+    use crate::{commands::FFISafeContainer, common::others::FFISafeString};
+    pub mod r#async {
+        use std::os::raw::c_void;
+        use std::{
+            fmt::Debug, future::Future, ops::{Deref, DerefMut},
+            pin::Pin, task::{Context, Poll},
+        };
+        use tokio::task::{JoinHandle, spawn_blocking};
+        use crate::{commands::FFISafeContainer, common::FFIableObject};
+        #[repr(C)]
+        #[allow(deprecated)]
+        pub enum AsyncInterface<T: FFISafeContainer + 'static> {
+            Threaded(ThreadedTask<T>),
+            Lazy(LazyableTask<T>),
+            LazyWithWaker(LazyableTaskWithWaker<T>),
+        }
+        impl<T: FFISafeContainer + 'static> Future for AsyncInterface<T> {
+            type Output = SafeWrapped<T>;
+            fn poll(
+                mut self: Pin<&mut Self>,
+                cx: &mut Context<'_>,
+            ) -> Poll<Self::Output> {
+                match self.as_mut().get_mut() {
+                    AsyncInterface::Lazy(lazy) => {
+                        Pin::new(lazy).poll(cx).map(|x| SafeWrapped(x))
+                    }
+                    AsyncInterface::Threaded(threaded) => Pin::new(threaded).poll(cx),
+                    AsyncInterface::LazyWithWaker(lazy) => {
+                        Pin::new(lazy).poll(cx).map(|x| SafeWrapped(x))
+                    }
+                }
+            }
+        }
+        #[repr(C)]
+        pub struct ThreadedTask<T: FFISafeContainer + 'static> {
+            pub computation: extern "C" fn() -> T,
+            handle: Option<JoinHandle<SafeWrapped<T>>>,
+        }
+        impl<T: FFISafeContainer + 'static> ThreadedTask<T> {
+            pub fn new(task: extern "C" fn() -> T) -> Self {
+                Self {
+                    computation: task,
+                    handle: None,
+                }
+            }
+            fn start_once(&mut self) {
+                if self.handle.is_none() {
+                    let computation = UnsafeWrapped(self.computation);
+                    let handle = spawn_blocking(move || {
+                        let computation_fn_ptr = computation.0;
+                        SafeWrapped((computation_fn_ptr)())
+                    });
+                    self.handle = Some(handle);
+                }
+            }
+        }
+        impl<T: FFISafeContainer + 'static> Future for ThreadedTask<T> {
+            type Output = SafeWrapped<T>;
+            fn poll(
+                mut self: Pin<&mut Self>,
+                cx: &mut Context<'_>,
+            ) -> Poll<Self::Output> {
+                self.start_once();
+                let handle = Pin::new(self.as_mut().get_mut().handle.as_mut().unwrap());
+                handle
+                    .poll(cx)
+                    .map(|result| {
+                        result.expect("Threaded task panicked during execution")
+                    })
+            }
+        }
+        pub(crate) struct UnsafeWrapped<T: 'static>(T);
+        unsafe impl<T> Send for UnsafeWrapped<T> {}
+        pub struct SafeWrapped<T: 'static + FFISafeContainer>(T);
+        unsafe impl<T: FFISafeContainer> Send for SafeWrapped<T> {}
+        impl<T: Debug + FFISafeContainer + 'static> Debug for SafeWrapped<T> {
+            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                self.0.fmt(f)
+            }
+        }
+        impl<T: 'static + FFISafeContainer> SafeWrapped<T> {
+            pub fn get_pure(self) -> T {
+                self.0
+            }
+        }
+        impl<T: 'static + FFISafeContainer> Deref for SafeWrapped<T> {
+            type Target = T;
+            fn deref(&self) -> &Self::Target {
+                &self.0
+            }
+        }
+        impl<T: 'static + FFISafeContainer> DerefMut for SafeWrapped<T> {
+            fn deref_mut(&mut self) -> &mut Self::Target {
+                &mut self.0
+            }
+        }
+        #[repr(C)]
+        pub struct LazyableTask<T: FFISafeContainer> {
+            pub state: FFIableObject,
+            pub poll: extern "C" fn(state: *mut FFIableObject) -> PollResult<T>,
+        }
+        #[repr(C)]
+        pub enum PollResult<T: FFISafeContainer> {
+            Ready(T),
+            Poll,
+        }
+        unsafe impl<T: FFISafeContainer> Send for LazyableTask<T> {}
+        impl<T: FFISafeContainer + 'static> Future for LazyableTask<T> {
+            type Output = T;
+            fn poll(
+                mut self: Pin<&mut Self>,
+                cx: &mut Context<'_>,
+            ) -> Poll<Self::Output> {
+                let data = (self.poll)(&mut self.state);
+                match data {
+                    PollResult::Ready(r) => Poll::Ready(r),
+                    PollResult::Poll => {
+                        let waker = cx.waker().clone();
+                        tokio::spawn(async move {
+                            tokio::time::sleep(tokio::time::Duration::from_millis(20))
+                                .await;
+                            waker.wake();
+                        });
+                        Poll::Pending
+                    }
+                }
+            }
+        }
+        #[link(name = "async_waker")]
+        unsafe extern "C" {
+            unsafe fn create_waker(
+                waker: FFIableObject,
+                call: extern "C" fn(waker: FFIableObject) -> (),
+            ) -> *mut c_void;
+            /// Use this function to call the waker
+            ///
+            /// SAFETY:
+            /// As a side effect this function also consumes the ptr and deallocates this.
+            pub unsafe fn call_waker_consume_ptr(waker: *mut c_void);
+        }
+        #[repr(C)]
+        pub struct LazyableTaskWithWaker<T: FFISafeContainer> {
+            pub state: FFIableObject,
+            pub waker: Option<*mut c_void>,
+            pub poll: extern "C" fn(state: *mut FFIableObject) -> PollResult<T>,
+            pub append_waker: extern "C" fn(waker: *mut c_void) -> (),
+        }
+        unsafe impl<T: FFISafeContainer> Send for LazyableTaskWithWaker<T> {}
+        extern "C" fn call_waker(waker: FFIableObject) {
+            use std::task::Waker;
+            let waker: Waker = unsafe { waker.reconstruct() };
+            waker.wake();
+        }
+        impl<T: FFISafeContainer + 'static> Future for LazyableTaskWithWaker<T> {
+            type Output = T;
+            fn poll(
+                mut self: Pin<&mut Self>,
+                cx: &mut Context<'_>,
+            ) -> Poll<Self::Output> {
+                let data = (self.poll)(&mut self.state);
+                match data {
+                    PollResult::Ready(r) => Poll::Ready(r),
+                    PollResult::Poll => {
+                        if self.waker.is_none() {
+                            let waker: std::task::Waker = cx.waker().clone();
+                            self.waker = Some(unsafe {
+                                create_waker(
+                                    FFIableObject::create_using_box_no_display(waker),
+                                    call_waker,
+                                )
+                            });
+                            (self.append_waker)(self.waker.clone().unwrap())
+                        }
+                        Poll::Pending
+                    }
+                }
+            }
+        }
+    }
     pub mod others {
         use std::ffi::CString;
         use std::fmt;
@@ -763,7 +953,7 @@ pub mod common {
             /// Creates an `FFISafeString` from a Rust `&str`.
             ///
             /// This allocates a new C-compatible string and copies the content.
-            pub fn from_str(s: &str) -> Self {
+            pub fn from<T: Into<Vec<u8>>>(s: T) -> Self {
                 let cstring = CString::new(s).expect("String contains null bytes");
                 let len = cstring.as_bytes().len();
                 let capacity = len + 1;
@@ -872,43 +1062,14 @@ pub mod common {
         }
     }
     #[repr(C)]
-    pub struct CommonString {
-        data: *mut c_char,
-        drop: extern "C" fn(*mut c_char),
-    }
-    extern "C" fn common_string_drop(ptr: *mut c_char) {
-        unsafe {
-            drop(CString::from_raw(ptr));
-        }
-    }
-    impl Into<CommonString> for String {
-        fn into(self) -> CommonString {
-            let cstring = CString::new(self).unwrap();
-            let data = cstring.into_raw();
-            CommonString {
-                data,
-                drop: common_string_drop,
-            }
-        }
-    }
-    impl AsRef<CStr> for CommonString {
-        fn as_ref(&self) -> &CStr {
-            unsafe { CStr::from_ptr(self.data) }
-        }
-    }
-    impl Drop for CommonString {
-        fn drop(&mut self) {
-            (self.drop)(self.data)
-        }
-    }
-    #[repr(C)]
     pub struct FFIableObject {
         data: *mut c_void,
         drop: extern "C" fn(*mut c_void),
-        fmt: extern "C" fn(*mut c_void) -> CommonString,
-        display: extern "C" fn(*mut c_void) -> CommonString,
+        fmt: extern "C" fn(*mut c_void) -> FFISafeString,
+        display: extern "C" fn(*mut c_void) -> FFISafeString,
         poisoned: bool,
     }
+    impl FFISafeContainer for FFIableObject {}
     #[repr(C)]
     pub struct WrappedFFIableObject<'a, T> {
         object: *mut FFIableObject,
@@ -937,7 +1098,7 @@ pub mod common {
         pub unsafe fn get(&'a self) -> &'a T {
             unsafe { self.get_ptr().get() }
         }
-        pub unsafe fn get_mut(&'a mut self) -> &'a T {
+        pub unsafe fn get_mut(&'a mut self) -> &'a mut T {
             unsafe { self.get_ptr().get_mut() }
         }
     }
@@ -946,29 +1107,30 @@ pub mod common {
             drop(Box::from_raw(ptr as *mut T));
         }
     }
-    extern "C" fn general_display<T: Display>(ptr: *mut c_void) -> CommonString {
+    extern "C" fn general_display<T: Display>(ptr: *mut c_void) -> FFISafeString {
         unsafe {
             let data = &*(ptr as *mut T);
             let fmt = ::alloc::__export::must_use({
                 ::alloc::fmt::format(format_args!("{0}", data))
             });
-            fmt.into()
+            FFISafeString::from(fmt)
         }
     }
-    extern "C" fn general_debug<T: Debug>(ptr: *mut c_void) -> CommonString {
+    extern "C" fn general_debug<T: Debug>(ptr: *mut c_void) -> FFISafeString {
         unsafe {
             let data = &*(ptr as *mut T);
             let fmt = ::alloc::__export::must_use({
                 ::alloc::fmt::format(format_args!("{0:?}", data))
             });
-            fmt.into()
+            FFISafeString::from(fmt)
         }
     }
-    extern "C" fn no_display(_: *mut c_void) -> CommonString {
-        ::alloc::__export::must_use({
+    extern "C" fn no_display(_: *mut c_void) -> FFISafeString {
+        FFISafeString::from(
+            ::alloc::__export::must_use({
                 ::alloc::fmt::format(format_args!("<cannot display type>"))
-            })
-            .into()
+            }),
+        )
     }
     impl FFIableObject {
         /// (Un)safely consumes the FFIableObject and returns the original owned `T`.
@@ -1056,9 +1218,8 @@ pub mod common {
     impl Display for FFIableObject {
         fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
             let data = (self.display)(self.data);
-            let data = data.as_ref();
-            let data = data.to_str();
-            let Ok(data) = data else {
+            let data = data.as_str();
+            let Some(data) = data else {
                 return Err(std::fmt::Error::default());
             };
             f.write_str(data)
@@ -1067,9 +1228,8 @@ pub mod common {
     impl Debug for FFIableObject {
         fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
             let data = (self.fmt)(self.data);
-            let data = data.as_ref();
-            let data = data.to_str();
-            let Ok(data) = data else {
+            let data = data.as_str();
+            let Some(data) = data else {
                 return Err(std::fmt::Error::default());
             };
             f.write_str(data)

@@ -1,3 +1,5 @@
+#[cfg(feature = "waker")]
+use std::os::raw::c_void;
 use std::{
   fmt::Debug, future::Future, ops::{Deref, DerefMut}, pin::Pin, task::{Context, Poll}
 };
@@ -6,11 +8,19 @@ use tokio::task::{JoinHandle, spawn_blocking};
 
 use crate::{commands::FFISafeContainer, common::FFIableObject};
 
+#[cfg(feature = "waker")]
+mod waker;
+
+#[cfg(feature = "waker")]
+pub use waker::{WAKER, call_waker_consume_ptr};
+
 #[repr(C)]
 #[allow(deprecated)]
 pub enum AsyncInterface<T: FFISafeContainer + 'static> {
   Threaded(ThreadedTask<T>),
   Lazy(LazyableTask<T>),
+  #[cfg(feature = "waker")]
+  LazyWithWaker(LazyableTaskWithWaker<T>)
 }
 
 impl<T: FFISafeContainer + 'static> Future for AsyncInterface<T> {
@@ -20,6 +30,8 @@ impl<T: FFISafeContainer + 'static> Future for AsyncInterface<T> {
     match self.as_mut().get_mut() {
       AsyncInterface::Lazy(lazy) => Pin::new(lazy).poll(cx).map(|x| SafeWrapped(x)),
       AsyncInterface::Threaded(threaded) => Pin::new(threaded).poll(cx),
+      #[cfg(feature = "waker")]
+      AsyncInterface::LazyWithWaker(lazy) => Pin::new(lazy).poll(cx).map(|x| SafeWrapped(x)),
     }
   }
 }
@@ -123,6 +135,50 @@ impl<T: FFISafeContainer + 'static> Future for LazyableTask<T> {
           tokio::time::sleep(tokio::time::Duration::from_millis(20)).await;
           waker.wake();
         });
+        Poll::Pending
+      }
+    }
+  }
+}
+
+#[repr(C)]
+#[cfg(feature = "waker")]
+pub struct LazyableTaskWithWaker<T: FFISafeContainer> {
+  pub state: FFIableObject,
+  pub waker: Option<*mut c_void>,
+  pub poll: extern "C" fn(state: *mut FFIableObject) -> PollResult<T>,
+  pub append_waker: extern "C" fn(waker: *mut c_void) -> ()
+}
+
+#[cfg(feature = "waker")]
+unsafe impl<T: FFISafeContainer> Send for LazyableTaskWithWaker<T> {}
+
+#[cfg(feature = "waker")]
+extern "C" fn call_waker_inner(waker: FFIableObject) {
+  use std::task::Waker;
+
+  let waker: Waker = unsafe { waker.reconstruct() };
+  waker.wake();
+}
+
+#[cfg(feature = "waker")]
+impl<T: FFISafeContainer + 'static> Future for LazyableTaskWithWaker<T> {
+  type Output = T;
+
+  fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
+    let data = (self.poll)(&mut self.state);
+    match data {
+      PollResult::Ready(r) => Poll::Ready(r),
+      PollResult::Poll => {
+        if self.waker.is_none() {
+          let waker: std::task::Waker = cx.waker().clone();
+          self.waker = Some({
+            (WAKER.create_waker)(FFIableObject::create_using_box_no_display(waker), call_waker_inner)
+          });
+
+          (self.append_waker)(self.waker.clone().unwrap())
+        }
+
         Poll::Pending
       }
     }
