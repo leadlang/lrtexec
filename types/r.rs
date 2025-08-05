@@ -753,6 +753,60 @@ pub mod common {
         };
         use tokio::task::{JoinHandle, spawn_blocking};
         use crate::{commands::FFISafeContainer, common::FFIableObject};
+        mod waker {
+            use std::{
+                env, mem::transmute, os::raw::c_void, path::PathBuf, str::FromStr,
+                sync::LazyLock,
+            };
+            use libloading::{library_filename, Library, Symbol};
+            use crate::common::FFIableObject;
+            pub static WAKER: LazyLock<Waker> = LazyLock::new(|| { Waker::new() });
+            /// This function consumes the pointer, should be called only once
+            pub extern "C" fn call_waker_consume_ptr(waker: *mut c_void) {
+                (*WAKER.call_waker_consume_ptr)(waker)
+            }
+            pub type CreateWaker = extern "C" fn(
+                waker: FFIableObject,
+                call: extern "C" fn(waker: FFIableObject) -> (),
+            ) -> *mut c_void;
+            pub type CallWakerConsume = extern "C" fn(waker: *mut c_void);
+            pub struct Waker {
+                _lib: Library,
+                pub(crate) create_waker: Symbol<'static, CreateWaker>,
+                pub call_waker_consume_ptr: Symbol<'static, CallWakerConsume>,
+            }
+            impl Waker {
+                pub fn new() -> Self {
+                    let lrt = env::var("LRT_HOME").expect("LRT Home not present");
+                    let file = library_filename("async_waker");
+                    let mut path = PathBuf::from_str(&lrt).unwrap();
+                    path.push("libs");
+                    path.push("waker");
+                    path.push(file);
+                    let lib = unsafe {
+                        Library::new(path).expect("Unable to load async_waker")
+                    };
+                    let create: Symbol<'_, CreateWaker> = unsafe {
+                        lib.get(b"").unwrap()
+                    };
+                    let create = unsafe { transmute(create) };
+                    let call_consume_ptr: Symbol<
+                        '_,
+                        extern "C" fn(*mut std::ffi::c_void),
+                    > = unsafe { lib.get(b"").unwrap() };
+                    let call_consume_ptr: Symbol<
+                        'static,
+                        extern "C" fn(*mut std::ffi::c_void),
+                    > = unsafe { transmute(call_consume_ptr) };
+                    Self {
+                        _lib: lib,
+                        create_waker: create,
+                        call_waker_consume_ptr: call_consume_ptr,
+                    }
+                }
+            }
+        }
+        pub use waker::{WAKER, call_waker_consume_ptr};
         #[repr(C)]
         #[allow(deprecated)]
         pub enum AsyncInterface<T: FFISafeContainer + 'static> {
@@ -872,18 +926,6 @@ pub mod common {
                 }
             }
         }
-        #[link(name = "async_waker")]
-        unsafe extern "C" {
-            unsafe fn create_waker(
-                waker: FFIableObject,
-                call: extern "C" fn(waker: FFIableObject) -> (),
-            ) -> *mut c_void;
-            /// Use this function to call the waker
-            ///
-            /// SAFETY:
-            /// As a side effect this function also consumes the ptr and deallocates this.
-            pub unsafe fn call_waker_consume_ptr(waker: *mut c_void);
-        }
         #[repr(C)]
         pub struct LazyableTaskWithWaker<T: FFISafeContainer> {
             pub state: FFIableObject,
@@ -892,7 +934,7 @@ pub mod common {
             pub append_waker: extern "C" fn(waker: *mut c_void) -> (),
         }
         unsafe impl<T: FFISafeContainer> Send for LazyableTaskWithWaker<T> {}
-        extern "C" fn call_waker(waker: FFIableObject) {
+        extern "C" fn call_waker_inner(waker: FFIableObject) {
             use std::task::Waker;
             let waker: Waker = unsafe { waker.reconstruct() };
             waker.wake();
@@ -909,10 +951,11 @@ pub mod common {
                     PollResult::Poll => {
                         if self.waker.is_none() {
                             let waker: std::task::Waker = cx.waker().clone();
-                            self.waker = Some(unsafe {
-                                create_waker(
+                            self.waker = Some({
+                                (WAKER
+                                    .create_waker)(
                                     FFIableObject::create_using_box_no_display(waker),
-                                    call_waker,
+                                    call_waker_inner,
                                 )
                             });
                             (self.append_waker)(self.waker.clone().unwrap())
