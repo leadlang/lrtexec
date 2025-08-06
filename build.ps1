@@ -34,19 +34,35 @@ Write-Host "Building smelt ($($buildType))"
 ../compiler $buildType --bins
 ""
 
-Set-Location ../async_waker
+Set-Location ../utils/async_waker
 
 # Build waker
 Write-Host "Building waker ($($buildType))"
-../compiler $buildType --lib
+../../compiler $buildType --lib
 ""
 
-Set-Location ..
+Set-Location ../hashmap
+
+# Build waker
+Write-Host "Building hashmap ($($buildType))"
+../../compiler $buildType --lib
+""
+
+Set-Location ../vector
+
+# Build waker
+Write-Host "Building vector ($($buildType))"
+../../compiler $buildType --lib
+""
+
+Set-Location ../..
 
 Remove-Item -Path dist -Recurse -ErrorAction SilentlyContinue
 New-Item -Path dist -ItemType Directory -ErrorAction SilentlyContinue > $null
 
 New-Item -Path dist/libs/waker -ItemType Directory -ErrorAction SilentlyContinue > $null
+New-Item -Path dist/libs/hashmap -ItemType Directory -ErrorAction SilentlyContinue > $null
+New-Item -Path dist/libs/vector -ItemType Directory -ErrorAction SilentlyContinue > $null
 
 if ($env:GUI -ne "false") {
   New-Item -Path dist/libs/dialog -ItemType Directory -ErrorAction SilentlyContinue > $null
@@ -65,8 +81,14 @@ Copy-Item -Path "./lrt/target$($buildTarget)/$($buildType)/*" -Filter lgui* -Des
 # Copy linst
 Copy-Item -Path "./linst/target$($buildTarget)/$($buildType)/*" -Filter linst* -Destination "./dist/" -Recurse
 
-Copy-Item -Path "./async_waker/target$($buildTarget)/$($buildType)/*" -Filter async_waker* -Destination "./dist/libs/waker/" -Recurse
-Copy-Item -Path "./async_waker/target$($buildTarget)/$($buildType)/*" -Filter libasync_waker* -Destination "./dist/libs/waker/" -Recurse
+Copy-Item -Path "./utils/async_waker/target$($buildTarget)/$($buildType)/*" -Filter async_waker* -Destination "./dist/libs/waker/" -Recurse
+Copy-Item -Path "./utils/async_waker/target$($buildTarget)/$($buildType)/*" -Filter libasync_waker* -Destination "./dist/libs/waker/" -Recurse
+
+Copy-Item -Path "./utils/hashmap/target$($buildTarget)/$($buildType)/*" -Filter hashmap* -Destination "./dist/libs/hashmap/" -Recurse
+Copy-Item -Path "./utils/hashmap/target$($buildTarget)/$($buildType)/*" -Filter libhashmap* -Destination "./dist/libs/hashmap/" -Recurse
+
+Copy-Item -Path "./utils/vector/target$($buildTarget)/$($buildType)/*" -Filter vector* -Destination "./dist/libs/vector/" -Recurse
+Copy-Item -Path "./utils/vector/target$($buildTarget)/$($buildType)/*" -Filter libvector* -Destination "./dist/libs/vector/" -Recurse
 
 if ($env:GUI -ne "false") {
   Copy-Item -Path "./dialog/target$($buildTarget)/$($buildType)/*" -Filter intl_dialog* -Destination "./dist/libs/dialog/" -Recurse
