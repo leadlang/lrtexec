@@ -1,0 +1,7 @@
+language = "C"
+
+documentation_style = "doxy"
+
+[parse]
+parse_deps = false
+extra_bindings = ["my_awesome_dep"]

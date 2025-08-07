@@ -39,13 +39,13 @@ pub mod commands {
             }
             extern "C" fn general_drop<T>(ptrr: *mut c_void) {
                 unsafe {
-                    _ = Box::from_raw(ptrr as *mut T);
+                    _ = Boxed::from_raw(ptrr as *mut T);
                 }
             }
             impl Into<ContainerV0> for u8 {
                 fn into(self) -> ContainerV0 {
-                    let data = Box::new(self);
-                    let d = Box::into_raw(data);
+                    let data = Boxed::new(self);
+                    let d = Boxed::into_raw(data);
                     ContainerV0 {
                         data: d as *mut c_void,
                         drop: general_drop::<u8>,
@@ -79,8 +79,8 @@ pub mod commands {
             }
             impl Into<ContainerV0> for u16 {
                 fn into(self) -> ContainerV0 {
-                    let data = Box::new(self);
-                    let d = Box::into_raw(data);
+                    let data = Boxed::new(self);
+                    let d = Boxed::into_raw(data);
                     ContainerV0 {
                         data: d as *mut c_void,
                         drop: general_drop::<u16>,
@@ -114,8 +114,8 @@ pub mod commands {
             }
             impl Into<ContainerV0> for u32 {
                 fn into(self) -> ContainerV0 {
-                    let data = Box::new(self);
-                    let d = Box::into_raw(data);
+                    let data = Boxed::new(self);
+                    let d = Boxed::into_raw(data);
                     ContainerV0 {
                         data: d as *mut c_void,
                         drop: general_drop::<u32>,
@@ -149,8 +149,8 @@ pub mod commands {
             }
             impl Into<ContainerV0> for u64 {
                 fn into(self) -> ContainerV0 {
-                    let data = Box::new(self);
-                    let d = Box::into_raw(data);
+                    let data = Boxed::new(self);
+                    let d = Boxed::into_raw(data);
                     ContainerV0 {
                         data: d as *mut c_void,
                         drop: general_drop::<u64>,
@@ -184,8 +184,8 @@ pub mod commands {
             }
             impl Into<ContainerV0> for u128 {
                 fn into(self) -> ContainerV0 {
-                    let data = Box::new(self);
-                    let d = Box::into_raw(data);
+                    let data = Boxed::new(self);
+                    let d = Boxed::into_raw(data);
                     ContainerV0 {
                         data: d as *mut c_void,
                         drop: general_drop::<u128>,
@@ -219,8 +219,8 @@ pub mod commands {
             }
             impl Into<ContainerV0> for i8 {
                 fn into(self) -> ContainerV0 {
-                    let data = Box::new(self);
-                    let d = Box::into_raw(data);
+                    let data = Boxed::new(self);
+                    let d = Boxed::into_raw(data);
                     ContainerV0 {
                         data: d as *mut c_void,
                         drop: general_drop::<i8>,
@@ -254,8 +254,8 @@ pub mod commands {
             }
             impl Into<ContainerV0> for i16 {
                 fn into(self) -> ContainerV0 {
-                    let data = Box::new(self);
-                    let d = Box::into_raw(data);
+                    let data = Boxed::new(self);
+                    let d = Boxed::into_raw(data);
                     ContainerV0 {
                         data: d as *mut c_void,
                         drop: general_drop::<i16>,
@@ -289,8 +289,8 @@ pub mod commands {
             }
             impl Into<ContainerV0> for i32 {
                 fn into(self) -> ContainerV0 {
-                    let data = Box::new(self);
-                    let d = Box::into_raw(data);
+                    let data = Boxed::new(self);
+                    let d = Boxed::into_raw(data);
                     ContainerV0 {
                         data: d as *mut c_void,
                         drop: general_drop::<i32>,
@@ -324,8 +324,8 @@ pub mod commands {
             }
             impl Into<ContainerV0> for i64 {
                 fn into(self) -> ContainerV0 {
-                    let data = Box::new(self);
-                    let d = Box::into_raw(data);
+                    let data = Boxed::new(self);
+                    let d = Boxed::into_raw(data);
                     ContainerV0 {
                         data: d as *mut c_void,
                         drop: general_drop::<i64>,
@@ -359,8 +359,8 @@ pub mod commands {
             }
             impl Into<ContainerV0> for i128 {
                 fn into(self) -> ContainerV0 {
-                    let data = Box::new(self);
-                    let d = Box::into_raw(data);
+                    let data = Boxed::new(self);
+                    let d = Boxed::into_raw(data);
                     ContainerV0 {
                         data: d as *mut c_void,
                         drop: general_drop::<i128>,
@@ -394,8 +394,8 @@ pub mod commands {
             }
             impl Into<ContainerV0> for f32 {
                 fn into(self) -> ContainerV0 {
-                    let data = Box::new(self);
-                    let d = Box::into_raw(data);
+                    let data = Boxed::new(self);
+                    let d = Boxed::into_raw(data);
                     ContainerV0 {
                         data: d as *mut c_void,
                         drop: general_drop::<f32>,
@@ -429,8 +429,8 @@ pub mod commands {
             }
             impl Into<ContainerV0> for f64 {
                 fn into(self) -> ContainerV0 {
-                    let data = Box::new(self);
-                    let d = Box::into_raw(data);
+                    let data = Boxed::new(self);
+                    let d = Boxed::into_raw(data);
                     ContainerV0 {
                         data: d as *mut c_void,
                         drop: general_drop::<f64>,
@@ -464,8 +464,8 @@ pub mod commands {
             }
             impl Into<ContainerV0> for bool {
                 fn into(self) -> ContainerV0 {
-                    let data = Box::new(self);
-                    let d = Box::into_raw(data);
+                    let data = Boxed::new(self);
+                    let d = Boxed::into_raw(data);
                     ContainerV0 {
                         data: d as *mut c_void,
                         drop: general_drop::<bool>,
@@ -509,8 +509,8 @@ pub mod commands {
             }
             impl Into<ContainerV0> for FFISafeString {
                 fn into(self) -> ContainerV0 {
-                    let data = Box::new(self);
-                    let d = Box::into_raw(data);
+                    let data = Boxed::new(self);
+                    let d = Boxed::into_raw(data);
                     ContainerV0 {
                         data: d as *mut c_void,
                         drop: general_drop::<FFISafeString>,
@@ -1147,7 +1147,7 @@ pub mod common {
     }
     extern "C" fn general_drop<T>(ptr: *mut c_void) {
         unsafe {
-            drop(Box::from_raw(ptr as *mut T));
+            drop(Boxed::from_raw(ptr as *mut T));
         }
     }
     extern "C" fn general_display<T: Display>(ptr: *mut c_void) -> FFISafeString {
@@ -1202,7 +1202,7 @@ pub mod common {
                 };
             }
             self.poisoned = true;
-            *(unsafe { Box::from_raw(self.data as *mut T) })
+            *(unsafe { Boxed::from_raw(self.data as *mut T) })
         }
         /// Transfers the ownership to the new data and sets the `poisoned` field to `true` of this structure
         pub unsafe fn transfer_ownership(&mut self) -> FFIableObject {
@@ -1236,8 +1236,8 @@ pub mod common {
             unsafe { &*(self.data as *mut T) }
         }
         pub fn create_using_box<T: Debug + Display>(data: T) -> Self {
-            let data = Box::new(data);
-            let data = Box::into_raw(data);
+            let data = Boxed::new(data);
+            let data = Boxed::into_raw(data);
             Self {
                 data: data as *mut c_void,
                 display: general_display::<T>,
@@ -1247,8 +1247,8 @@ pub mod common {
             }
         }
         pub fn create_using_box_no_display<T: Debug>(data: T) -> Self {
-            let data = Box::new(data);
-            let data = Box::into_raw(data);
+            let data = Boxed::new(data);
+            let data = Boxed::into_raw(data);
             Self {
                 data: data as *mut c_void,
                 display: no_display,

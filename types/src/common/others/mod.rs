@@ -4,6 +4,8 @@ use std::os::raw::c_char;
 use std::ptr; // For ptr::null_mut() and ptr::copy()
 use std::slice; // For slice::from_raw_parts_mut()
 
+pub mod boxes;
+
 /// A C-compatible string for FFI.
 ///
 /// This struct manages a null-terminated C-style string (`*mut c_char`)

@@ -4,7 +4,7 @@ use std::{
   marker::PhantomData,
 };
 
-use crate::{commands::FFISafeContainer, common::others::FFISafeString};
+use crate::{commands::FFISafeContainer, common::others::{boxes::Boxed, FFISafeString}};
 
 pub mod r#async;
 pub mod others;
@@ -65,7 +65,7 @@ impl<'a, T> WrappedFFIableObject<'a, T> {
 
 extern "C" fn general_drop<T>(ptr: *mut c_void) {
   unsafe {
-    drop(Box::from_raw(ptr as *mut T));
+    drop(Boxed::from_raw(ptr as *mut T));
   }
 }
 
@@ -118,7 +118,7 @@ impl FFIableObject {
 
     self.poisoned = true;
 
-    *(unsafe { Box::from_raw(self.data as *mut T) })
+    (unsafe { Boxed::from_raw(self.data as *mut T) }).unbox()
   }
 
   /// Transfers the ownership to the new data and sets the `poisoned` field to `true` of this structure
@@ -158,8 +158,8 @@ impl FFIableObject {
   }
 
   pub fn create_using_box<T: Debug + Display>(data: T) -> Self {
-    let data = Box::new(data);
-    let data = Box::into_raw(data);
+    let data = Boxed::new(data);
+    let data = Boxed::into_raw(data);
 
     Self {
       data: data as *mut c_void,
@@ -171,8 +171,8 @@ impl FFIableObject {
   }
 
   pub fn create_using_box_no_display<T: Debug>(data: T) -> Self {
-    let data = Box::new(data);
-    let data = Box::into_raw(data);
+    let data = Boxed::new(data);
+    let data = Boxed::into_raw(data);
 
     Self {
       data: data as *mut c_void,

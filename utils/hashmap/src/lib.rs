@@ -38,6 +38,7 @@ macro_rules! get {
   };
 }
 
+#[unsafe(no_mangle)]
 pub unsafe extern "C" fn insert_int(map: *const Ref, k: usize, v: FFIableObject) -> Maybe<FFIableObject> {
   let mut hmap = get!(map as AbiUnsafeNumMap);
 
@@ -48,6 +49,7 @@ pub unsafe extern "C" fn insert_int(map: *const Ref, k: usize, v: FFIableObject)
   data
 }
 
+#[unsafe(no_mangle)]
 pub unsafe extern "C" fn get_int(map: *const Ref, k: *const usize) -> Maybe<*const FFIableObject> {
   let mut hmap = get!(map as AbiUnsafeNumMap);
 
@@ -58,6 +60,7 @@ pub unsafe extern "C" fn get_int(map: *const Ref, k: *const usize) -> Maybe<*con
   data
 }
 
+#[unsafe(no_mangle)]
 pub unsafe extern "C" fn remove_int(map: *const Ref, k: *const usize) -> Maybe<FFIableObject> {
   let mut hmap = get!(map as AbiUnsafeNumMap);
 
@@ -68,6 +71,7 @@ pub unsafe extern "C" fn remove_int(map: *const Ref, k: *const usize) -> Maybe<F
   data
 }
 
+#[unsafe(no_mangle)]
 pub unsafe extern "C" fn insert_str(map: *const Ref, k: FFISafeString, v: FFIableObject) -> Maybe<FFIableObject> {
   let mut hmap = get!(map as AbiUnsafeStrMap);
 
@@ -78,6 +82,7 @@ pub unsafe extern "C" fn insert_str(map: *const Ref, k: FFISafeString, v: FFIabl
   data
 }
 
+#[unsafe(no_mangle)]
 pub unsafe extern "C" fn get_str(
   map: *const Ref,
   k: *const FFISafeString,
@@ -95,6 +100,7 @@ pub unsafe extern "C" fn get_str(
   data
 }
 
+#[unsafe(no_mangle)]
 pub unsafe extern "C" fn remove_str(
   map: *const Ref,
   k: *const FFISafeString,

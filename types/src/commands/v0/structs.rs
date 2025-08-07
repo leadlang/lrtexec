@@ -5,7 +5,7 @@
 
 use std::{fmt::Debug, os::raw::c_void};
 
-use crate::common::{others::FFISafeString, FFIableObject};
+use crate::common::{others::{boxes::Boxed, FFISafeString}, FFIableObject};
 use super::FFISafeContainer;
 
 #[repr(C)]
@@ -31,7 +31,7 @@ impl Drop for ContainerV0 {
 
 extern "C" fn general_drop<T>(ptrr: *mut c_void) {
   unsafe {
-    _ = Box::from_raw(ptrr as *mut T);
+    _ = Boxed::from_raw(ptrr as *mut T);
   }
 }
 
@@ -43,8 +43,8 @@ macro_rules! implement {
         $(
           impl Into<ContainerV0> for $t {
             fn into(self) -> ContainerV0 {
-              let data = Box::new(self);
-              let d = Box::into_raw(data);
+              let data = Boxed::new(self);
+              let d = Boxed::into_raw(data);
 
               ContainerV0 {
                 data: d as *mut c_void,
@@ -127,8 +127,8 @@ impl Into<ContainerV0> for &str {
 
 impl Into<ContainerV0> for FFISafeString {
   fn into(self) -> ContainerV0 {
-    let data = Box::new(self);
-    let d = Box::into_raw(data);
+    let data = Boxed::new(self);
+    let d = Boxed::into_raw(data);
 
     ContainerV0 {
       data: d as *mut c_void,
