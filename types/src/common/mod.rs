@@ -1,7 +1,5 @@
 use std::{
-  ffi::c_void,
-  fmt::{Debug, Display},
-  marker::PhantomData,
+  any::TypeId, ffi::c_void, fmt::{Debug, Display}, marker::PhantomData
 };
 
 use crate::{commands::FFISafeContainer, common::others::{boxes::Boxed, FFISafeString}};
@@ -16,6 +14,7 @@ pub struct FFIableObject {
   fmt: extern "C" fn(*mut c_void) -> FFISafeString,
   display: extern "C" fn(*mut c_void) -> FFISafeString,
   poisoned: bool,
+  tag: u8
 }
 
 impl FFISafeContainer for FFIableObject {}
@@ -27,7 +26,7 @@ pub struct WrappedFFIableObject<'a, T> {
 }
 
 impl<'a, T> WrappedFFIableObject<'a, T> {
-  pub fn create_using_box<E: Debug + Display>(data: E) -> (Self, FFIableObject) {
+  pub fn create_using_box<E: Debug + Display + 'static>(data: E) -> (Self, FFIableObject) {
     let mut object = FFIableObject::create_using_box(data);
 
     let data = Self::create_from_object(&mut object);
@@ -35,8 +34,24 @@ impl<'a, T> WrappedFFIableObject<'a, T> {
     (data, object)
   }
 
-  pub fn create_using_box_no_display<E: Debug>(data: E) -> (Self, FFIableObject) {
+  pub fn create_using_box_no_display<E: Debug + 'static>(data: E) -> (Self, FFIableObject) {
     let mut object = FFIableObject::create_using_box_no_display(data);
+
+    let data = Self::create_from_object(&mut object);
+
+    (data, object)
+  }
+
+    pub fn create_using_box_non_static<E: Debug + Display>(data: E) -> (Self, FFIableObject) {
+    let mut object = FFIableObject::create_using_box_non_static(data);
+
+    let data = Self::create_from_object(&mut object);
+
+    (data, object)
+  }
+
+  pub fn create_using_box_no_display_non_static<E: Debug + 'static>(data: E) -> (Self, FFIableObject) {
+    let mut object = FFIableObject::create_using_box_no_display_non_static(data);
 
     let data = Self::create_from_object(&mut object);
 
@@ -93,6 +108,72 @@ extern "C" fn no_display(_: *mut c_void) -> FFISafeString {
   FFISafeString::from(format!("<cannot display type>"))
 }
 
+macro_rules! implement {
+  (
+    $($num:expr => $t:ty),*
+  ) => {
+    pastey::paste! {
+      $(
+          impl Into<FFIableObject> for $t {
+            fn into(self) -> FFIableObject {
+              FFIableObject::create_using_box(self)
+            }
+          }
+
+          impl FFIableObject {
+            /// Returns `None` is types do not match
+            pub fn [<as_ $t:lower>](&self) -> Option<&$t> {
+              if self.tag != $num {
+                return None;
+              }
+
+              unsafe {
+                Some(self.[<as_ $t:lower _unchecked>]())
+              }
+            }
+
+            /// Returns `None` is types do not match
+            pub fn [<as_ $t:lower _mut>](&self) -> Option<&mut $t> {
+              if self.tag != $num {
+                return None;
+              }
+
+              unsafe {
+                Some(self.[<as_ $t:lower _mut_unchecked>]())
+              }
+            }
+
+            /// In NO Case; Should this be used unless you're absolutely sure it is exactly the type you're casting it as
+            pub unsafe fn [<as_ $t:lower _unchecked>](&self) -> &$t {
+              unsafe {
+                &*(self.data as *mut $t)
+              }
+            }
+
+            /// In NO Case; Should this be used unless you're absolutely sure it is exactly the type you're casting it as
+            pub unsafe fn [<as_ $t:lower _mut_unchecked>](&self) -> &mut $t {
+              unsafe {
+                &mut *(self.data as *mut $t)
+              }
+            }
+          }
+      )*
+    }
+
+    fn get_tag<T: 'static>() -> u8 {
+      let ty = TypeId::of::<T>();
+      
+      $(
+        if ty == TypeId::of::<$t>() {
+          return $num;
+        }
+      )*
+
+      0
+    }
+  };
+}
+
 impl FFIableObject {
   /// (Un)safely consumes the FFIableObject and returns the original owned `T`.
   ///
@@ -132,6 +213,7 @@ impl FFIableObject {
       fmt: self.fmt,
       display: self.display,
       poisoned: false,
+      tag: self.tag
     }
   }
 
@@ -157,7 +239,7 @@ impl FFIableObject {
     unsafe { &*(self.data as *mut T) }
   }
 
-  pub fn create_using_box<T: Debug + Display>(data: T) -> Self {
+  pub fn create_using_box<T: Debug + Display + 'static>(data: T) -> Self {
     let data = Boxed::new(data);
     let data = Boxed::into_raw(data);
 
@@ -167,10 +249,11 @@ impl FFIableObject {
       drop: general_drop::<T>,
       fmt: general_debug::<T>,
       poisoned: false,
+      tag: get_tag::<T>()
     }
   }
 
-  pub fn create_using_box_no_display<T: Debug>(data: T) -> Self {
+  pub fn create_using_box_no_display<T: Debug + 'static>(data: T) -> Self {
     let data = Boxed::new(data);
     let data = Boxed::into_raw(data);
 
@@ -180,8 +263,54 @@ impl FFIableObject {
       drop: general_drop::<T>,
       fmt: general_debug::<T>,
       poisoned: false,
+      tag: get_tag::<T>()
     }
   }
+
+  pub fn create_using_box_non_static<T: Debug + Display>(data: T) -> Self {
+    let data = Boxed::new(data);
+    let data = Boxed::into_raw(data);
+
+    Self {
+      data: data as *mut c_void,
+      display: general_display::<T>,
+      drop: general_drop::<T>,
+      fmt: general_debug::<T>,
+      poisoned: false,
+      tag: 0
+    }
+  }
+
+  pub fn create_using_box_no_display_non_static<T: Debug>(data: T) -> Self {
+    let data = Boxed::new(data);
+    let data = Boxed::into_raw(data);
+
+    Self {
+      data: data as *mut c_void,
+      display: no_display,
+      drop: general_drop::<T>,
+      fmt: general_debug::<T>,
+      poisoned: false,
+      tag: 0
+    }
+  }
+}
+
+implement! {
+  1 => u8,
+  2 => u16,
+  3 => u32,
+  4 => u64,
+  5 => u128,
+  6 => i8,
+  7 => i16,
+  8 => i32,
+  9 => i64,
+  10 => i128,
+  11 => f32,
+  12 => f64,
+  13 => bool,
+  14 => FFISafeString
 }
 
 impl Display for FFIableObject {

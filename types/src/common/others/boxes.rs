@@ -38,7 +38,7 @@ impl<T> Boxed<T> {
 
     Self { ptr, drop: true }
   }
-
+  
   /// Consumes the FfiBox and returns the value inside.
   ///
   /// This will deallocate the memory used by the box but not the value itself.
@@ -66,7 +66,7 @@ impl<T> Boxed<T> {
   ///
   /// # Safety
   /// The caller must guarantee that the pointer is valid, non-null,
-  /// and points to a value of type T that was allocated with `libc::malloc` i.e. by Boxed::<T>::new or equivalent.
+  /// and points to a value of type T that was allocated with `libc::malloc` i.e. by `Boxed::<T>::new`` or equivalent.
   /// The caller also takes responsibility for ensuring that the data is not
   /// freed elsewhere.
   pub unsafe fn from_raw(ptr: *mut T) -> Self {
