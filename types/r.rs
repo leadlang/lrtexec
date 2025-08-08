@@ -223,7 +223,7 @@ pub mod common {
         marker::PhantomData,
     };
     use crate::{
-        commands::FFISafeContainer, common::others::{boxes::Boxed, FFISafeString},
+        commands::FFISafeContainer, common::others::{FFISafeString, boxes::Boxed},
     };
     pub mod r#async {
         use std::os::raw::c_void;
@@ -238,9 +238,9 @@ pub mod common {
                 env, mem::transmute, os::raw::c_void, path::PathBuf, str::FromStr,
                 sync::LazyLock,
             };
-            use libloading::{library_filename, Library, Symbol};
+            use libloading::{Library, Symbol, library_filename};
             use crate::common::FFIableObject;
-            pub static WAKER: LazyLock<Waker> = LazyLock::new(|| { Waker::new() });
+            pub static WAKER: LazyLock<Waker> = LazyLock::new(|| Waker::new());
             /// This function consumes the pointer, should be called only once
             pub extern "C" fn call_waker_consume_ptr(waker: *mut c_void) {
                 (*WAKER.call_waker_consume_ptr)(waker)
@@ -453,11 +453,11 @@ pub mod common {
         use std::ptr;
         use std::slice;
         pub mod boxes {
-            use libc::{malloc, free};
+            use libc::{free, malloc};
             use std::ffi::c_void;
-            use std::ptr::{self, NonNull};
-            use std::ops::{Deref, DerefMut};
             use std::mem;
+            use std::ops::{Deref, DerefMut};
+            use std::ptr::{self, NonNull};
             #[repr(C)]
             pub struct Boxed<T> {
                 ptr: NonNull<T>,
@@ -549,11 +549,11 @@ pub mod common {
         }
         pub mod hashmap {
             use crate::{
-                common::{others::FFISafeString, FFIableObject},
-                Maybe, Ref,
+                Maybe, Ref, common::{FFIableObject, others::FFISafeString},
+                create,
             };
-            use std::{env, mem::transmute, path::PathBuf, str::FromStr, sync::LazyLock};
             use libloading::{Library, Symbol, library_filename};
+            use std::{env, mem::transmute, path::PathBuf, str::FromStr, sync::LazyLock};
             pub static FFIHASHMAP: LazyLock<FfiHashMap> = LazyLock::new(|| {
                 FfiHashMap::new()
             });
@@ -588,11 +588,17 @@ pub mod common {
                 _lib: Library,
                 ///Creates a new HashMap
                 pub create: CallCreateFn,
+                ///Inserts a key-value pair using an integer key
                 pub insert_int: CallInsertIntFn,
+                ///Gets a reference to the value associated with an integer key
                 pub get_int: CallGetIntFn,
+                ///Removes and returns the value associated with an integer key
                 pub remove_int: CallRemoveIntFn,
+                ///Inserts a key-value pair using a string key
                 pub insert_str: CallInsertStrFn,
+                ///Gets a reference to the value associated with a string key
                 pub get_str: CallGetStrFn,
+                ///Removes and returns the value associated with a string key
                 pub remove_str: CallRemoveStrFn,
             }
             impl FfiHashMap {
@@ -682,6 +688,150 @@ pub mod common {
                 }
             }
         }
+        pub mod vector {
+            use crate::{Maybe, Ref, common::FFIableObject, create};
+            use libloading::{Library, Symbol, library_filename};
+            use std::{env, mem::transmute, path::PathBuf, str::FromStr, sync::LazyLock};
+            pub static FFIVECTOR: LazyLock<FfiVector> = LazyLock::new(|| {
+                FfiVector::new()
+            });
+            pub type CallCreateFn = unsafe extern "C" fn() -> Ref;
+            pub type CallGetAtFn = unsafe extern "C" fn(
+                this: *mut Ref,
+                index: usize,
+            ) -> Maybe<*const FFIableObject>;
+            pub type CallGetAtMutFn = unsafe extern "C" fn(
+                this: *mut Ref,
+                index: usize,
+            ) -> Maybe<*mut FFIableObject>;
+            pub type CallReplaceFn = unsafe extern "C" fn(
+                this: *mut Ref,
+                index: usize,
+                with: FFIableObject,
+            ) -> Maybe<FFIableObject>;
+            pub type CallPopFn = unsafe extern "C" fn(
+                this: *mut Ref,
+            ) -> Maybe<FFIableObject>;
+            pub type CallPushFn = unsafe extern "C" fn(
+                this: *mut Ref,
+                item: FFIableObject,
+            ) -> ();
+            pub type CallLengthFn = unsafe extern "C" fn(this: *mut Ref) -> usize;
+            pub type CallCapacityFn = unsafe extern "C" fn(this: *mut Ref) -> usize;
+            pub struct FfiVector {
+                _lib: Library,
+                ///Creates a new empty vector
+                pub create: CallCreateFn,
+                ///Gets a reference to the element at the specified index
+                pub get_at: CallGetAtFn,
+                ///Gets a mutable reference to the element at the specified index
+                pub get_at_mut: CallGetAtMutFn,
+                ///Replaces the element at the specified index
+                pub replace: CallReplaceFn,
+                ///Removes the last element from the vector and returns it
+                pub pop: CallPopFn,
+                ///Appends an element to the back of the vector
+                pub push: CallPushFn,
+                ///Returns the number of elements in the vector
+                pub length: CallLengthFn,
+                ///Returns the total number of elements the vector can hold without reallocating
+                pub capacity: CallCapacityFn,
+            }
+            impl FfiVector {
+                pub fn new() -> Self {
+                    let lrt = env::var("LRT_HOME").expect("LRT Home not present");
+                    let file = library_filename("vector");
+                    let mut path = PathBuf::from_str(&lrt).unwrap();
+                    path.push("libs");
+                    path.push("waker");
+                    path.push(file);
+                    let lib = unsafe {
+                        Library::new(path).expect("Unable to load async_waker")
+                    };
+                    let create = {
+                        let ptr: Symbol<'_, CallCreateFn> = unsafe {
+                            lib.get("create".as_bytes()).unwrap()
+                        };
+                        let out: Symbol<'static, CallCreateFn> = unsafe {
+                            transmute(ptr)
+                        };
+                        out
+                    };
+                    let get_at = {
+                        let ptr: Symbol<'_, CallGetAtFn> = unsafe {
+                            lib.get("get_at".as_bytes()).unwrap()
+                        };
+                        let out: Symbol<'static, CallGetAtFn> = unsafe {
+                            transmute(ptr)
+                        };
+                        out
+                    };
+                    let get_at_mut = {
+                        let ptr: Symbol<'_, CallGetAtMutFn> = unsafe {
+                            lib.get("get_at_mut".as_bytes()).unwrap()
+                        };
+                        let out: Symbol<'static, CallGetAtMutFn> = unsafe {
+                            transmute(ptr)
+                        };
+                        out
+                    };
+                    let replace = {
+                        let ptr: Symbol<'_, CallReplaceFn> = unsafe {
+                            lib.get("replace".as_bytes()).unwrap()
+                        };
+                        let out: Symbol<'static, CallReplaceFn> = unsafe {
+                            transmute(ptr)
+                        };
+                        out
+                    };
+                    let pop = {
+                        let ptr: Symbol<'_, CallPopFn> = unsafe {
+                            lib.get("pop".as_bytes()).unwrap()
+                        };
+                        let out: Symbol<'static, CallPopFn> = unsafe { transmute(ptr) };
+                        out
+                    };
+                    let push = {
+                        let ptr: Symbol<'_, CallPushFn> = unsafe {
+                            lib.get("push".as_bytes()).unwrap()
+                        };
+                        let out: Symbol<'static, CallPushFn> = unsafe { transmute(ptr) };
+                        out
+                    };
+                    let length = {
+                        let ptr: Symbol<'_, CallLengthFn> = unsafe {
+                            lib.get("length".as_bytes()).unwrap()
+                        };
+                        let out: Symbol<'static, CallLengthFn> = unsafe {
+                            transmute(ptr)
+                        };
+                        out
+                    };
+                    let capacity = {
+                        let ptr: Symbol<'_, CallCapacityFn> = unsafe {
+                            lib.get("capacity".as_bytes()).unwrap()
+                        };
+                        let out: Symbol<'static, CallCapacityFn> = unsafe {
+                            transmute(ptr)
+                        };
+                        out
+                    };
+                    Self {
+                        _lib: lib,
+                        create: *create,
+                        get_at: *get_at,
+                        get_at_mut: *get_at_mut,
+                        replace: *replace,
+                        pop: *pop,
+                        push: *push,
+                        length: *length,
+                        capacity: *capacity,
+                    }
+                }
+            }
+        }
+        #[macro_use]
+        pub(crate) mod macros {}
         /// A C-compatible string for FFI.
         ///
         /// This struct manages a null-terminated C-style string (`*mut c_char`)

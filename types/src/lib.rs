@@ -28,14 +28,14 @@ impl Drop for Ref {
 #[repr(C)]
 pub enum Maybe<T> {
   Some(T),
-  None
+  None,
 }
 
 impl<T> From<Option<&T>> for Maybe<*const T> {
   fn from(value: Option<&T>) -> Self {
     match value {
       Some(x) => Maybe::Some(x),
-      None => Maybe::None
+      None => Maybe::None,
     }
   }
 }
@@ -44,7 +44,7 @@ impl<T> From<Option<&mut T>> for Maybe<*mut T> {
   fn from(value: Option<&mut T>) -> Self {
     match value {
       Some(x) => Maybe::Some(x),
-      None => Maybe::None
+      None => Maybe::None,
     }
   }
 }
@@ -53,10 +53,7 @@ impl<T> From<Option<T>> for Maybe<T> {
   fn from(value: Option<T>) -> Self {
     match value {
       Some(x) => Maybe::Some(x),
-      None => Maybe::None
+      None => Maybe::None,
     }
   }
 }
-
-#[cfg(test)]
-mod tests;

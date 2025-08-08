@@ -1,8 +1,14 @@
 use std::{
-  any::TypeId, ffi::c_void, fmt::{Debug, Display}, marker::PhantomData
+  any::TypeId,
+  ffi::c_void,
+  fmt::{Debug, Display},
+  marker::PhantomData,
 };
 
-use crate::{commands::FFISafeContainer, common::others::{boxes::Boxed, FFISafeString}};
+use crate::{
+  commands::FFISafeContainer,
+  common::others::{FFISafeString, boxes::Boxed},
+};
 
 pub mod r#async;
 pub mod others;
@@ -14,7 +20,7 @@ pub struct FFIableObject {
   fmt: extern "C" fn(*mut c_void) -> FFISafeString,
   display: extern "C" fn(*mut c_void) -> FFISafeString,
   poisoned: bool,
-  tag: u8
+  tag: u8,
 }
 
 impl FFISafeContainer for FFIableObject {}
@@ -42,7 +48,7 @@ impl<'a, T> WrappedFFIableObject<'a, T> {
     (data, object)
   }
 
-    pub fn create_using_box_non_static<E: Debug + Display>(data: E) -> (Self, FFIableObject) {
+  pub fn create_using_box_non_static<E: Debug + Display>(data: E) -> (Self, FFIableObject) {
     let mut object = FFIableObject::create_using_box_non_static(data);
 
     let data = Self::create_from_object(&mut object);
@@ -50,7 +56,9 @@ impl<'a, T> WrappedFFIableObject<'a, T> {
     (data, object)
   }
 
-  pub fn create_using_box_no_display_non_static<E: Debug + 'static>(data: E) -> (Self, FFIableObject) {
+  pub fn create_using_box_no_display_non_static<E: Debug + 'static>(
+    data: E,
+  ) -> (Self, FFIableObject) {
     let mut object = FFIableObject::create_using_box_no_display_non_static(data);
 
     let data = Self::create_from_object(&mut object);
@@ -162,7 +170,7 @@ macro_rules! implement {
 
     fn get_tag<T: 'static>() -> u8 {
       let ty = TypeId::of::<T>();
-      
+
       $(
         if ty == TypeId::of::<$t>() {
           return $num;
@@ -213,7 +221,7 @@ impl FFIableObject {
       fmt: self.fmt,
       display: self.display,
       poisoned: false,
-      tag: self.tag
+      tag: self.tag,
     }
   }
 
@@ -249,7 +257,7 @@ impl FFIableObject {
       drop: general_drop::<T>,
       fmt: general_debug::<T>,
       poisoned: false,
-      tag: get_tag::<T>()
+      tag: get_tag::<T>(),
     }
   }
 
@@ -263,7 +271,7 @@ impl FFIableObject {
       drop: general_drop::<T>,
       fmt: general_debug::<T>,
       poisoned: false,
-      tag: get_tag::<T>()
+      tag: get_tag::<T>(),
     }
   }
 
@@ -277,7 +285,7 @@ impl FFIableObject {
       drop: general_drop::<T>,
       fmt: general_debug::<T>,
       poisoned: false,
-      tag: 0
+      tag: 0,
     }
   }
 
@@ -291,7 +299,7 @@ impl FFIableObject {
       drop: general_drop::<T>,
       fmt: general_debug::<T>,
       poisoned: false,
-      tag: 0
+      tag: 0,
     }
   }
 }

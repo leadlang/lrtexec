@@ -1,13 +1,13 @@
-use libc::{malloc, free};
+use libc::{free, malloc};
 use std::ffi::c_void;
-use std::ptr::{self, NonNull};
-use std::ops::{Deref, DerefMut};
 use std::mem;
+use std::ops::{Deref, DerefMut};
+use std::ptr::{self, NonNull};
 
 #[repr(C)]
 pub struct Boxed<T> {
   ptr: NonNull<T>,
-  drop: bool
+  drop: bool,
 }
 
 impl<T> Boxed<T> {
@@ -21,7 +21,7 @@ impl<T> Boxed<T> {
     if size == 0 {
       return Boxed {
         ptr: NonNull::dangling(),
-        drop: true
+        drop: true,
       };
     }
 
@@ -38,7 +38,7 @@ impl<T> Boxed<T> {
 
     Self { ptr, drop: true }
   }
-  
+
   /// Consumes the FfiBox and returns the value inside.
   ///
   /// This will deallocate the memory used by the box but not the value itself.
@@ -72,7 +72,7 @@ impl<T> Boxed<T> {
   pub unsafe fn from_raw(ptr: *mut T) -> Self {
     Self {
       ptr: NonNull::new(ptr as *mut T).expect("Invalid Pointer provided"),
-      drop: true
+      drop: true,
     }
   }
 

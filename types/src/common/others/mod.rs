@@ -6,6 +6,10 @@ use std::slice; // For slice::from_raw_parts_mut()
 
 pub mod boxes;
 pub mod hashmap;
+pub mod vector;
+
+#[macro_use]
+pub(crate) mod macros;
 
 /// A C-compatible string for FFI.
 ///

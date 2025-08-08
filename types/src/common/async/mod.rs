@@ -1,7 +1,11 @@
 #[cfg(feature = "waker")]
 use std::os::raw::c_void;
 use std::{
-  fmt::Debug, future::Future, ops::{Deref, DerefMut}, pin::Pin, task::{Context, Poll}
+  fmt::Debug,
+  future::Future,
+  ops::{Deref, DerefMut},
+  pin::Pin,
+  task::{Context, Poll},
 };
 
 use tokio::task::{JoinHandle, spawn_blocking};
@@ -20,7 +24,7 @@ pub enum AsyncInterface<T: FFISafeContainer + 'static> {
   Threaded(ThreadedTask<T>),
   Lazy(LazyableTask<T>),
   #[cfg(feature = "waker")]
-  LazyWithWaker(LazyableTaskWithWaker<T>)
+  LazyWithWaker(LazyableTaskWithWaker<T>),
 }
 
 impl<T: FFISafeContainer + 'static> Future for AsyncInterface<T> {
@@ -47,7 +51,7 @@ impl<T: FFISafeContainer + 'static> ThreadedTask<T> {
   pub fn new(task: extern "C" fn() -> T) -> Self {
     Self {
       computation: task,
-      handle: None
+      handle: None,
     }
   }
 
@@ -147,7 +151,7 @@ pub struct LazyableTaskWithWaker<T: FFISafeContainer> {
   pub state: FFIableObject,
   pub waker: Option<*mut c_void>,
   pub poll: extern "C" fn(state: *mut FFIableObject) -> PollResult<T>,
-  pub append_waker: extern "C" fn(waker: *mut c_void) -> ()
+  pub append_waker: extern "C" fn(waker: *mut c_void) -> (),
 }
 
 #[cfg(feature = "waker")]
@@ -173,7 +177,10 @@ impl<T: FFISafeContainer + 'static> Future for LazyableTaskWithWaker<T> {
         if self.waker.is_none() {
           let waker: std::task::Waker = cx.waker().clone();
           self.waker = Some({
-            (WAKER.create_waker)(FFIableObject::create_using_box_no_display(waker), call_waker_inner)
+            (WAKER.create_waker)(
+              FFIableObject::create_using_box_no_display(waker),
+              call_waker_inner,
+            )
           });
 
           (self.append_waker)(self.waker.clone().unwrap())
