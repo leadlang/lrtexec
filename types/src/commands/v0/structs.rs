@@ -3,185 +3,15 @@
 //! 
 //! Structs related to v0 Assembly Syntax
 
-use std::{fmt::Debug, os::raw::c_void};
+use std::fmt::Debug;
 
-use crate::common::{others::{boxes::Boxed, FFISafeString}, FFIableObject};
-use super::FFISafeContainer;
-
-#[repr(C)]
-pub enum VariableDataV0 {
-  Inbuilt(ContainerV0),
-  Object(FFIableObject)
-}
-
-#[repr(C)]
-pub struct ContainerV0 {
-  pub data: *mut c_void,
-  pub drop: extern "C" fn(*mut c_void),
-  pub id: u8
-}
-
-impl FFISafeContainer for ContainerV0 {}
-
-impl Drop for ContainerV0 {
-  fn drop(&mut self) {
-    (self.drop)(self.data)
-  }
-}
-
-extern "C" fn general_drop<T>(ptrr: *mut c_void) {
-  unsafe {
-    _ = Boxed::from_raw(ptrr as *mut T);
-  }
-}
-
-macro_rules! implement {
-  (
-    $($num:expr => $t:ty),*
-  ) => {
-    pastey::paste! {
-        $(
-          impl Into<ContainerV0> for $t {
-            fn into(self) -> ContainerV0 {
-              let data = Boxed::new(self);
-              let d = Boxed::into_raw(data);
-
-              ContainerV0 {
-                data: d as *mut c_void,
-                drop: general_drop::<$t>,
-                id: $num
-              }
-            }
-          }
-
-          impl ContainerV0 {
-            /// Returns `None` is types do not match
-            pub fn [<as_ $t>](&self) -> Option<&$t> {
-              if self.id != $num {
-                return None;
-              }
-
-              unsafe {
-                Some(self.[<as_ $t _unchecked>]())
-              }
-            }
-
-            /// Returns `None` is types do not match
-            pub fn [<as_ $t _mut>](&self) -> Option<&mut $t> {
-              if self.id != $num {
-                return None;
-              }
-
-              unsafe {
-                Some(self.[<as_ $t _mut_unchecked>]())
-              }
-            }
-
-            /// In NO Case; Should this be used unless you're absolutely sure it is exactly the type you're casting it as
-            pub unsafe fn [<as_ $t _unchecked>](&self) -> &$t {
-              unsafe {
-                &*(self.data as *mut $t)
-              }
-            }
-
-            /// In NO Case; Should this be used unless you're absolutely sure it is exactly the type you're casting it as
-            pub unsafe fn [<as_ $t _mut_unchecked>](&self) -> &mut $t {
-              unsafe {
-                &mut *(self.data as *mut $t)
-              }
-            }
-          }
-      )*
-    }
-  };
-}
-
-implement! {
-  0 => u8,
-  1 => u16,
-  2 => u32,
-  3 => u64,
-  4 => u128,
-  5 => i8,
-  6 => i16,
-  7 => i32,
-  8 => i64,
-  9 => i128,
-  10 => f32,
-  11 => f64,
-  12 => bool
-  // 13 => FFISafeString
-}
-
-impl Into<ContainerV0> for String {
-  fn into(self) -> ContainerV0 {
-    FFISafeString::from(self).into()
-  }
-}
-
-impl Into<ContainerV0> for &str {
-  fn into(self) -> ContainerV0 {
-    FFISafeString::from(self).into()
-  }
-}
-
-impl Into<ContainerV0> for FFISafeString {
-  fn into(self) -> ContainerV0 {
-    let data = Boxed::new(self);
-    let d = Boxed::into_raw(data);
-
-    ContainerV0 {
-      data: d as *mut c_void,
-      drop: general_drop::<FFISafeString>,
-      id: 13
-    }
-  }
-}
-
-impl ContainerV0 {
-  /// Returns `None` is types do not match
-  pub fn as_string(&self) -> Option<&FFISafeString> {
-    if self.id != 13 {
-      return None;
-    }
-
-    unsafe {
-      Some(self.as_string_unchecked())
-    }
-  }
-
-  /// Returns `None` is types do not match
-  pub fn as_string_mut(&self) -> Option<&mut FFISafeString> {
-    if self.id != 13 {
-      return None;
-    }
-
-    unsafe {
-      Some(self.as_string_mut_unchecked())
-    }
-  }
-
-  /// In NO Case; Should this be used unless you're absolutely sure it is exactly the type you're casting it as
-  pub unsafe fn as_string_unchecked(&self) -> &FFISafeString {
-    unsafe {
-      &*(self.data as *mut FFISafeString)
-    }
-  }
-
-  /// In NO Case; Should this be used unless you're absolutely sure it is exactly the type you're casting it as
-  pub unsafe fn as_string_mut_unchecked(&self) -> &mut FFISafeString {
-    unsafe {
-      &mut *(self.data as *mut FFISafeString)
-    }
-  }
-}
-
+use crate::common::FFIableObject;
 
 #[repr(C)]
 #[derive(Default)]
 pub struct FnStackV0 {
   /// Return value (identifier in MemoryMap)
-  pub ret: Option<VariableDataV0>,
+  pub ret: Option<FFIableObject>,
   /// Registers
   pub r1: WrapperRegValueV0,
   pub r2: WrapperRegValueV0,
@@ -260,13 +90,13 @@ impl WrapperRegValueV0 {
   /// instance and the provided type `T` by the caller. If the enum instance is `Null`, this function will return `None`. If it is
   /// not `Null`, this function will return a mutable reference to the `FFIableObject`
   /// stored in the enum instance.
-  pub unsafe fn get_ptr_mut<T>(&self) -> Option<&mut T> {
+  pub unsafe fn get_ptr_mut<'a, T>(&'a self) -> Option<&'a mut T> {
     unsafe {
       Some(match self._inner {
         RegValueV0::Moved(ptr) => &mut *ptr,
         RegValueV0::Mut(ptr) => &mut *ptr,
         _ => return None,
-      }.get_mut())
+      }.get_mut::<T>())
     }
   }
 

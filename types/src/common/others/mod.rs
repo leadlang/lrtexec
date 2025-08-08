@@ -5,6 +5,7 @@ use std::ptr; // For ptr::null_mut() and ptr::copy()
 use std::slice; // For slice::from_raw_parts_mut()
 
 pub mod boxes;
+pub mod hashmap;
 
 /// A C-compatible string for FFI.
 ///

@@ -18,538 +18,12 @@ pub mod commands {
             //! This crate defines the `v0` of the Assembly Syntax of LRTEXEC Bytecode (also mentioned as assembly in many places)
             //!
             //! Structs related to v0 Assembly Syntax
-            use std::{fmt::Debug, os::raw::c_void};
-            use crate::common::{
-                others::{boxes::Boxed, FFISafeString},
-                FFIableObject,
-            };
-            use super::FFISafeContainer;
-            #[repr(C)]
-            pub enum VariableDataV0 {
-                Inbuilt(ContainerV0),
-                Object(FFIableObject),
-            }
-            #[repr(C)]
-            pub struct ContainerV0 {
-                pub data: *mut c_void,
-                pub drop: extern "C" fn(*mut c_void),
-                pub id: u8,
-            }
-            impl FFISafeContainer for ContainerV0 {}
-            impl Drop for ContainerV0 {
-                fn drop(&mut self) {
-                    (self.drop)(self.data)
-                }
-            }
-            extern "C" fn general_drop<T>(ptrr: *mut c_void) {
-                unsafe {
-                    _ = Boxed::from_raw(ptrr as *mut T);
-                }
-            }
-            impl Into<ContainerV0> for u8 {
-                fn into(self) -> ContainerV0 {
-                    let data = Boxed::new(self);
-                    let d = Boxed::into_raw(data);
-                    ContainerV0 {
-                        data: d as *mut c_void,
-                        drop: general_drop::<u8>,
-                        id: 0,
-                    }
-                }
-            }
-            impl ContainerV0 {
-                /// Returns `None` is types do not match
-                pub fn as_u8(&self) -> Option<&u8> {
-                    if self.id != 0 {
-                        return None;
-                    }
-                    unsafe { Some(self.as_u8_unchecked()) }
-                }
-                /// Returns `None` is types do not match
-                pub fn as_u8_mut(&self) -> Option<&mut u8> {
-                    if self.id != 0 {
-                        return None;
-                    }
-                    unsafe { Some(self.as_u8_mut_unchecked()) }
-                }
-                /// In NO Case; Should this be used unless you're absolutely sure it is exactly the type you're casting it as
-                pub unsafe fn as_u8_unchecked(&self) -> &u8 {
-                    unsafe { &*(self.data as *mut u8) }
-                }
-                /// In NO Case; Should this be used unless you're absolutely sure it is exactly the type you're casting it as
-                pub unsafe fn as_u8_mut_unchecked(&self) -> &mut u8 {
-                    unsafe { &mut *(self.data as *mut u8) }
-                }
-            }
-            impl Into<ContainerV0> for u16 {
-                fn into(self) -> ContainerV0 {
-                    let data = Boxed::new(self);
-                    let d = Boxed::into_raw(data);
-                    ContainerV0 {
-                        data: d as *mut c_void,
-                        drop: general_drop::<u16>,
-                        id: 1,
-                    }
-                }
-            }
-            impl ContainerV0 {
-                /// Returns `None` is types do not match
-                pub fn as_u16(&self) -> Option<&u16> {
-                    if self.id != 1 {
-                        return None;
-                    }
-                    unsafe { Some(self.as_u16_unchecked()) }
-                }
-                /// Returns `None` is types do not match
-                pub fn as_u16_mut(&self) -> Option<&mut u16> {
-                    if self.id != 1 {
-                        return None;
-                    }
-                    unsafe { Some(self.as_u16_mut_unchecked()) }
-                }
-                /// In NO Case; Should this be used unless you're absolutely sure it is exactly the type you're casting it as
-                pub unsafe fn as_u16_unchecked(&self) -> &u16 {
-                    unsafe { &*(self.data as *mut u16) }
-                }
-                /// In NO Case; Should this be used unless you're absolutely sure it is exactly the type you're casting it as
-                pub unsafe fn as_u16_mut_unchecked(&self) -> &mut u16 {
-                    unsafe { &mut *(self.data as *mut u16) }
-                }
-            }
-            impl Into<ContainerV0> for u32 {
-                fn into(self) -> ContainerV0 {
-                    let data = Boxed::new(self);
-                    let d = Boxed::into_raw(data);
-                    ContainerV0 {
-                        data: d as *mut c_void,
-                        drop: general_drop::<u32>,
-                        id: 2,
-                    }
-                }
-            }
-            impl ContainerV0 {
-                /// Returns `None` is types do not match
-                pub fn as_u32(&self) -> Option<&u32> {
-                    if self.id != 2 {
-                        return None;
-                    }
-                    unsafe { Some(self.as_u32_unchecked()) }
-                }
-                /// Returns `None` is types do not match
-                pub fn as_u32_mut(&self) -> Option<&mut u32> {
-                    if self.id != 2 {
-                        return None;
-                    }
-                    unsafe { Some(self.as_u32_mut_unchecked()) }
-                }
-                /// In NO Case; Should this be used unless you're absolutely sure it is exactly the type you're casting it as
-                pub unsafe fn as_u32_unchecked(&self) -> &u32 {
-                    unsafe { &*(self.data as *mut u32) }
-                }
-                /// In NO Case; Should this be used unless you're absolutely sure it is exactly the type you're casting it as
-                pub unsafe fn as_u32_mut_unchecked(&self) -> &mut u32 {
-                    unsafe { &mut *(self.data as *mut u32) }
-                }
-            }
-            impl Into<ContainerV0> for u64 {
-                fn into(self) -> ContainerV0 {
-                    let data = Boxed::new(self);
-                    let d = Boxed::into_raw(data);
-                    ContainerV0 {
-                        data: d as *mut c_void,
-                        drop: general_drop::<u64>,
-                        id: 3,
-                    }
-                }
-            }
-            impl ContainerV0 {
-                /// Returns `None` is types do not match
-                pub fn as_u64(&self) -> Option<&u64> {
-                    if self.id != 3 {
-                        return None;
-                    }
-                    unsafe { Some(self.as_u64_unchecked()) }
-                }
-                /// Returns `None` is types do not match
-                pub fn as_u64_mut(&self) -> Option<&mut u64> {
-                    if self.id != 3 {
-                        return None;
-                    }
-                    unsafe { Some(self.as_u64_mut_unchecked()) }
-                }
-                /// In NO Case; Should this be used unless you're absolutely sure it is exactly the type you're casting it as
-                pub unsafe fn as_u64_unchecked(&self) -> &u64 {
-                    unsafe { &*(self.data as *mut u64) }
-                }
-                /// In NO Case; Should this be used unless you're absolutely sure it is exactly the type you're casting it as
-                pub unsafe fn as_u64_mut_unchecked(&self) -> &mut u64 {
-                    unsafe { &mut *(self.data as *mut u64) }
-                }
-            }
-            impl Into<ContainerV0> for u128 {
-                fn into(self) -> ContainerV0 {
-                    let data = Boxed::new(self);
-                    let d = Boxed::into_raw(data);
-                    ContainerV0 {
-                        data: d as *mut c_void,
-                        drop: general_drop::<u128>,
-                        id: 4,
-                    }
-                }
-            }
-            impl ContainerV0 {
-                /// Returns `None` is types do not match
-                pub fn as_u128(&self) -> Option<&u128> {
-                    if self.id != 4 {
-                        return None;
-                    }
-                    unsafe { Some(self.as_u128_unchecked()) }
-                }
-                /// Returns `None` is types do not match
-                pub fn as_u128_mut(&self) -> Option<&mut u128> {
-                    if self.id != 4 {
-                        return None;
-                    }
-                    unsafe { Some(self.as_u128_mut_unchecked()) }
-                }
-                /// In NO Case; Should this be used unless you're absolutely sure it is exactly the type you're casting it as
-                pub unsafe fn as_u128_unchecked(&self) -> &u128 {
-                    unsafe { &*(self.data as *mut u128) }
-                }
-                /// In NO Case; Should this be used unless you're absolutely sure it is exactly the type you're casting it as
-                pub unsafe fn as_u128_mut_unchecked(&self) -> &mut u128 {
-                    unsafe { &mut *(self.data as *mut u128) }
-                }
-            }
-            impl Into<ContainerV0> for i8 {
-                fn into(self) -> ContainerV0 {
-                    let data = Boxed::new(self);
-                    let d = Boxed::into_raw(data);
-                    ContainerV0 {
-                        data: d as *mut c_void,
-                        drop: general_drop::<i8>,
-                        id: 5,
-                    }
-                }
-            }
-            impl ContainerV0 {
-                /// Returns `None` is types do not match
-                pub fn as_i8(&self) -> Option<&i8> {
-                    if self.id != 5 {
-                        return None;
-                    }
-                    unsafe { Some(self.as_i8_unchecked()) }
-                }
-                /// Returns `None` is types do not match
-                pub fn as_i8_mut(&self) -> Option<&mut i8> {
-                    if self.id != 5 {
-                        return None;
-                    }
-                    unsafe { Some(self.as_i8_mut_unchecked()) }
-                }
-                /// In NO Case; Should this be used unless you're absolutely sure it is exactly the type you're casting it as
-                pub unsafe fn as_i8_unchecked(&self) -> &i8 {
-                    unsafe { &*(self.data as *mut i8) }
-                }
-                /// In NO Case; Should this be used unless you're absolutely sure it is exactly the type you're casting it as
-                pub unsafe fn as_i8_mut_unchecked(&self) -> &mut i8 {
-                    unsafe { &mut *(self.data as *mut i8) }
-                }
-            }
-            impl Into<ContainerV0> for i16 {
-                fn into(self) -> ContainerV0 {
-                    let data = Boxed::new(self);
-                    let d = Boxed::into_raw(data);
-                    ContainerV0 {
-                        data: d as *mut c_void,
-                        drop: general_drop::<i16>,
-                        id: 6,
-                    }
-                }
-            }
-            impl ContainerV0 {
-                /// Returns `None` is types do not match
-                pub fn as_i16(&self) -> Option<&i16> {
-                    if self.id != 6 {
-                        return None;
-                    }
-                    unsafe { Some(self.as_i16_unchecked()) }
-                }
-                /// Returns `None` is types do not match
-                pub fn as_i16_mut(&self) -> Option<&mut i16> {
-                    if self.id != 6 {
-                        return None;
-                    }
-                    unsafe { Some(self.as_i16_mut_unchecked()) }
-                }
-                /// In NO Case; Should this be used unless you're absolutely sure it is exactly the type you're casting it as
-                pub unsafe fn as_i16_unchecked(&self) -> &i16 {
-                    unsafe { &*(self.data as *mut i16) }
-                }
-                /// In NO Case; Should this be used unless you're absolutely sure it is exactly the type you're casting it as
-                pub unsafe fn as_i16_mut_unchecked(&self) -> &mut i16 {
-                    unsafe { &mut *(self.data as *mut i16) }
-                }
-            }
-            impl Into<ContainerV0> for i32 {
-                fn into(self) -> ContainerV0 {
-                    let data = Boxed::new(self);
-                    let d = Boxed::into_raw(data);
-                    ContainerV0 {
-                        data: d as *mut c_void,
-                        drop: general_drop::<i32>,
-                        id: 7,
-                    }
-                }
-            }
-            impl ContainerV0 {
-                /// Returns `None` is types do not match
-                pub fn as_i32(&self) -> Option<&i32> {
-                    if self.id != 7 {
-                        return None;
-                    }
-                    unsafe { Some(self.as_i32_unchecked()) }
-                }
-                /// Returns `None` is types do not match
-                pub fn as_i32_mut(&self) -> Option<&mut i32> {
-                    if self.id != 7 {
-                        return None;
-                    }
-                    unsafe { Some(self.as_i32_mut_unchecked()) }
-                }
-                /// In NO Case; Should this be used unless you're absolutely sure it is exactly the type you're casting it as
-                pub unsafe fn as_i32_unchecked(&self) -> &i32 {
-                    unsafe { &*(self.data as *mut i32) }
-                }
-                /// In NO Case; Should this be used unless you're absolutely sure it is exactly the type you're casting it as
-                pub unsafe fn as_i32_mut_unchecked(&self) -> &mut i32 {
-                    unsafe { &mut *(self.data as *mut i32) }
-                }
-            }
-            impl Into<ContainerV0> for i64 {
-                fn into(self) -> ContainerV0 {
-                    let data = Boxed::new(self);
-                    let d = Boxed::into_raw(data);
-                    ContainerV0 {
-                        data: d as *mut c_void,
-                        drop: general_drop::<i64>,
-                        id: 8,
-                    }
-                }
-            }
-            impl ContainerV0 {
-                /// Returns `None` is types do not match
-                pub fn as_i64(&self) -> Option<&i64> {
-                    if self.id != 8 {
-                        return None;
-                    }
-                    unsafe { Some(self.as_i64_unchecked()) }
-                }
-                /// Returns `None` is types do not match
-                pub fn as_i64_mut(&self) -> Option<&mut i64> {
-                    if self.id != 8 {
-                        return None;
-                    }
-                    unsafe { Some(self.as_i64_mut_unchecked()) }
-                }
-                /// In NO Case; Should this be used unless you're absolutely sure it is exactly the type you're casting it as
-                pub unsafe fn as_i64_unchecked(&self) -> &i64 {
-                    unsafe { &*(self.data as *mut i64) }
-                }
-                /// In NO Case; Should this be used unless you're absolutely sure it is exactly the type you're casting it as
-                pub unsafe fn as_i64_mut_unchecked(&self) -> &mut i64 {
-                    unsafe { &mut *(self.data as *mut i64) }
-                }
-            }
-            impl Into<ContainerV0> for i128 {
-                fn into(self) -> ContainerV0 {
-                    let data = Boxed::new(self);
-                    let d = Boxed::into_raw(data);
-                    ContainerV0 {
-                        data: d as *mut c_void,
-                        drop: general_drop::<i128>,
-                        id: 9,
-                    }
-                }
-            }
-            impl ContainerV0 {
-                /// Returns `None` is types do not match
-                pub fn as_i128(&self) -> Option<&i128> {
-                    if self.id != 9 {
-                        return None;
-                    }
-                    unsafe { Some(self.as_i128_unchecked()) }
-                }
-                /// Returns `None` is types do not match
-                pub fn as_i128_mut(&self) -> Option<&mut i128> {
-                    if self.id != 9 {
-                        return None;
-                    }
-                    unsafe { Some(self.as_i128_mut_unchecked()) }
-                }
-                /// In NO Case; Should this be used unless you're absolutely sure it is exactly the type you're casting it as
-                pub unsafe fn as_i128_unchecked(&self) -> &i128 {
-                    unsafe { &*(self.data as *mut i128) }
-                }
-                /// In NO Case; Should this be used unless you're absolutely sure it is exactly the type you're casting it as
-                pub unsafe fn as_i128_mut_unchecked(&self) -> &mut i128 {
-                    unsafe { &mut *(self.data as *mut i128) }
-                }
-            }
-            impl Into<ContainerV0> for f32 {
-                fn into(self) -> ContainerV0 {
-                    let data = Boxed::new(self);
-                    let d = Boxed::into_raw(data);
-                    ContainerV0 {
-                        data: d as *mut c_void,
-                        drop: general_drop::<f32>,
-                        id: 10,
-                    }
-                }
-            }
-            impl ContainerV0 {
-                /// Returns `None` is types do not match
-                pub fn as_f32(&self) -> Option<&f32> {
-                    if self.id != 10 {
-                        return None;
-                    }
-                    unsafe { Some(self.as_f32_unchecked()) }
-                }
-                /// Returns `None` is types do not match
-                pub fn as_f32_mut(&self) -> Option<&mut f32> {
-                    if self.id != 10 {
-                        return None;
-                    }
-                    unsafe { Some(self.as_f32_mut_unchecked()) }
-                }
-                /// In NO Case; Should this be used unless you're absolutely sure it is exactly the type you're casting it as
-                pub unsafe fn as_f32_unchecked(&self) -> &f32 {
-                    unsafe { &*(self.data as *mut f32) }
-                }
-                /// In NO Case; Should this be used unless you're absolutely sure it is exactly the type you're casting it as
-                pub unsafe fn as_f32_mut_unchecked(&self) -> &mut f32 {
-                    unsafe { &mut *(self.data as *mut f32) }
-                }
-            }
-            impl Into<ContainerV0> for f64 {
-                fn into(self) -> ContainerV0 {
-                    let data = Boxed::new(self);
-                    let d = Boxed::into_raw(data);
-                    ContainerV0 {
-                        data: d as *mut c_void,
-                        drop: general_drop::<f64>,
-                        id: 11,
-                    }
-                }
-            }
-            impl ContainerV0 {
-                /// Returns `None` is types do not match
-                pub fn as_f64(&self) -> Option<&f64> {
-                    if self.id != 11 {
-                        return None;
-                    }
-                    unsafe { Some(self.as_f64_unchecked()) }
-                }
-                /// Returns `None` is types do not match
-                pub fn as_f64_mut(&self) -> Option<&mut f64> {
-                    if self.id != 11 {
-                        return None;
-                    }
-                    unsafe { Some(self.as_f64_mut_unchecked()) }
-                }
-                /// In NO Case; Should this be used unless you're absolutely sure it is exactly the type you're casting it as
-                pub unsafe fn as_f64_unchecked(&self) -> &f64 {
-                    unsafe { &*(self.data as *mut f64) }
-                }
-                /// In NO Case; Should this be used unless you're absolutely sure it is exactly the type you're casting it as
-                pub unsafe fn as_f64_mut_unchecked(&self) -> &mut f64 {
-                    unsafe { &mut *(self.data as *mut f64) }
-                }
-            }
-            impl Into<ContainerV0> for bool {
-                fn into(self) -> ContainerV0 {
-                    let data = Boxed::new(self);
-                    let d = Boxed::into_raw(data);
-                    ContainerV0 {
-                        data: d as *mut c_void,
-                        drop: general_drop::<bool>,
-                        id: 12,
-                    }
-                }
-            }
-            impl ContainerV0 {
-                /// Returns `None` is types do not match
-                pub fn as_bool(&self) -> Option<&bool> {
-                    if self.id != 12 {
-                        return None;
-                    }
-                    unsafe { Some(self.as_bool_unchecked()) }
-                }
-                /// Returns `None` is types do not match
-                pub fn as_bool_mut(&self) -> Option<&mut bool> {
-                    if self.id != 12 {
-                        return None;
-                    }
-                    unsafe { Some(self.as_bool_mut_unchecked()) }
-                }
-                /// In NO Case; Should this be used unless you're absolutely sure it is exactly the type you're casting it as
-                pub unsafe fn as_bool_unchecked(&self) -> &bool {
-                    unsafe { &*(self.data as *mut bool) }
-                }
-                /// In NO Case; Should this be used unless you're absolutely sure it is exactly the type you're casting it as
-                pub unsafe fn as_bool_mut_unchecked(&self) -> &mut bool {
-                    unsafe { &mut *(self.data as *mut bool) }
-                }
-            }
-            impl Into<ContainerV0> for String {
-                fn into(self) -> ContainerV0 {
-                    FFISafeString::from(self).into()
-                }
-            }
-            impl Into<ContainerV0> for &str {
-                fn into(self) -> ContainerV0 {
-                    FFISafeString::from(self).into()
-                }
-            }
-            impl Into<ContainerV0> for FFISafeString {
-                fn into(self) -> ContainerV0 {
-                    let data = Boxed::new(self);
-                    let d = Boxed::into_raw(data);
-                    ContainerV0 {
-                        data: d as *mut c_void,
-                        drop: general_drop::<FFISafeString>,
-                        id: 13,
-                    }
-                }
-            }
-            impl ContainerV0 {
-                /// Returns `None` is types do not match
-                pub fn as_string(&self) -> Option<&FFISafeString> {
-                    if self.id != 13 {
-                        return None;
-                    }
-                    unsafe { Some(self.as_string_unchecked()) }
-                }
-                /// Returns `None` is types do not match
-                pub fn as_string_mut(&self) -> Option<&mut FFISafeString> {
-                    if self.id != 13 {
-                        return None;
-                    }
-                    unsafe { Some(self.as_string_mut_unchecked()) }
-                }
-                /// In NO Case; Should this be used unless you're absolutely sure it is exactly the type you're casting it as
-                pub unsafe fn as_string_unchecked(&self) -> &FFISafeString {
-                    unsafe { &*(self.data as *mut FFISafeString) }
-                }
-                /// In NO Case; Should this be used unless you're absolutely sure it is exactly the type you're casting it as
-                pub unsafe fn as_string_mut_unchecked(&self) -> &mut FFISafeString {
-                    unsafe { &mut *(self.data as *mut FFISafeString) }
-                }
-            }
+            use std::fmt::Debug;
+            use crate::common::FFIableObject;
             #[repr(C)]
             pub struct FnStackV0 {
                 /// Return value (identifier in MemoryMap)
-                pub ret: Option<VariableDataV0>,
+                pub ret: Option<FFIableObject>,
                 /// Registers
                 pub r1: WrapperRegValueV0,
                 pub r2: WrapperRegValueV0,
@@ -643,7 +117,7 @@ pub mod commands {
                 /// instance and the provided type `T` by the caller. If the enum instance is `Null`, this function will return `None`. If it is
                 /// not `Null`, this function will return a mutable reference to the `FFIableObject`
                 /// stored in the enum instance.
-                pub unsafe fn get_ptr_mut<T>(&self) -> Option<&mut T> {
+                pub unsafe fn get_ptr_mut<'a, T>(&'a self) -> Option<&'a mut T> {
                     unsafe {
                         Some(
                             match self._inner {
@@ -651,7 +125,7 @@ pub mod commands {
                                 RegValueV0::Mut(ptr) => &mut *ptr,
                                 _ => return None,
                             }
-                                .get_mut(),
+                                .get_mut::<T>(),
                         )
                     }
                 }
@@ -1073,6 +547,141 @@ pub mod common {
                 }
             }
         }
+        pub mod hashmap {
+            use crate::{
+                common::{others::FFISafeString, FFIableObject},
+                Maybe, Ref,
+            };
+            use std::{env, mem::transmute, path::PathBuf, str::FromStr, sync::LazyLock};
+            use libloading::{Library, Symbol, library_filename};
+            pub static FFIHASHMAP: LazyLock<FfiHashMap> = LazyLock::new(|| {
+                FfiHashMap::new()
+            });
+            pub type CallCreateFn = unsafe extern "C" fn(use_str_map: bool) -> Ref;
+            pub type CallInsertIntFn = unsafe extern "C" fn(
+                map: *const Ref,
+                k: usize,
+                v: FFIableObject,
+            ) -> Maybe<FFIableObject>;
+            pub type CallGetIntFn = unsafe extern "C" fn(
+                map: *const Ref,
+                k: *const usize,
+            ) -> Maybe<*const FFIableObject>;
+            pub type CallRemoveIntFn = unsafe extern "C" fn(
+                map: *const Ref,
+                k: *const usize,
+            ) -> Maybe<FFIableObject>;
+            pub type CallInsertStrFn = unsafe extern "C" fn(
+                map: *const Ref,
+                k: FFISafeString,
+                v: FFIableObject,
+            ) -> Maybe<FFIableObject>;
+            pub type CallGetStrFn = unsafe extern "C" fn(
+                map: *const Ref,
+                k: *const FFISafeString,
+            ) -> Maybe<*const FFIableObject>;
+            pub type CallRemoveStrFn = unsafe extern "C" fn(
+                map: *const Ref,
+                k: *const FFISafeString,
+            ) -> Maybe<FFIableObject>;
+            pub struct FfiHashMap {
+                _lib: Library,
+                ///Creates a new HashMap
+                pub create: CallCreateFn,
+                pub insert_int: CallInsertIntFn,
+                pub get_int: CallGetIntFn,
+                pub remove_int: CallRemoveIntFn,
+                pub insert_str: CallInsertStrFn,
+                pub get_str: CallGetStrFn,
+                pub remove_str: CallRemoveStrFn,
+            }
+            impl FfiHashMap {
+                pub fn new() -> Self {
+                    let lrt = env::var("LRT_HOME").expect("LRT Home not present");
+                    let file = library_filename("hashmap");
+                    let mut path = PathBuf::from_str(&lrt).unwrap();
+                    path.push("libs");
+                    path.push("waker");
+                    path.push(file);
+                    let lib = unsafe {
+                        Library::new(path).expect("Unable to load async_waker")
+                    };
+                    let create = {
+                        let ptr: Symbol<'_, CallCreateFn> = unsafe {
+                            lib.get("create".as_bytes()).unwrap()
+                        };
+                        let out: Symbol<'static, CallCreateFn> = unsafe {
+                            transmute(ptr)
+                        };
+                        out
+                    };
+                    let insert_int = {
+                        let ptr: Symbol<'_, CallInsertIntFn> = unsafe {
+                            lib.get("insert_int".as_bytes()).unwrap()
+                        };
+                        let out: Symbol<'static, CallInsertIntFn> = unsafe {
+                            transmute(ptr)
+                        };
+                        out
+                    };
+                    let get_int = {
+                        let ptr: Symbol<'_, CallGetIntFn> = unsafe {
+                            lib.get("get_int".as_bytes()).unwrap()
+                        };
+                        let out: Symbol<'static, CallGetIntFn> = unsafe {
+                            transmute(ptr)
+                        };
+                        out
+                    };
+                    let remove_int = {
+                        let ptr: Symbol<'_, CallRemoveIntFn> = unsafe {
+                            lib.get("remove_int".as_bytes()).unwrap()
+                        };
+                        let out: Symbol<'static, CallRemoveIntFn> = unsafe {
+                            transmute(ptr)
+                        };
+                        out
+                    };
+                    let insert_str = {
+                        let ptr: Symbol<'_, CallInsertStrFn> = unsafe {
+                            lib.get("insert_str".as_bytes()).unwrap()
+                        };
+                        let out: Symbol<'static, CallInsertStrFn> = unsafe {
+                            transmute(ptr)
+                        };
+                        out
+                    };
+                    let get_str = {
+                        let ptr: Symbol<'_, CallGetStrFn> = unsafe {
+                            lib.get("get_str".as_bytes()).unwrap()
+                        };
+                        let out: Symbol<'static, CallGetStrFn> = unsafe {
+                            transmute(ptr)
+                        };
+                        out
+                    };
+                    let remove_str = {
+                        let ptr: Symbol<'_, CallRemoveStrFn> = unsafe {
+                            lib.get("remove_str".as_bytes()).unwrap()
+                        };
+                        let out: Symbol<'static, CallRemoveStrFn> = unsafe {
+                            transmute(ptr)
+                        };
+                        out
+                    };
+                    Self {
+                        _lib: lib,
+                        create: *create,
+                        insert_int: *insert_int,
+                        get_int: *get_int,
+                        remove_int: *remove_int,
+                        insert_str: *insert_str,
+                        get_str: *get_str,
+                        remove_str: *remove_str,
+                    }
+                }
+            }
+        }
         /// A C-compatible string for FFI.
         ///
         /// This struct manages a null-terminated C-style string (`*mut c_char`)
@@ -1419,19 +1028,19 @@ pub mod common {
             unsafe { Some(self.as_u8_unchecked()) }
         }
         /// Returns `None` is types do not match
-        pub fn as_u8_mut(&self) -> Option<&mut u8> {
+        pub fn as_u8_mut<'a>(&'a mut self) -> Option<&'a mut u8> {
             if self.tag != 1 {
                 return None;
             }
             unsafe { Some(self.as_u8_mut_unchecked()) }
         }
         /// In NO Case; Should this be used unless you're absolutely sure it is exactly the type you're casting it as
-        pub unsafe fn as_u8_unchecked(&self) -> &u8 {
-            unsafe { &*(self.data as *mut u8) }
+        pub unsafe fn as_u8_unchecked<'a>(&'a self) -> &'a u8 {
+            unsafe { self.get::<u8>() }
         }
         /// In NO Case; Should this be used unless you're absolutely sure it is exactly the type you're casting it as
-        pub unsafe fn as_u8_mut_unchecked(&self) -> &mut u8 {
-            unsafe { &mut *(self.data as *mut u8) }
+        pub unsafe fn as_u8_mut_unchecked<'a>(&'a mut self) -> &'a mut u8 {
+            unsafe { self.get_mut::<u8>() }
         }
     }
     impl Into<FFIableObject> for u16 {
@@ -1448,19 +1057,19 @@ pub mod common {
             unsafe { Some(self.as_u16_unchecked()) }
         }
         /// Returns `None` is types do not match
-        pub fn as_u16_mut(&self) -> Option<&mut u16> {
+        pub fn as_u16_mut<'a>(&'a mut self) -> Option<&'a mut u16> {
             if self.tag != 2 {
                 return None;
             }
             unsafe { Some(self.as_u16_mut_unchecked()) }
         }
         /// In NO Case; Should this be used unless you're absolutely sure it is exactly the type you're casting it as
-        pub unsafe fn as_u16_unchecked(&self) -> &u16 {
-            unsafe { &*(self.data as *mut u16) }
+        pub unsafe fn as_u16_unchecked<'a>(&'a self) -> &'a u16 {
+            unsafe { self.get::<u16>() }
         }
         /// In NO Case; Should this be used unless you're absolutely sure it is exactly the type you're casting it as
-        pub unsafe fn as_u16_mut_unchecked(&self) -> &mut u16 {
-            unsafe { &mut *(self.data as *mut u16) }
+        pub unsafe fn as_u16_mut_unchecked<'a>(&'a mut self) -> &'a mut u16 {
+            unsafe { self.get_mut::<u16>() }
         }
     }
     impl Into<FFIableObject> for u32 {
@@ -1477,19 +1086,19 @@ pub mod common {
             unsafe { Some(self.as_u32_unchecked()) }
         }
         /// Returns `None` is types do not match
-        pub fn as_u32_mut(&self) -> Option<&mut u32> {
+        pub fn as_u32_mut<'a>(&'a mut self) -> Option<&'a mut u32> {
             if self.tag != 3 {
                 return None;
             }
             unsafe { Some(self.as_u32_mut_unchecked()) }
         }
         /// In NO Case; Should this be used unless you're absolutely sure it is exactly the type you're casting it as
-        pub unsafe fn as_u32_unchecked(&self) -> &u32 {
-            unsafe { &*(self.data as *mut u32) }
+        pub unsafe fn as_u32_unchecked<'a>(&'a self) -> &'a u32 {
+            unsafe { self.get::<u32>() }
         }
         /// In NO Case; Should this be used unless you're absolutely sure it is exactly the type you're casting it as
-        pub unsafe fn as_u32_mut_unchecked(&self) -> &mut u32 {
-            unsafe { &mut *(self.data as *mut u32) }
+        pub unsafe fn as_u32_mut_unchecked<'a>(&'a mut self) -> &'a mut u32 {
+            unsafe { self.get_mut::<u32>() }
         }
     }
     impl Into<FFIableObject> for u64 {
@@ -1506,19 +1115,19 @@ pub mod common {
             unsafe { Some(self.as_u64_unchecked()) }
         }
         /// Returns `None` is types do not match
-        pub fn as_u64_mut(&self) -> Option<&mut u64> {
+        pub fn as_u64_mut<'a>(&'a mut self) -> Option<&'a mut u64> {
             if self.tag != 4 {
                 return None;
             }
             unsafe { Some(self.as_u64_mut_unchecked()) }
         }
         /// In NO Case; Should this be used unless you're absolutely sure it is exactly the type you're casting it as
-        pub unsafe fn as_u64_unchecked(&self) -> &u64 {
-            unsafe { &*(self.data as *mut u64) }
+        pub unsafe fn as_u64_unchecked<'a>(&'a self) -> &'a u64 {
+            unsafe { self.get::<u64>() }
         }
         /// In NO Case; Should this be used unless you're absolutely sure it is exactly the type you're casting it as
-        pub unsafe fn as_u64_mut_unchecked(&self) -> &mut u64 {
-            unsafe { &mut *(self.data as *mut u64) }
+        pub unsafe fn as_u64_mut_unchecked<'a>(&'a mut self) -> &'a mut u64 {
+            unsafe { self.get_mut::<u64>() }
         }
     }
     impl Into<FFIableObject> for u128 {
@@ -1535,19 +1144,19 @@ pub mod common {
             unsafe { Some(self.as_u128_unchecked()) }
         }
         /// Returns `None` is types do not match
-        pub fn as_u128_mut(&self) -> Option<&mut u128> {
+        pub fn as_u128_mut<'a>(&'a mut self) -> Option<&'a mut u128> {
             if self.tag != 5 {
                 return None;
             }
             unsafe { Some(self.as_u128_mut_unchecked()) }
         }
         /// In NO Case; Should this be used unless you're absolutely sure it is exactly the type you're casting it as
-        pub unsafe fn as_u128_unchecked(&self) -> &u128 {
-            unsafe { &*(self.data as *mut u128) }
+        pub unsafe fn as_u128_unchecked<'a>(&'a self) -> &'a u128 {
+            unsafe { self.get::<u128>() }
         }
         /// In NO Case; Should this be used unless you're absolutely sure it is exactly the type you're casting it as
-        pub unsafe fn as_u128_mut_unchecked(&self) -> &mut u128 {
-            unsafe { &mut *(self.data as *mut u128) }
+        pub unsafe fn as_u128_mut_unchecked<'a>(&'a mut self) -> &'a mut u128 {
+            unsafe { self.get_mut::<u128>() }
         }
     }
     impl Into<FFIableObject> for i8 {
@@ -1564,19 +1173,19 @@ pub mod common {
             unsafe { Some(self.as_i8_unchecked()) }
         }
         /// Returns `None` is types do not match
-        pub fn as_i8_mut(&self) -> Option<&mut i8> {
+        pub fn as_i8_mut<'a>(&'a mut self) -> Option<&'a mut i8> {
             if self.tag != 6 {
                 return None;
             }
             unsafe { Some(self.as_i8_mut_unchecked()) }
         }
         /// In NO Case; Should this be used unless you're absolutely sure it is exactly the type you're casting it as
-        pub unsafe fn as_i8_unchecked(&self) -> &i8 {
-            unsafe { &*(self.data as *mut i8) }
+        pub unsafe fn as_i8_unchecked<'a>(&'a self) -> &'a i8 {
+            unsafe { self.get::<i8>() }
         }
         /// In NO Case; Should this be used unless you're absolutely sure it is exactly the type you're casting it as
-        pub unsafe fn as_i8_mut_unchecked(&self) -> &mut i8 {
-            unsafe { &mut *(self.data as *mut i8) }
+        pub unsafe fn as_i8_mut_unchecked<'a>(&'a mut self) -> &'a mut i8 {
+            unsafe { self.get_mut::<i8>() }
         }
     }
     impl Into<FFIableObject> for i16 {
@@ -1593,19 +1202,19 @@ pub mod common {
             unsafe { Some(self.as_i16_unchecked()) }
         }
         /// Returns `None` is types do not match
-        pub fn as_i16_mut(&self) -> Option<&mut i16> {
+        pub fn as_i16_mut<'a>(&'a mut self) -> Option<&'a mut i16> {
             if self.tag != 7 {
                 return None;
             }
             unsafe { Some(self.as_i16_mut_unchecked()) }
         }
         /// In NO Case; Should this be used unless you're absolutely sure it is exactly the type you're casting it as
-        pub unsafe fn as_i16_unchecked(&self) -> &i16 {
-            unsafe { &*(self.data as *mut i16) }
+        pub unsafe fn as_i16_unchecked<'a>(&'a self) -> &'a i16 {
+            unsafe { self.get::<i16>() }
         }
         /// In NO Case; Should this be used unless you're absolutely sure it is exactly the type you're casting it as
-        pub unsafe fn as_i16_mut_unchecked(&self) -> &mut i16 {
-            unsafe { &mut *(self.data as *mut i16) }
+        pub unsafe fn as_i16_mut_unchecked<'a>(&'a mut self) -> &'a mut i16 {
+            unsafe { self.get_mut::<i16>() }
         }
     }
     impl Into<FFIableObject> for i32 {
@@ -1622,19 +1231,19 @@ pub mod common {
             unsafe { Some(self.as_i32_unchecked()) }
         }
         /// Returns `None` is types do not match
-        pub fn as_i32_mut(&self) -> Option<&mut i32> {
+        pub fn as_i32_mut<'a>(&'a mut self) -> Option<&'a mut i32> {
             if self.tag != 8 {
                 return None;
             }
             unsafe { Some(self.as_i32_mut_unchecked()) }
         }
         /// In NO Case; Should this be used unless you're absolutely sure it is exactly the type you're casting it as
-        pub unsafe fn as_i32_unchecked(&self) -> &i32 {
-            unsafe { &*(self.data as *mut i32) }
+        pub unsafe fn as_i32_unchecked<'a>(&'a self) -> &'a i32 {
+            unsafe { self.get::<i32>() }
         }
         /// In NO Case; Should this be used unless you're absolutely sure it is exactly the type you're casting it as
-        pub unsafe fn as_i32_mut_unchecked(&self) -> &mut i32 {
-            unsafe { &mut *(self.data as *mut i32) }
+        pub unsafe fn as_i32_mut_unchecked<'a>(&'a mut self) -> &'a mut i32 {
+            unsafe { self.get_mut::<i32>() }
         }
     }
     impl Into<FFIableObject> for i64 {
@@ -1651,19 +1260,19 @@ pub mod common {
             unsafe { Some(self.as_i64_unchecked()) }
         }
         /// Returns `None` is types do not match
-        pub fn as_i64_mut(&self) -> Option<&mut i64> {
+        pub fn as_i64_mut<'a>(&'a mut self) -> Option<&'a mut i64> {
             if self.tag != 9 {
                 return None;
             }
             unsafe { Some(self.as_i64_mut_unchecked()) }
         }
         /// In NO Case; Should this be used unless you're absolutely sure it is exactly the type you're casting it as
-        pub unsafe fn as_i64_unchecked(&self) -> &i64 {
-            unsafe { &*(self.data as *mut i64) }
+        pub unsafe fn as_i64_unchecked<'a>(&'a self) -> &'a i64 {
+            unsafe { self.get::<i64>() }
         }
         /// In NO Case; Should this be used unless you're absolutely sure it is exactly the type you're casting it as
-        pub unsafe fn as_i64_mut_unchecked(&self) -> &mut i64 {
-            unsafe { &mut *(self.data as *mut i64) }
+        pub unsafe fn as_i64_mut_unchecked<'a>(&'a mut self) -> &'a mut i64 {
+            unsafe { self.get_mut::<i64>() }
         }
     }
     impl Into<FFIableObject> for i128 {
@@ -1680,19 +1289,19 @@ pub mod common {
             unsafe { Some(self.as_i128_unchecked()) }
         }
         /// Returns `None` is types do not match
-        pub fn as_i128_mut(&self) -> Option<&mut i128> {
+        pub fn as_i128_mut<'a>(&'a mut self) -> Option<&'a mut i128> {
             if self.tag != 10 {
                 return None;
             }
             unsafe { Some(self.as_i128_mut_unchecked()) }
         }
         /// In NO Case; Should this be used unless you're absolutely sure it is exactly the type you're casting it as
-        pub unsafe fn as_i128_unchecked(&self) -> &i128 {
-            unsafe { &*(self.data as *mut i128) }
+        pub unsafe fn as_i128_unchecked<'a>(&'a self) -> &'a i128 {
+            unsafe { self.get::<i128>() }
         }
         /// In NO Case; Should this be used unless you're absolutely sure it is exactly the type you're casting it as
-        pub unsafe fn as_i128_mut_unchecked(&self) -> &mut i128 {
-            unsafe { &mut *(self.data as *mut i128) }
+        pub unsafe fn as_i128_mut_unchecked<'a>(&'a mut self) -> &'a mut i128 {
+            unsafe { self.get_mut::<i128>() }
         }
     }
     impl Into<FFIableObject> for f32 {
@@ -1709,19 +1318,19 @@ pub mod common {
             unsafe { Some(self.as_f32_unchecked()) }
         }
         /// Returns `None` is types do not match
-        pub fn as_f32_mut(&self) -> Option<&mut f32> {
+        pub fn as_f32_mut<'a>(&'a mut self) -> Option<&'a mut f32> {
             if self.tag != 11 {
                 return None;
             }
             unsafe { Some(self.as_f32_mut_unchecked()) }
         }
         /// In NO Case; Should this be used unless you're absolutely sure it is exactly the type you're casting it as
-        pub unsafe fn as_f32_unchecked(&self) -> &f32 {
-            unsafe { &*(self.data as *mut f32) }
+        pub unsafe fn as_f32_unchecked<'a>(&'a self) -> &'a f32 {
+            unsafe { self.get::<f32>() }
         }
         /// In NO Case; Should this be used unless you're absolutely sure it is exactly the type you're casting it as
-        pub unsafe fn as_f32_mut_unchecked(&self) -> &mut f32 {
-            unsafe { &mut *(self.data as *mut f32) }
+        pub unsafe fn as_f32_mut_unchecked<'a>(&'a mut self) -> &'a mut f32 {
+            unsafe { self.get_mut::<f32>() }
         }
     }
     impl Into<FFIableObject> for f64 {
@@ -1738,19 +1347,19 @@ pub mod common {
             unsafe { Some(self.as_f64_unchecked()) }
         }
         /// Returns `None` is types do not match
-        pub fn as_f64_mut(&self) -> Option<&mut f64> {
+        pub fn as_f64_mut<'a>(&'a mut self) -> Option<&'a mut f64> {
             if self.tag != 12 {
                 return None;
             }
             unsafe { Some(self.as_f64_mut_unchecked()) }
         }
         /// In NO Case; Should this be used unless you're absolutely sure it is exactly the type you're casting it as
-        pub unsafe fn as_f64_unchecked(&self) -> &f64 {
-            unsafe { &*(self.data as *mut f64) }
+        pub unsafe fn as_f64_unchecked<'a>(&'a self) -> &'a f64 {
+            unsafe { self.get::<f64>() }
         }
         /// In NO Case; Should this be used unless you're absolutely sure it is exactly the type you're casting it as
-        pub unsafe fn as_f64_mut_unchecked(&self) -> &mut f64 {
-            unsafe { &mut *(self.data as *mut f64) }
+        pub unsafe fn as_f64_mut_unchecked<'a>(&'a mut self) -> &'a mut f64 {
+            unsafe { self.get_mut::<f64>() }
         }
     }
     impl Into<FFIableObject> for bool {
@@ -1767,19 +1376,19 @@ pub mod common {
             unsafe { Some(self.as_bool_unchecked()) }
         }
         /// Returns `None` is types do not match
-        pub fn as_bool_mut(&self) -> Option<&mut bool> {
+        pub fn as_bool_mut<'a>(&'a mut self) -> Option<&'a mut bool> {
             if self.tag != 13 {
                 return None;
             }
             unsafe { Some(self.as_bool_mut_unchecked()) }
         }
         /// In NO Case; Should this be used unless you're absolutely sure it is exactly the type you're casting it as
-        pub unsafe fn as_bool_unchecked(&self) -> &bool {
-            unsafe { &*(self.data as *mut bool) }
+        pub unsafe fn as_bool_unchecked<'a>(&'a self) -> &'a bool {
+            unsafe { self.get::<bool>() }
         }
         /// In NO Case; Should this be used unless you're absolutely sure it is exactly the type you're casting it as
-        pub unsafe fn as_bool_mut_unchecked(&self) -> &mut bool {
-            unsafe { &mut *(self.data as *mut bool) }
+        pub unsafe fn as_bool_mut_unchecked<'a>(&'a mut self) -> &'a mut bool {
+            unsafe { self.get_mut::<bool>() }
         }
     }
     impl Into<FFIableObject> for FFISafeString {
@@ -1796,19 +1405,21 @@ pub mod common {
             unsafe { Some(self.as_ffisafestring_unchecked()) }
         }
         /// Returns `None` is types do not match
-        pub fn as_ffisafestring_mut(&self) -> Option<&mut FFISafeString> {
+        pub fn as_ffisafestring_mut<'a>(&'a mut self) -> Option<&'a mut FFISafeString> {
             if self.tag != 14 {
                 return None;
             }
             unsafe { Some(self.as_ffisafestring_mut_unchecked()) }
         }
         /// In NO Case; Should this be used unless you're absolutely sure it is exactly the type you're casting it as
-        pub unsafe fn as_ffisafestring_unchecked(&self) -> &FFISafeString {
-            unsafe { &*(self.data as *mut FFISafeString) }
+        pub unsafe fn as_ffisafestring_unchecked<'a>(&'a self) -> &'a FFISafeString {
+            unsafe { self.get::<FFISafeString>() }
         }
         /// In NO Case; Should this be used unless you're absolutely sure it is exactly the type you're casting it as
-        pub unsafe fn as_ffisafestring_mut_unchecked(&self) -> &mut FFISafeString {
-            unsafe { &mut *(self.data as *mut FFISafeString) }
+        pub unsafe fn as_ffisafestring_mut_unchecked<'a>(
+            &'a mut self,
+        ) -> &'a mut FFISafeString {
+            unsafe { self.get_mut::<FFISafeString>() }
         }
     }
     fn get_tag<T: 'static>() -> u8 {

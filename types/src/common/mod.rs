@@ -133,7 +133,7 @@ macro_rules! implement {
             }
 
             /// Returns `None` is types do not match
-            pub fn [<as_ $t:lower _mut>](&self) -> Option<&mut $t> {
+            pub fn [<as_ $t:lower _mut>]<'a>(&'a mut self) -> Option<&'a mut $t> {
               if self.tag != $num {
                 return None;
               }
@@ -144,16 +144,16 @@ macro_rules! implement {
             }
 
             /// In NO Case; Should this be used unless you're absolutely sure it is exactly the type you're casting it as
-            pub unsafe fn [<as_ $t:lower _unchecked>](&self) -> &$t {
+            pub unsafe fn [<as_ $t:lower _unchecked>]<'a>(&'a self) -> &'a $t {
               unsafe {
-                &*(self.data as *mut $t)
+                self.get::<$t>()
               }
             }
 
             /// In NO Case; Should this be used unless you're absolutely sure it is exactly the type you're casting it as
-            pub unsafe fn [<as_ $t:lower _mut_unchecked>](&self) -> &mut $t {
+            pub unsafe fn [<as_ $t:lower _mut_unchecked>]<'a>(&'a mut self) -> &'a mut $t {
               unsafe {
-                &mut *(self.data as *mut $t)
+                self.get_mut::<$t>()
               }
             }
           }

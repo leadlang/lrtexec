@@ -57,3 +57,6 @@ impl<T> From<Option<T>> for Maybe<T> {
     }
   }
 }
+
+#[cfg(test)]
+mod tests;
