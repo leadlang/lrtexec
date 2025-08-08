@@ -15,6 +15,9 @@ tokio = { version = "1.47.1", features = ["macros", "rt", "sync", "time"] }
 
 [features]
 default = ["v_all", "waker"]
+
+fnstack_no_cleanup = []
+
 waker = ["dep:libloading"]
 sudo = []
 memory = []

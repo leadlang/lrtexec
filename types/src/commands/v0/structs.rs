@@ -3,15 +3,19 @@
 //! 
 //! Structs related to v0 Assembly Syntax
 
-use std::fmt::Debug;
+use std::{cell::UnsafeCell, fmt::Debug, mem::replace};
 
-use crate::common::FFIableObject;
+use crate::common::{r#async::{AsyncInterface, ReturnReg}, FFIableObject};
 
 #[repr(C)]
-#[derive(Default)]
 pub struct FnStackV0 {
   /// Return value (identifier in MemoryMap)
-  pub ret: Option<FFIableObject>,
+  // Do not set a public since it can be misused
+  // Still it may be misused by redeclaraing in the crate, but still, safety measure
+
+  // TODO: Shift to something else that has even better mem safety
+  // What about using FFIableObject itself, but thats not the best way
+  pub ret: UnsafeCell<ReturnReg<FFIableObject>>,
   /// Registers
   pub r1: WrapperRegValueV0,
   pub r2: WrapperRegValueV0,
@@ -21,6 +25,59 @@ pub struct FnStackV0 {
   pub r6: WrapperRegValueV0,
   pub r7: WrapperRegValueV0,
   pub r8: WrapperRegValueV0,
+}
+
+#[cfg(not(feature = "fnstack_no_cleanup"))]
+macro_rules! cleanup {
+  (
+    $(
+      $x:expr
+    ),*
+  ) => {
+    $(
+      $x._inner = RegValueV0::Null;
+    )*
+  };
+}
+
+impl FnStackV0 {
+  /// Set either the output or the async task, doing both will override one of the results
+  pub fn set_output(&self, out: FFIableObject) {
+    * unsafe { self.ret.as_mut_unchecked() } = ReturnReg::Output(out);
+  }
+
+  /// Set either the output or the async task, doing both will override one of the results
+  pub fn set_async_task(&self, out: AsyncInterface<FFIableObject>) {
+    * unsafe { self.ret.as_mut_unchecked() } = ReturnReg::Async(out);
+  }
+
+  // The library side can't run this since this is provided to the library as a `*const FnStackV0`
+  pub fn postrun(&mut self) -> Option<ReturnReg<FFIableObject>> {
+    let ret_to_replace = ReturnReg::<FFIableObject>::Null;
+
+    let ret = replace(self.ret.get_mut(), ret_to_replace);
+
+    // Cleanup
+    #[cfg(not(feature = "fnstack_no_cleanup"))]
+    {
+      cleanup!(
+        self.r1,
+        self.r2,
+        self.r3,
+        self.r4,
+        self.r5,
+        self.r6,
+        self.r7,
+        self.r8
+      );
+    }
+
+    if matches!(ret, ReturnReg::Null) {
+      return None;
+    }
+
+    Some(ret)
+  }
 }
 
 macro_rules! fnstack {
@@ -58,11 +115,10 @@ pub enum RegValueV0 {
 #[repr(C)]
 #[derive(Default)]
 pub struct WrapperRegValueV0 {
-  _inner: RegValueV0
+  pub(crate) _inner: RegValueV0
 }
 
 impl WrapperRegValueV0 {
-  
   /// Get a shared reference to the inner `FFIableObject` if it isn't null.
   ///
   /// # Safety
@@ -120,7 +176,7 @@ impl WrapperRegValueV0 {
     }
   }
 
-    /// Get a mutable reference to the inner `FFIableObject` if it isn't null.
+  /// Get a mutable reference to the inner `FFIableObject` if it isn't null.
   ///
   /// # Note
   /// You are given a `&mut T` instance of the `FFIableObject` stored in the enum instance.

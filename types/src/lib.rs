@@ -1,5 +1,4 @@
-#![feature(trivial_bounds)]
-
+#![feature(trivial_bounds, unsafe_cell_access)]
 use std::os::raw::c_void;
 
 pub mod commands;

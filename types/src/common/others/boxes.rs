@@ -15,7 +15,7 @@ impl<T> Boxed<T> {
   ///
   /// This function manually allocates memory on the heap using `libc::malloc`
   /// and moves the value into that newly allocated space.
-  pub fn new(value: T) -> Self {
+  pub extern "C" fn new(value: T) -> Self {
     let size = mem::size_of::<T>();
 
     if size == 0 {
@@ -42,7 +42,7 @@ impl<T> Boxed<T> {
   /// Consumes the FfiBox and returns the value inside.
   ///
   /// This will deallocate the memory used by the box but not the value itself.
-  pub fn unbox(mut self) -> T {
+  pub extern "C" fn unbox(mut self) -> T {
     let ptr = self.ptr.as_ptr();
     self.drop = false;
 
@@ -69,14 +69,14 @@ impl<T> Boxed<T> {
   /// and points to a value of type T that was allocated with `libc::malloc` i.e. by `Boxed::<T>::new`` or equivalent.
   /// The caller also takes responsibility for ensuring that the data is not
   /// freed elsewhere.
-  pub unsafe fn from_raw(ptr: *mut T) -> Self {
+  pub unsafe extern "C" fn from_raw(ptr: *mut T) -> Self {
     Self {
       ptr: NonNull::new(ptr as *mut T).expect("Invalid Pointer provided"),
       drop: true,
     }
   }
 
-  pub fn into_raw(mut val: Self) -> *mut c_void {
+  pub extern "C" fn into_raw(mut val: Self) -> *mut c_void {
     val.drop = false;
 
     val.ptr.as_ptr() as _

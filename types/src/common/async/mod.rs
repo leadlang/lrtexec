@@ -20,6 +20,14 @@ pub use waker::{WAKER, call_waker_consume_ptr};
 
 #[repr(C)]
 #[allow(deprecated)]
+pub enum ReturnReg<T: FFISafeContainer + 'static> {
+  Output(T),
+  Async(AsyncInterface<T>),
+  Null
+}
+
+#[repr(C)]
+#[allow(deprecated)]
 pub enum AsyncInterface<T: FFISafeContainer + 'static> {
   Threaded(ThreadedTask<T>),
   Lazy(LazyableTask<T>),
@@ -35,7 +43,7 @@ impl<T: FFISafeContainer + 'static> Future for AsyncInterface<T> {
       AsyncInterface::Lazy(lazy) => Pin::new(lazy).poll(cx).map(|x| SafeWrapped(x)),
       AsyncInterface::Threaded(threaded) => Pin::new(threaded).poll(cx),
       #[cfg(feature = "waker")]
-      AsyncInterface::LazyWithWaker(lazy) => Pin::new(lazy).poll(cx).map(|x| SafeWrapped(x)),
+      AsyncInterface::LazyWithWaker(lazy) => Pin::new(lazy).poll(cx).map(|x| SafeWrapped(x))
     }
   }
 }

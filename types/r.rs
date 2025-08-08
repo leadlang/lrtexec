@@ -1,5 +1,5 @@
 #![feature(prelude_import)]
-#![feature(trivial_bounds)]
+#![feature(trivial_bounds, unsafe_cell_access)]
 #[macro_use]
 extern crate std;
 #[prelude_import]
@@ -18,12 +18,15 @@ pub mod commands {
             //! This crate defines the `v0` of the Assembly Syntax of LRTEXEC Bytecode (also mentioned as assembly in many places)
             //!
             //! Structs related to v0 Assembly Syntax
-            use std::fmt::Debug;
-            use crate::common::FFIableObject;
+            use std::{cell::UnsafeCell, fmt::Debug, mem::replace};
+            use crate::common::{
+                r#async::{AsyncInterface, ReturnReg},
+                FFIableObject,
+            };
             #[repr(C)]
             pub struct FnStackV0 {
                 /// Return value (identifier in MemoryMap)
-                pub ret: Option<FFIableObject>,
+                pub ret: UnsafeCell<ReturnReg<FFIableObject>>,
                 /// Registers
                 pub r1: WrapperRegValueV0,
                 pub r2: WrapperRegValueV0,
@@ -34,21 +37,36 @@ pub mod commands {
                 pub r7: WrapperRegValueV0,
                 pub r8: WrapperRegValueV0,
             }
-            #[automatically_derived]
-            impl ::core::default::Default for FnStackV0 {
-                #[inline]
-                fn default() -> FnStackV0 {
-                    FnStackV0 {
-                        ret: ::core::default::Default::default(),
-                        r1: ::core::default::Default::default(),
-                        r2: ::core::default::Default::default(),
-                        r3: ::core::default::Default::default(),
-                        r4: ::core::default::Default::default(),
-                        r5: ::core::default::Default::default(),
-                        r6: ::core::default::Default::default(),
-                        r7: ::core::default::Default::default(),
-                        r8: ::core::default::Default::default(),
+            impl FnStackV0 {
+                /// Set either the output or the async task, doing both will override one of the results
+                pub fn set_output(&self, out: FFIableObject) {
+                    *unsafe { self.ret.as_mut_unchecked() } = ReturnReg::Output(out);
+                }
+                /// Set either the output or the async task, doing both will override one of the results
+                pub fn set_async_task(&self, out: AsyncInterface<FFIableObject>) {
+                    *unsafe { self.ret.as_mut_unchecked() } = ReturnReg::Async(out);
+                }
+                pub fn postrun(&mut self) -> Option<ReturnReg<FFIableObject>> {
+                    let ret_to_replace = ReturnReg::<FFIableObject>::Null;
+                    let ret = replace(self.ret.get_mut(), ret_to_replace);
+                    {
+                        self.r1._inner = RegValueV0::Null;
+                        self.r2._inner = RegValueV0::Null;
+                        self.r3._inner = RegValueV0::Null;
+                        self.r4._inner = RegValueV0::Null;
+                        self.r5._inner = RegValueV0::Null;
+                        self.r6._inner = RegValueV0::Null;
+                        self.r7._inner = RegValueV0::Null;
+                        self.r8._inner = RegValueV0::Null;
                     }
+                    if #[allow(non_exhaustive_omitted_patterns)]
+                    match ret {
+                        ReturnReg::Null => true,
+                        _ => false,
+                    } {
+                        return None;
+                    }
+                    Some(ret)
                 }
             }
             pub static REGISTER_R1: u16 = 0;
@@ -77,7 +95,7 @@ pub mod commands {
             }
             #[repr(C)]
             pub struct WrapperRegValueV0 {
-                _inner: RegValueV0,
+                pub(crate) _inner: RegValueV0,
             }
             #[automatically_derived]
             impl ::core::default::Default for WrapperRegValueV0 {
@@ -220,7 +238,7 @@ pub mod commands {
 pub mod common {
     use std::{
         any::TypeId, ffi::c_void, fmt::{Debug, Display},
-        marker::PhantomData,
+        marker::PhantomData, ptr::null_mut,
     };
     use crate::{
         commands::FFISafeContainer, common::others::{FFISafeString, boxes::Boxed},
@@ -287,6 +305,13 @@ pub mod common {
             }
         }
         pub use waker::{WAKER, call_waker_consume_ptr};
+        #[repr(C)]
+        #[allow(deprecated)]
+        pub enum ReturnReg<T: FFISafeContainer + 'static> {
+            Output(T),
+            Async(AsyncInterface<T>),
+            Null,
+        }
         #[repr(C)]
         #[allow(deprecated)]
         pub enum AsyncInterface<T: FFISafeContainer + 'static> {
@@ -829,6 +854,7 @@ pub mod common {
                     }
                 }
             }
+            pub struct Vect {}
         }
         #[macro_use]
         pub(crate) mod macros {}
@@ -1054,7 +1080,26 @@ pub mod common {
             }),
         )
     }
+    extern "C" fn drop_noop(_: *mut c_void) {}
+    extern "C" fn fmt_noop(_: *mut c_void) -> FFISafeString {
+        FFISafeString::from("")
+    }
     impl FFIableObject {
+        /// This might be a good way to create a dummy, invalid struct
+        /// We still dont recommend it
+        pub fn null() -> Self {
+            Self {
+                data: null_mut(),
+                display: no_display,
+                drop: drop_noop,
+                fmt: fmt_noop,
+                poisoned: true,
+                tag: 0,
+            }
+        }
+        pub const fn is_null(&self) -> bool {
+            self.data.is_null()
+        }
         /// (Un)safely consumes the FFIableObject and returns the original owned `T`.
         ///
         /// This method transfers ownership of the raw data pointer from this FFIableObject
@@ -1085,6 +1130,13 @@ pub mod common {
         }
         /// Transfers the ownership to the new data and sets the `poisoned` field to `true` of this structure
         pub unsafe fn transfer_ownership(&mut self) -> FFIableObject {
+            if self.poisoned {
+                {
+                    ::core::panicking::panic_fmt(
+                        format_args!("The object is already poisoned."),
+                    );
+                };
+            }
             let data = self.data;
             self.poisoned = true;
             FFIableObject {
@@ -1098,21 +1150,53 @@ pub mod common {
         }
         /// Returns whether this FFIableObject is poisoned or not. This is usually used to check whether
         /// `reconstruct` or `transfer_ownership` has been called on this instance before calling any other methods.
-        pub fn is_poisoned(&self) -> bool {
+        pub const fn is_poisoned(&self) -> bool {
             self.poisoned
         }
         /// Get a mutable reference to the inner `FFIableObject`
         ///
         /// # Safety
-        /// Do no use this is the struct is poisoned
+        /// We assume that you're absolutely sure that the strucure is the `T` that you've provided
         pub unsafe fn get_mut<'a, T>(&'a mut self) -> &'a mut T {
+            if self.poisoned {
+                {
+                    ::core::panicking::panic_fmt(
+                        format_args!("The object is poisoned."),
+                    );
+                };
+            }
+            unsafe { self.get_mut_unchecked() }
+        }
+        /// Get a mutable reference to the inner `FFIableObject` like `get_mut`
+        ///
+        /// # 🚨 Safety
+        /// ## **CRITICAL CAUTION REQUIRED**
+        /// - We assume that you're absolutely sure that the strucure is the `T` that you've provided
+        /// - **CRITICAL** This function does not check if the data is poisoned!
+        pub unsafe fn get_mut_unchecked<'a, T>(&'a mut self) -> &'a mut T {
             unsafe { &mut *(self.data as *mut T) }
         }
         /// Get a mutable reference to the inner `FFIableObject`
         ///
         /// # Safety
-        /// Do no use this is the struct is poisoned
+        /// We assume that you're absolutely sure that the strucure is the `T` that you've provided
         pub unsafe fn get<'a, T>(&'a self) -> &'a T {
+            if self.poisoned {
+                {
+                    ::core::panicking::panic_fmt(
+                        format_args!("The object is poisoned."),
+                    );
+                };
+            }
+            unsafe { self.get_unchecked() }
+        }
+        /// Get a mutable reference to the inner `FFIableObject` like `get`
+        ///
+        /// # 🚨 Safety
+        /// ## **CRITICAL CAUTION REQUIRED**
+        /// - We assume that you're absolutely sure that the strucure is the `T` that you've provided
+        /// - **CRITICAL** This function does not check if the data is poisoned!
+        pub unsafe fn get_unchecked<'a, T>(&'a self) -> &'a T {
             unsafe { &*(self.data as *mut T) }
         }
         pub fn create_using_box<T: Debug + Display + 'static>(data: T) -> Self {

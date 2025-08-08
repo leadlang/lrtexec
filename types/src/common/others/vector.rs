@@ -36,3 +36,7 @@ create! {
     fn capacity -> usize { this: *mut Ref }
   }
 }
+
+pub struct Vect {
+
+}
