@@ -7,7 +7,7 @@ use std::{
 
 use crate::{
   commands::FFISafeContainer,
-  common::others::{FFISafeString, boxes::Boxed},
+  common::others::{boxes::Boxed, FFISafeString}, Maybe,
 };
 
 pub mod r#async;
@@ -98,7 +98,7 @@ extern "C" fn general_display<T: Display>(ptr: *mut c_void) -> FFISafeString {
 
     let fmt = format!("{}", data);
 
-    FFISafeString::from(fmt)
+    FFISafeString::new(fmt).unwrap()
   }
 }
 
@@ -108,12 +108,12 @@ extern "C" fn general_debug<T: Debug>(ptr: *mut c_void) -> FFISafeString {
 
     let fmt = format!("{:?}", data);
 
-    FFISafeString::from(fmt)
+    FFISafeString::new(fmt).unwrap()
   }
 }
 
 extern "C" fn no_display(_: *mut c_void) -> FFISafeString {
-  FFISafeString::from(format!("<cannot display type>"))
+  FFISafeString::new(format!("<cannot display type>")).unwrap()
 }
 
 macro_rules! implement {
@@ -187,7 +187,7 @@ extern "C" fn drop_noop(_: *mut c_void) {
 }
 
 extern "C" fn fmt_noop(_: *mut c_void) -> FFISafeString {
-  FFISafeString::from("")
+  FFISafeString::new("").unwrap()
 }
 
 impl FFIableObject {
@@ -225,6 +225,7 @@ impl FFIableObject {
   /// 2. The `FFIableObject` actually contains a value of type `T`. Mis-casting `T` will lead to Undefined Behavior.
   /// 3. This `FFIableObject` is not used further after this call, as its internal pointer
   ///    will effectively be consumed.
+  /// 4. This binary has created this object or else it can happily lead for undefined behaviour
   pub unsafe fn reconstruct<T: Debug>(mut self) -> T {
     if self.poisoned {
       panic!("FFIableObject is poisoned");
@@ -382,9 +383,9 @@ impl Display for FFIableObject {
   fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
     let data = (self.display)(self.data);
 
-    let data = data.as_str();
+    let data = data.to_str();
 
-    let Some(data) = data else {
+    let Maybe::Some(data) = data else {
       return Err(std::fmt::Error::default());
     };
 
@@ -396,9 +397,9 @@ impl Debug for FFIableObject {
   fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
     let data = (self.fmt)(self.data);
 
-    let data = data.as_str();
+    let data = data.to_str();
 
-    let Some(data) = data else {
+    let Maybe::Some(data) = data else {
       return Err(std::fmt::Error::default());
     };
 

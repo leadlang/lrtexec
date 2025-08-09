@@ -3,6 +3,9 @@ name = "lrtexec_lib"
 version = "0.0.0-replace-me"
 edition = "2024"
 
+[workspace]
+members = ["test_str"]
+
 [lib]
 crate-type = ["rlib"]
 

@@ -30,6 +30,15 @@ pub enum Maybe<T> {
   None,
 }
 
+impl<T> Maybe<T> {
+  pub fn unwrap(self) -> T {
+    match self {
+      Maybe::Some(x) => x,
+      _ => panic!("Panicked during unwrap")
+    }
+  }
+}
+
 impl<T> From<Option<&T>> for Maybe<*const T> {
   fn from(value: Option<&T>) -> Self {
     match value {
