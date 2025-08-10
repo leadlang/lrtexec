@@ -2,7 +2,7 @@ use std::{
   any::TypeId,
   ffi::c_void,
   fmt::{Debug, Display},
-  marker::PhantomData, ptr::null_mut,
+  ptr::null_mut,
 };
 
 use crate::{
@@ -25,76 +25,16 @@ pub struct FFIableObject {
 
 impl FFISafeContainer for FFIableObject {}
 
-#[repr(C)]
-pub struct WrappedFFIableObject<'a, T> {
-  object: *mut FFIableObject,
-  r#type: PhantomData<&'a T>,
-}
-
-impl<'a, T> WrappedFFIableObject<'a, T> {
-  pub fn create_using_box<E: Debug + Display + 'static>(data: E) -> (Self, FFIableObject) {
-    let mut object = FFIableObject::create_using_box(data);
-
-    let data = Self::create_from_object(&mut object);
-
-    (data, object)
-  }
-
-  pub fn create_using_box_no_display<E: Debug + 'static>(data: E) -> (Self, FFIableObject) {
-    let mut object = FFIableObject::create_using_box_no_display(data);
-
-    let data = Self::create_from_object(&mut object);
-
-    (data, object)
-  }
-
-  pub fn create_using_box_non_static<E: Debug + Display>(data: E) -> (Self, FFIableObject) {
-    let mut object = FFIableObject::create_using_box_non_static(data);
-
-    let data = Self::create_from_object(&mut object);
-
-    (data, object)
-  }
-
-  pub fn create_using_box_no_display_non_static<E: Debug + 'static>(
-    data: E,
-  ) -> (Self, FFIableObject) {
-    let mut object = FFIableObject::create_using_box_no_display_non_static(data);
-
-    let data = Self::create_from_object(&mut object);
-
-    (data, object)
-  }
-
-  pub fn create_from_object<'e>(object: &'e mut FFIableObject) -> Self {
-    Self {
-      object,
-      r#type: PhantomData,
-    }
-  }
-
-  fn get_ptr(&self) -> &mut FFIableObject {
-    unsafe { &mut *self.object }
-  }
-
-  pub unsafe fn get(&'a self) -> &'a T {
-    unsafe { self.get_ptr().get() }
-  }
-
-  pub unsafe fn get_mut(&'a mut self) -> &'a mut T {
-    unsafe { self.get_ptr().get_mut() }
-  }
-}
-
 extern "C" fn general_drop<T>(ptr: *mut c_void) {
   unsafe {
-    drop(Boxed::from_raw(ptr as *mut T));
+    drop(Boxed::<T>::from_raw(ptr));
   }
 }
 
 extern "C" fn general_display<T: Display>(ptr: *mut c_void) -> FFISafeString {
   unsafe {
-    let data = &*(ptr as *mut T);
+    let data = &*(ptr as *mut (T, extern "C" fn(_: *mut c_void)));
+    let data = &data.0;
 
     let fmt = format!("{}", data);
 
@@ -104,7 +44,8 @@ extern "C" fn general_display<T: Display>(ptr: *mut c_void) -> FFISafeString {
 
 extern "C" fn general_debug<T: Debug>(ptr: *mut c_void) -> FFISafeString {
   unsafe {
-    let data = &*(ptr as *mut T);
+    let data = &*(ptr as *mut (T, extern "C" fn(_: *mut c_void)));
+    let data = &data.0;
 
     let fmt = format!("{:?}", data);
 
@@ -233,7 +174,7 @@ impl FFIableObject {
 
     self.poisoned = true;
 
-    (unsafe { Boxed::from_raw(self.data as *mut T) }).unbox()
+    (unsafe { Boxed::<T>::from_raw(self.data) }).unbox()
   }
 
   /// Transfers the ownership to the new data and sets the `poisoned` field to `true` of this structure
@@ -280,7 +221,7 @@ impl FFIableObject {
   /// - We assume that you're absolutely sure that the strucure is the `T` that you've provided
   /// - **CRITICAL** This function does not check if the data is poisoned!
   pub unsafe fn get_mut_unchecked<'a, T>(&'a mut self) -> &'a mut T {
-    unsafe { &mut *(self.data as *mut T) }
+    unsafe { &mut (*(self.data as *mut (T, extern "C" fn (_: *mut c_void)))).0 }
   }
 
   /// Get a mutable reference to the inner `FFIableObject`
@@ -302,7 +243,7 @@ impl FFIableObject {
   /// - We assume that you're absolutely sure that the strucure is the `T` that you've provided
   /// - **CRITICAL** This function does not check if the data is poisoned!
   pub unsafe fn get_unchecked<'a, T>(&'a self) -> &'a T {
-    unsafe { &*(self.data as *mut T) }
+    unsafe { &(*(self.data as *mut (T, extern "C" fn(_: *mut c_void)))).0 }
   }
 
   pub fn create_using_box<T: Debug + Display + 'static>(data: T) -> Self {
