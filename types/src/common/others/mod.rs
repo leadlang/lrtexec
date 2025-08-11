@@ -13,6 +13,7 @@ use crate::Maybe;
 pub mod boxes;
 pub mod hashmap;
 pub mod vector;
+pub mod rt_struct;
 
 #[macro_use]
 pub(crate) mod macros;
