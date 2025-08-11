@@ -7,7 +7,7 @@ use std::{
 
 use crate::{
   commands::FFISafeContainer,
-  common::others::{boxes::Boxed, FFISafeString}, Maybe,
+  common::others::{boxes::{Boxed, BoxedData}, FFISafeString}, Maybe,
 };
 
 pub mod r#async;
@@ -33,8 +33,8 @@ extern "C" fn general_drop<T>(ptr: *mut c_void) {
 
 extern "C" fn general_display<T: Display>(ptr: *mut c_void) -> FFISafeString {
   unsafe {
-    let data = &*(ptr as *mut (T, extern "C" fn(_: *mut c_void)));
-    let data = &data.0;
+    let data = &*(ptr as *mut BoxedData<T>);
+    let data = &data.value;
 
     let fmt = format!("{}", data);
 
@@ -44,8 +44,8 @@ extern "C" fn general_display<T: Display>(ptr: *mut c_void) -> FFISafeString {
 
 extern "C" fn general_debug<T: Debug>(ptr: *mut c_void) -> FFISafeString {
   unsafe {
-    let data = &*(ptr as *mut (T, extern "C" fn(_: *mut c_void)));
-    let data = &data.0;
+    let data = &*(ptr as *mut BoxedData<T>);
+    let data = &data.value;
 
     let fmt = format!("{:?}", data);
 
@@ -221,7 +221,8 @@ impl FFIableObject {
   /// - We assume that you're absolutely sure that the strucure is the `T` that you've provided
   /// - **CRITICAL** This function does not check if the data is poisoned!
   pub unsafe fn get_mut_unchecked<'a, T>(&'a mut self) -> &'a mut T {
-    unsafe { &mut (*(self.data as *mut (T, extern "C" fn (_: *mut c_void)))).0 }
+    let data = unsafe { &mut *(self.data as *mut BoxedData<T>) };
+    &mut data.value
   }
 
   /// Get a mutable reference to the inner `FFIableObject`
@@ -243,7 +244,8 @@ impl FFIableObject {
   /// - We assume that you're absolutely sure that the strucure is the `T` that you've provided
   /// - **CRITICAL** This function does not check if the data is poisoned!
   pub unsafe fn get_unchecked<'a, T>(&'a self) -> &'a T {
-    unsafe { &(*(self.data as *mut (T, extern "C" fn(_: *mut c_void)))).0 }
+    let data = unsafe { & *(self.data as *mut BoxedData<T>) };
+    &data.value
   }
 
   pub fn create_using_box<T: Debug + Display + 'static>(data: T) -> Self {

@@ -238,10 +238,11 @@ pub mod commands {
 pub mod common {
     use std::{
         any::TypeId, ffi::c_void, fmt::{Debug, Display},
-        marker::PhantomData, ptr::null_mut,
+        ptr::null_mut,
     };
     use crate::{
-        commands::FFISafeContainer, common::others::{FFISafeString, boxes::Boxed},
+        commands::FFISafeContainer, common::others::{boxes::Boxed, FFISafeString},
+        Maybe,
     };
     pub mod r#async {
         use std::os::raw::c_void;
@@ -472,11 +473,14 @@ pub mod common {
         }
     }
     pub mod others {
-        use std::ffi::CString;
-        use std::fmt;
-        use std::os::raw::c_char;
-        use std::ptr;
+        use core::str;
+        use std::fmt::{self, Display};
+        use std::ops::{Deref, Index, Range};
+        use std::os::raw::c_void;
+        use std::ptr::{copy_nonoverlapping, null_mut};
         use std::slice;
+        use libc::{malloc, realloc};
+        use crate::Maybe;
         pub mod boxes {
             use libc::{free, malloc};
             use std::ffi::c_void;
@@ -485,23 +489,32 @@ pub mod common {
             use std::ptr::{self, NonNull};
             #[repr(C)]
             pub struct Boxed<T> {
-                ptr: NonNull<T>,
+                ptr: NonNull<(T, extern "C" fn(data: *mut c_void))>,
                 drop: bool,
+            }
+            extern "C" fn ptr_drop<T>(data: *mut c_void) {
+                unsafe {
+                    ptr::drop_in_place(data as *mut T);
+                }
             }
             impl<T> Boxed<T> {
                 /// Creates a new Boxed containing the provided value.
                 ///
                 /// This function manually allocates memory on the heap using `libc::malloc`
                 /// and moves the value into that newly allocated space.
-                pub fn new(value: T) -> Self {
-                    let size = mem::size_of::<T>();
+                pub extern "C" fn new(value: T) -> Self {
+                    let drop = ptr_drop::<T>;
+                    let data: (T, extern "C" fn(*mut c_void)) = (value, drop);
+                    let size = size_of_val(&data);
                     if size == 0 {
                         return Boxed {
                             ptr: NonNull::dangling(),
                             drop: true,
                         };
                     }
-                    let ptr = unsafe { malloc(size) as *mut T };
+                    let ptr = unsafe {
+                        malloc(size) as *mut (T, extern "C" fn(_: *mut c_void))
+                    };
                     let ptr = match NonNull::new(ptr) {
                         Some(p) => p,
                         None => {
@@ -511,14 +524,14 @@ pub mod common {
                         }
                     };
                     unsafe {
-                        ptr::write(ptr.as_ptr(), value);
+                        ptr::write(ptr.as_ptr(), data);
                     }
                     Self { ptr, drop: true }
                 }
                 /// Consumes the FfiBox and returns the value inside.
                 ///
                 /// This will deallocate the memory used by the box but not the value itself.
-                pub fn unbox(mut self) -> T {
+                pub extern "C" fn unbox(mut self) -> T {
                     let ptr = self.ptr.as_ptr();
                     self.drop = false;
                     let value = unsafe { ptr::read(ptr) };
@@ -527,7 +540,7 @@ pub mod common {
                             free(ptr as *mut c_void);
                         }
                     }
-                    value
+                    value.0
                 }
                 /// Creates an Boxed from a raw, non-null pointer.
                 ///
@@ -536,14 +549,14 @@ pub mod common {
                 /// and points to a value of type T that was allocated with `libc::malloc` i.e. by `Boxed::<T>::new`` or equivalent.
                 /// The caller also takes responsibility for ensuring that the data is not
                 /// freed elsewhere.
-                pub unsafe fn from_raw(ptr: *mut T) -> Self {
+                pub unsafe extern "C" fn from_raw(ptr: *mut c_void) -> Self {
                     Self {
-                        ptr: NonNull::new(ptr as *mut T)
+                        ptr: NonNull::new(ptr as *mut (T, extern "C" fn(_: *mut c_void)))
                             .expect("Invalid Pointer provided"),
                         drop: true,
                     }
                 }
-                pub fn into_raw(mut val: Self) -> *mut c_void {
+                pub extern "C" fn into_raw(mut val: Self) -> *mut c_void {
                     val.drop = false;
                     val.ptr.as_ptr() as _
                 }
@@ -551,19 +564,20 @@ pub mod common {
             impl<T> Deref for Boxed<T> {
                 type Target = T;
                 fn deref(&self) -> &Self::Target {
-                    unsafe { self.ptr.as_ref() }
+                    unsafe { &self.ptr.as_ref().0 }
                 }
             }
             impl<T> DerefMut for Boxed<T> {
                 fn deref_mut(&mut self) -> &mut Self::Target {
-                    unsafe { self.ptr.as_mut() }
+                    unsafe { &mut self.ptr.as_mut().0 }
                 }
             }
             impl<T> Drop for Boxed<T> {
                 fn drop(&mut self) {
                     if mem::size_of::<T>() > 0 && self.drop {
                         unsafe {
-                            ptr::drop_in_place(self.ptr.as_ptr() as *mut c_void);
+                            let ptr = &mut *self.ptr.as_ptr();
+                            (ptr.1)(&mut ptr.0 as *mut _ as *mut _)
                         }
                         unsafe {
                             free(self.ptr.as_ptr() as *mut _);
@@ -714,278 +728,330 @@ pub mod common {
             }
         }
         pub mod vector {
-            use crate::{Maybe, Ref, common::FFIableObject, create};
-            use libloading::{Library, Symbol, library_filename};
-            use std::{env, mem::transmute, path::PathBuf, str::FromStr, sync::LazyLock};
-            pub static FFIVECTOR: LazyLock<FfiVector> = LazyLock::new(|| {
-                FfiVector::new()
-            });
-            pub type CallCreateFn = unsafe extern "C" fn() -> Ref;
-            pub type CallGetAtFn = unsafe extern "C" fn(
-                this: *mut Ref,
-                index: usize,
-            ) -> Maybe<*const FFIableObject>;
-            pub type CallGetAtMutFn = unsafe extern "C" fn(
-                this: *mut Ref,
-                index: usize,
-            ) -> Maybe<*mut FFIableObject>;
-            pub type CallReplaceFn = unsafe extern "C" fn(
-                this: *mut Ref,
-                index: usize,
-                with: FFIableObject,
-            ) -> Maybe<FFIableObject>;
-            pub type CallPopFn = unsafe extern "C" fn(
-                this: *mut Ref,
-            ) -> Maybe<FFIableObject>;
-            pub type CallPushFn = unsafe extern "C" fn(
-                this: *mut Ref,
-                item: FFIableObject,
-            ) -> ();
-            pub type CallLengthFn = unsafe extern "C" fn(this: *mut Ref) -> usize;
-            pub type CallCapacityFn = unsafe extern "C" fn(this: *mut Ref) -> usize;
-            pub struct FfiVector {
-                _lib: Library,
-                ///Creates a new empty vector
-                pub create: CallCreateFn,
-                ///Gets a reference to the element at the specified index
-                pub get_at: CallGetAtFn,
-                ///Gets a mutable reference to the element at the specified index
-                pub get_at_mut: CallGetAtMutFn,
-                ///Replaces the element at the specified index
-                pub replace: CallReplaceFn,
-                ///Removes the last element from the vector and returns it
-                pub pop: CallPopFn,
-                ///Appends an element to the back of the vector
-                pub push: CallPushFn,
-                ///Returns the number of elements in the vector
-                pub length: CallLengthFn,
-                ///Returns the total number of elements the vector can hold without reallocating
-                pub capacity: CallCapacityFn,
+            use crate::{
+                common::{others::boxes::Boxed, FFIableObject},
+                Maybe,
+            };
+            use libc::malloc;
+            use std::{
+                ffi::c_void, ops::{Index, Range},
+                ptr, slice,
+            };
+            #[repr(C)]
+            pub struct FFIVector {
+                ptr: *mut *mut c_void,
+                len: usize,
+                cap: usize,
             }
-            impl FfiVector {
-                pub fn new() -> Self {
-                    let lrt = env::var("LRT_HOME").expect("LRT Home not present");
-                    let file = library_filename("vector");
-                    let mut path = PathBuf::from_str(&lrt).unwrap();
-                    path.push("libs");
-                    path.push("waker");
-                    path.push(file);
-                    let lib = unsafe {
-                        Library::new(path).expect("Unable to load async_waker")
-                    };
-                    let create = {
-                        let ptr: Symbol<'_, CallCreateFn> = unsafe {
-                            lib.get("create".as_bytes()).unwrap()
-                        };
-                        let out: Symbol<'static, CallCreateFn> = unsafe {
-                            transmute(ptr)
-                        };
-                        out
-                    };
-                    let get_at = {
-                        let ptr: Symbol<'_, CallGetAtFn> = unsafe {
-                            lib.get("get_at".as_bytes()).unwrap()
-                        };
-                        let out: Symbol<'static, CallGetAtFn> = unsafe {
-                            transmute(ptr)
-                        };
-                        out
-                    };
-                    let get_at_mut = {
-                        let ptr: Symbol<'_, CallGetAtMutFn> = unsafe {
-                            lib.get("get_at_mut".as_bytes()).unwrap()
-                        };
-                        let out: Symbol<'static, CallGetAtMutFn> = unsafe {
-                            transmute(ptr)
-                        };
-                        out
-                    };
-                    let replace = {
-                        let ptr: Symbol<'_, CallReplaceFn> = unsafe {
-                            lib.get("replace".as_bytes()).unwrap()
-                        };
-                        let out: Symbol<'static, CallReplaceFn> = unsafe {
-                            transmute(ptr)
-                        };
-                        out
-                    };
-                    let pop = {
-                        let ptr: Symbol<'_, CallPopFn> = unsafe {
-                            lib.get("pop".as_bytes()).unwrap()
-                        };
-                        let out: Symbol<'static, CallPopFn> = unsafe { transmute(ptr) };
-                        out
-                    };
-                    let push = {
-                        let ptr: Symbol<'_, CallPushFn> = unsafe {
-                            lib.get("push".as_bytes()).unwrap()
-                        };
-                        let out: Symbol<'static, CallPushFn> = unsafe { transmute(ptr) };
-                        out
-                    };
-                    let length = {
-                        let ptr: Symbol<'_, CallLengthFn> = unsafe {
-                            lib.get("length".as_bytes()).unwrap()
-                        };
-                        let out: Symbol<'static, CallLengthFn> = unsafe {
-                            transmute(ptr)
-                        };
-                        out
-                    };
-                    let capacity = {
-                        let ptr: Symbol<'_, CallCapacityFn> = unsafe {
-                            lib.get("capacity".as_bytes()).unwrap()
-                        };
-                        let out: Symbol<'static, CallCapacityFn> = unsafe {
-                            transmute(ptr)
-                        };
-                        out
-                    };
+            unsafe impl Send for FFIVector {}
+            unsafe impl Sync for FFIVector {}
+            impl FFIVector {
+                pub fn null() -> Self {
                     Self {
-                        _lib: lib,
-                        create: *create,
-                        get_at: *get_at,
-                        get_at_mut: *get_at_mut,
-                        replace: *replace,
-                        pop: *pop,
-                        push: *push,
-                        length: *length,
-                        capacity: *capacity,
+                        ptr: ptr::null_mut(),
+                        cap: 0,
+                        len: 0,
+                    }
+                }
+                pub fn new(slice: Vec<FFIableObject>) -> Maybe<Self> {
+                    let len = slice.len();
+                    if len == 0 {
+                        return Maybe::Some(Self::null());
+                    }
+                    let Some(cap) = len.checked_mul(2) else {
+                        return Maybe::None;
+                    };
+                    let ptr = unsafe {
+                        malloc(cap * size_of::<*mut c_void>()) as *mut *mut c_void
+                    };
+                    if ptr.is_null() {
+                        return Maybe::None;
+                    }
+                    unsafe {
+                        for (index, item) in slice.into_iter().enumerate() {
+                            let data = Boxed::into_raw(Boxed::new(item));
+                            *ptr.add(index) = data;
+                        }
+                    }
+                    Maybe::Some(Self { ptr, len, cap })
+                }
+                pub fn push(&mut self, item: FFIableObject) -> Maybe<()> {
+                    let Some(new_len) = self.len.checked_add(1) else {
+                        return Maybe::None;
+                    };
+                    let mut cap = self.cap;
+                    if new_len > self.cap {
+                        unsafe {
+                            let Some(c) = new_len.checked_mul(2) else {
+                                return Maybe::None;
+                            };
+                            cap = c;
+                            let new_ptr = libc::realloc(
+                                self.ptr as _,
+                                cap * size_of::<*mut c_void>(),
+                            ) as *mut *mut c_void;
+                            if new_ptr.is_null() {
+                                return Maybe::None;
+                            }
+                            self.ptr = new_ptr as *mut *mut c_void;
+                        }
+                    }
+                    unsafe {
+                        *self.ptr.add(self.len) = Boxed::into_raw(
+                            Boxed::<FFIableObject>::new(item),
+                        );
+                    }
+                    self.len = new_len;
+                    self.cap = cap;
+                    Maybe::Some(())
+                }
+                pub fn length(&self) -> usize {
+                    self.len
+                }
+                pub fn capacity(&self) -> usize {
+                    self.cap
+                }
+                /// This does not realloc and returns Maybe::None, if the total size is less than cap
+                ///
+                /// # SAFETY
+                /// - **CRITICAL** you must ensure that the bounds check is correct
+                pub unsafe fn get_at<'a>(
+                    &'a self,
+                    index: Range<usize>,
+                ) -> &'a [*mut c_void] {
+                    let dst = self.ptr;
+                    unsafe { slice::from_raw_parts(dst.add(index.start), index.len()) }
+                }
+                pub fn edit(&mut self, index: usize, data: FFIableObject) -> Maybe<()> {
+                    if index >= self.len {
+                        return Maybe::None;
+                    }
+                    unsafe {
+                        let data = Boxed::into_raw(Boxed::new(data));
+                        let old_ptr = *self.ptr.add(index);
+                        *self.ptr.add(index) = data;
+                        drop(Boxed::<FFIableObject>::from_raw(old_ptr));
+                        Maybe::Some(())
                     }
                 }
             }
-            pub struct Vect {}
+            impl Index<Range<usize>> for FFIVector {
+                type Output = [*mut c_void];
+                fn index(&self, index: Range<usize>) -> &Self::Output {
+                    unsafe { self.get_at(index) }
+                }
+            }
+            impl Drop for FFIVector {
+                fn drop(&mut self) {
+                    if !self.ptr.is_null() {
+                        unsafe { self.get_at(0..self.len) }
+                            .iter()
+                            .for_each(|x| {
+                                unsafe { drop(Boxed::<FFIableObject>::from_raw(*x)) };
+                            });
+                        unsafe { libc::free(self.ptr as *mut c_void) }
+                    }
+                }
+            }
         }
         #[macro_use]
         pub(crate) mod macros {}
-        /// A C-compatible string for FFI.
+        /// A string using our custom spec for FFI.
         ///
-        /// This struct manages a null-terminated C-style string (`*mut c_char`)
-        /// and its length (excluding the null terminator). It ensures that
-        /// memory is properly allocated, deallocated, and reallocated when
-        /// the string content changes.
+        /// This struct manages a custom made String
+        /// It can store UTF-8 compatible Strings and is quite stable in design
+        ///
+        /// Intended for Rust-Rust FFI
         #[repr(C)]
+        /// TODO: Rename to FFISafeString
         pub struct FFISafeString {
-            ptr: *mut c_char,
+            ptr: *mut u8,
             len: usize,
-            capacity: usize,
+            cap: usize,
+        }
+        #[automatically_derived]
+        impl ::core::fmt::Debug for FFISafeString {
+            #[inline]
+            fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+                ::core::fmt::Formatter::debug_struct_field3_finish(
+                    f,
+                    "FFISafeString",
+                    "ptr",
+                    &self.ptr,
+                    "len",
+                    &self.len,
+                    "cap",
+                    &&self.cap,
+                )
+            }
         }
         impl FFISafeString {
-            /// Creates a new, empty `FFISafeString`.
-            pub fn new() -> Self {
+            pub fn null() -> Self {
                 Self {
-                    ptr: ptr::null_mut(),
+                    ptr: null_mut(),
+                    cap: 0,
                     len: 0,
-                    capacity: 0,
                 }
             }
-            /// Creates an `FFISafeString` from a Rust `&str`.
-            ///
-            /// This allocates a new C-compatible string and copies the content.
-            pub fn from<T: Into<Vec<u8>>>(s: T) -> Self {
-                let cstring = CString::new(s).expect("String contains null bytes");
-                let len = cstring.as_bytes().len();
-                let capacity = len + 1;
-                let ptr = cstring.into_raw();
-                Self { ptr, len, capacity }
-            }
-            /// Appends a string slice to this `FFISafeString`.
-            ///
-            /// This method reallocates memory if the new content exceeds the current capacity.
-            pub fn push_str(&mut self, s: &str) {
-                let additional_len = s.len();
-                let new_len = self.len + additional_len;
-                if new_len >= self.capacity {
-                    let new_capacity = (new_len + 1).max(self.capacity * 2).max(16);
-                    let new_ptr = if self.ptr.is_null() {
-                        unsafe { libc::malloc(new_capacity) as *mut c_char }
-                    } else {
-                        unsafe {
-                            libc::realloc(self.ptr as *mut libc::c_void, new_capacity)
-                                as *mut c_char
-                        }
-                    };
-                    if new_ptr.is_null() {
-                        {
-                            ::core::panicking::panic_fmt(
-                                format_args!(
-                                    "Failed to reallocate memory for FFISafeString",
-                                ),
-                            );
-                        };
-                    }
-                    self.ptr = new_ptr;
-                    self.capacity = new_capacity;
+            pub fn new(slice: impl AsRef<str>) -> Maybe<Self> {
+                let data: &str = slice.as_ref();
+                let len = data.len();
+                if len == 0 {
+                    return Maybe::Some(Self::null());
+                }
+                let Some(cap) = len.checked_mul(2) else {
+                    return Maybe::None;
+                };
+                let ptr = unsafe { malloc(cap) as *mut u8 };
+                if ptr.is_null() {
+                    return Maybe::None;
                 }
                 unsafe {
-                    let dest = self.ptr.add(self.len) as *mut u8;
-                    let src = s.as_ptr();
-                    ptr::copy_nonoverlapping(src, dest, additional_len);
+                    let bytes = data.as_bytes();
+                    let src = bytes.as_ptr();
+                    copy_nonoverlapping(src, ptr, bytes.len());
+                }
+                Maybe::Some(Self { ptr, len, cap })
+            }
+            pub fn push_str(&mut self, slice: impl AsRef<str>) -> Maybe<()> {
+                let data: &str = slice.as_ref();
+                if data.len() == 0 {
+                    return Maybe::Some(());
+                }
+                let Some(new_len) = self.len.checked_add(data.len()) else {
+                    return Maybe::None;
+                };
+                let mut cap = self.cap;
+                if new_len > self.cap {
+                    unsafe {
+                        let Some(c) = new_len.checked_mul(2) else {
+                            return Maybe::None;
+                        };
+                        cap = c;
+                        let new_ptr = libc::realloc(self.ptr as _, cap);
+                        if new_ptr.is_null() {
+                            return Maybe::None;
+                        }
+                        self.ptr = new_ptr as *mut u8;
+                    }
+                }
+                unsafe {
+                    let src_vect = data.as_bytes();
+                    let src = src_vect.as_ptr();
+                    copy_nonoverlapping(src, self.ptr.add(self.len), new_len - self.len);
                 }
                 self.len = new_len;
-                unsafe {
-                    *self.ptr.add(self.len) = 0;
-                }
+                self.cap = cap;
+                Maybe::Some(())
             }
-            /// Returns a `&str` slice of the `FFISafeString` content.
-            ///
-            /// This is a safe way to view the string within Rust.
-            pub fn as_str(&self) -> Option<&str> {
-                if self.ptr.is_null() || self.len == 0 {
-                    return None;
-                }
-                unsafe {
-                    let slice = slice::from_raw_parts(self.ptr as *const u8, self.len);
-                    std::str::from_utf8(slice).ok()
-                }
-            }
-            /// Returns a `*const c_char` to the internal C string.
-            ///
-            /// This is typically what you'd pass to C functions.
-            pub fn as_ptr(&self) -> *const c_char {
-                self.ptr
-            }
-            /// Returns the length of the string in bytes, excluding the null terminator.
-            pub fn len(&self) -> usize {
+            pub fn length(&self) -> usize {
                 self.len
             }
-            /// Returns true if the string has a length of 0.
-            pub fn is_empty(&self) -> bool {
-                self.len == 0
+            pub fn capacity(&self) -> usize {
+                self.cap
             }
-        }
-        impl fmt::Debug for FFISafeString {
-            fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-                let s = self.as_str().unwrap_or("[invalid UTF-8 or null]");
-                f.debug_struct("FFISafeString")
-                    .field("ptr", &self.ptr)
-                    .field("len", &self.len)
-                    .field("capacity", &self.capacity)
-                    .field("value", &s)
-                    .finish()
+            /// This does not realloc and returns Maybe::None, if the total size is less than cap
+            ///
+            /// # SAFETY
+            /// - **CRITICAL** You must ensure that this points to valid UTF8 data (which it should)
+            /// - **CRITICAL** you must ensure that the bounds check is correct
+            pub unsafe fn get_at_unchecked(&self, index: Range<usize>) -> &str {
+                let dst = self.ptr;
+                let slice = unsafe {
+                    slice::from_raw_parts(dst.add(index.start), index.len())
+                };
+                unsafe { str::from_utf8_unchecked(slice) }
             }
-        }
-        impl fmt::Display for FFISafeString {
-            fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-                match self.as_str() {
-                    Some(s) => f.write_fmt(format_args!("{0}", s)),
-                    None => {
-                        f.write_fmt(
-                            format_args!("{0}", "[invalid UTF-8 or null string]"),
-                        )
+            /// This does not realloc and returns Maybe::None, if the total size is less than cap or if its invalid utf8
+            pub fn get_at(&self, index: Range<usize>) -> Maybe<&str> {
+                let dst = self.ptr;
+                let slice = unsafe {
+                    slice::from_raw_parts(dst.add(index.start), index.len())
+                };
+                str::from_utf8(slice).ok().into()
+            }
+            pub fn edit(&mut self, start: usize, src: impl AsRef<str>) -> Maybe<()> {
+                unsafe {
+                    let src = src.as_ref().as_bytes();
+                    let to_be_set_as_len = (start + src.len()).max(self.len);
+                    if self.cap < to_be_set_as_len {
+                        let Some(new_cap) = to_be_set_as_len.checked_mul(2) else {
+                            return Maybe::None;
+                        };
+                        {
+                            let ptr = realloc(self.ptr as _, new_cap);
+                            if ptr.is_null() {
+                                return Maybe::None;
+                            }
+                            self.ptr = ptr as _;
+                            self.cap = new_cap;
+                        }
                     }
+                    self.len = to_be_set_as_len;
+                    copy_nonoverlapping(
+                        src.as_ptr(),
+                        self.ptr.add(start) as _,
+                        src.len(),
+                    );
                 }
+                Maybe::Some(())
+            }
+            pub fn to_str<'a>(&'a self) -> Maybe<&'a str> {
+                if self.ptr.is_null() {
+                    return Maybe::Some("");
+                }
+                let bytes = unsafe { slice::from_raw_parts(self.ptr, self.len) };
+                str::from_utf8(bytes).ok().into()
+            }
+            pub fn try_clone(&self) -> Maybe<Self> {
+                Self::new(
+                    match self.to_str() {
+                        Maybe::Some(x) => x,
+                        _ => {
+                            return Maybe::None;
+                        }
+                    },
+                )
+            }
+            pub unsafe fn to_str_unchecked<'a>(&'a self) -> &'a str {
+                if self.ptr.is_null() {
+                    return "";
+                }
+                let bytes = unsafe { slice::from_raw_parts(self.ptr, self.len) };
+                unsafe { str::from_utf8_unchecked(bytes) }
+            }
+        }
+        impl Index<usize> for FFISafeString {
+            type Output = str;
+            fn index(&self, index: usize) -> &Self::Output {
+                self.get_at(Range {
+                        start: index,
+                        end: index + 1,
+                    })
+                    .unwrap()
+            }
+        }
+        impl Index<Range<usize>> for FFISafeString {
+            type Output = str;
+            fn index(&self, index: Range<usize>) -> &Self::Output {
+                self.get_at(index).unwrap()
+            }
+        }
+        impl Display for FFISafeString {
+            fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+                Display::fmt(self.deref(), f)
+            }
+        }
+        impl Deref for FFISafeString {
+            type Target = str;
+            fn deref(&self) -> &Self::Target {
+                self.to_str().unwrap()
             }
         }
         impl Drop for FFISafeString {
             fn drop(&mut self) {
                 if !self.ptr.is_null() {
-                    unsafe {
-                        libc::free(self.ptr as *mut libc::c_void);
-                    }
-                    self.ptr = ptr::null_mut();
-                    self.len = 0;
-                    self.capacity = 0;
+                    unsafe { libc::free(self.ptr as *mut c_void) }
                 }
             }
         }
@@ -1000,89 +1066,42 @@ pub mod common {
         tag: u8,
     }
     impl FFISafeContainer for FFIableObject {}
-    #[repr(C)]
-    pub struct WrappedFFIableObject<'a, T> {
-        object: *mut FFIableObject,
-        r#type: PhantomData<&'a T>,
-    }
-    impl<'a, T> WrappedFFIableObject<'a, T> {
-        pub fn create_using_box<E: Debug + Display + 'static>(
-            data: E,
-        ) -> (Self, FFIableObject) {
-            let mut object = FFIableObject::create_using_box(data);
-            let data = Self::create_from_object(&mut object);
-            (data, object)
-        }
-        pub fn create_using_box_no_display<E: Debug + 'static>(
-            data: E,
-        ) -> (Self, FFIableObject) {
-            let mut object = FFIableObject::create_using_box_no_display(data);
-            let data = Self::create_from_object(&mut object);
-            (data, object)
-        }
-        pub fn create_using_box_non_static<E: Debug + Display>(
-            data: E,
-        ) -> (Self, FFIableObject) {
-            let mut object = FFIableObject::create_using_box_non_static(data);
-            let data = Self::create_from_object(&mut object);
-            (data, object)
-        }
-        pub fn create_using_box_no_display_non_static<E: Debug + 'static>(
-            data: E,
-        ) -> (Self, FFIableObject) {
-            let mut object = FFIableObject::create_using_box_no_display_non_static(data);
-            let data = Self::create_from_object(&mut object);
-            (data, object)
-        }
-        pub fn create_from_object<'e>(object: &'e mut FFIableObject) -> Self {
-            Self {
-                object,
-                r#type: PhantomData,
-            }
-        }
-        fn get_ptr(&self) -> &mut FFIableObject {
-            unsafe { &mut *self.object }
-        }
-        pub unsafe fn get(&'a self) -> &'a T {
-            unsafe { self.get_ptr().get() }
-        }
-        pub unsafe fn get_mut(&'a mut self) -> &'a mut T {
-            unsafe { self.get_ptr().get_mut() }
-        }
-    }
     extern "C" fn general_drop<T>(ptr: *mut c_void) {
         unsafe {
-            drop(Boxed::from_raw(ptr as *mut T));
+            drop(Boxed::<T>::from_raw(ptr));
         }
     }
     extern "C" fn general_display<T: Display>(ptr: *mut c_void) -> FFISafeString {
         unsafe {
-            let data = &*(ptr as *mut T);
+            let data = &*(ptr as *mut (T, extern "C" fn(_: *mut c_void)));
+            let data = &data.0;
             let fmt = ::alloc::__export::must_use({
                 ::alloc::fmt::format(format_args!("{0}", data))
             });
-            FFISafeString::from(fmt)
+            FFISafeString::new(fmt).unwrap()
         }
     }
     extern "C" fn general_debug<T: Debug>(ptr: *mut c_void) -> FFISafeString {
         unsafe {
-            let data = &*(ptr as *mut T);
+            let data = &*(ptr as *mut (T, extern "C" fn(_: *mut c_void)));
+            let data = &data.0;
             let fmt = ::alloc::__export::must_use({
                 ::alloc::fmt::format(format_args!("{0:?}", data))
             });
-            FFISafeString::from(fmt)
+            FFISafeString::new(fmt).unwrap()
         }
     }
     extern "C" fn no_display(_: *mut c_void) -> FFISafeString {
-        FFISafeString::from(
-            ::alloc::__export::must_use({
-                ::alloc::fmt::format(format_args!("<cannot display type>"))
-            }),
-        )
+        FFISafeString::new(
+                ::alloc::__export::must_use({
+                    ::alloc::fmt::format(format_args!("<cannot display type>"))
+                }),
+            )
+            .unwrap()
     }
     extern "C" fn drop_noop(_: *mut c_void) {}
     extern "C" fn fmt_noop(_: *mut c_void) -> FFISafeString {
-        FFISafeString::from("")
+        FFISafeString::new("").unwrap()
     }
     impl FFIableObject {
         /// This might be a good way to create a dummy, invalid struct
@@ -1117,6 +1136,7 @@ pub mod common {
         /// 2. The `FFIableObject` actually contains a value of type `T`. Mis-casting `T` will lead to Undefined Behavior.
         /// 3. This `FFIableObject` is not used further after this call, as its internal pointer
         ///    will effectively be consumed.
+        /// 4. This binary has created this object or else it can happily lead for undefined behaviour
         pub unsafe fn reconstruct<T: Debug>(mut self) -> T {
             if self.poisoned {
                 {
@@ -1126,7 +1146,7 @@ pub mod common {
                 };
             }
             self.poisoned = true;
-            (unsafe { Boxed::from_raw(self.data as *mut T) }).unbox()
+            (unsafe { Boxed::<T>::from_raw(self.data) }).unbox()
         }
         /// Transfers the ownership to the new data and sets the `poisoned` field to `true` of this structure
         pub unsafe fn transfer_ownership(&mut self) -> FFIableObject {
@@ -1174,7 +1194,7 @@ pub mod common {
         /// - We assume that you're absolutely sure that the strucure is the `T` that you've provided
         /// - **CRITICAL** This function does not check if the data is poisoned!
         pub unsafe fn get_mut_unchecked<'a, T>(&'a mut self) -> &'a mut T {
-            unsafe { &mut *(self.data as *mut T) }
+            unsafe { &mut (*(self.data as *mut (T, extern "C" fn(_: *mut c_void)))).0 }
         }
         /// Get a mutable reference to the inner `FFIableObject`
         ///
@@ -1197,7 +1217,7 @@ pub mod common {
         /// - We assume that you're absolutely sure that the strucure is the `T` that you've provided
         /// - **CRITICAL** This function does not check if the data is poisoned!
         pub unsafe fn get_unchecked<'a, T>(&'a self) -> &'a T {
-            unsafe { &*(self.data as *mut T) }
+            unsafe { &(*(self.data as *mut (T, extern "C" fn(_: *mut c_void)))).0 }
         }
         pub fn create_using_box<T: Debug + Display + 'static>(data: T) -> Self {
             let data = Boxed::new(data);
@@ -1705,8 +1725,8 @@ pub mod common {
     impl Display for FFIableObject {
         fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
             let data = (self.display)(self.data);
-            let data = data.as_str();
-            let Some(data) = data else {
+            let data = data.to_str();
+            let Maybe::Some(data) = data else {
                 return Err(std::fmt::Error::default());
             };
             f.write_str(data)
@@ -1715,8 +1735,8 @@ pub mod common {
     impl Debug for FFIableObject {
         fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
             let data = (self.fmt)(self.data);
-            let data = data.as_str();
-            let Some(data) = data else {
+            let data = data.to_str();
+            let Maybe::Some(data) = data else {
                 return Err(std::fmt::Error::default());
             };
             f.write_str(data)
@@ -1744,6 +1764,16 @@ impl Drop for Ref {
 pub enum Maybe<T> {
     Some(T),
     None,
+}
+impl<T> Maybe<T> {
+    pub fn unwrap(self) -> T {
+        match self {
+            Maybe::Some(x) => x,
+            _ => {
+                ::core::panicking::panic_fmt(format_args!("Panicked during unwrap"));
+            }
+        }
+    }
 }
 impl<T> From<Option<&T>> for Maybe<*const T> {
     fn from(value: Option<&T>) -> Self {

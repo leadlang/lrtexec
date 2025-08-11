@@ -6,13 +6,26 @@ use std::ptr::{self, NonNull};
 
 #[repr(C)]
 pub struct Boxed<T> {
-  ptr: NonNull<(T, extern "C" fn(data: *mut c_void))>,
+  ptr: NonNull<BoxedData<T>>,
   drop: bool,
 }
 
-extern "C" fn ptr_drop<T>(data: *mut c_void) {
-  unsafe {
-    ptr::drop_in_place(data as *mut T);
+#[repr(C)]
+pub struct BoxedData<T> {
+  pub value: T,
+  drop: extern "C" fn(*mut c_void)
+}
+
+extern "C" fn mfree<T>(d: *mut c_void) {
+  unsafe { ptr::drop_in_place(d as *mut T) };
+}
+
+impl<T> BoxedData<T> {
+  pub fn new(d: T) -> Self {
+    Self {
+      value: d,
+      drop: mfree::<T>
+    }
   }
 }
 
@@ -22,8 +35,9 @@ impl<T> Boxed<T> {
   /// This function manually allocates memory on the heap using `libc::malloc`
   /// and moves the value into that newly allocated space.
   pub extern "C" fn new(value: T) -> Self {
-    let drop = ptr_drop::<T>;
-    let data: (T, extern "C" fn(*mut c_void)) = (value, drop);
+    let data = BoxedData::new(
+      value
+    );
 
     let size = size_of_val(&data);
 
@@ -34,7 +48,7 @@ impl<T> Boxed<T> {
       };
     }
 
-    let ptr = unsafe { malloc(size) as *mut (T, extern "C" fn (_: *mut c_void)) };
+    let ptr = unsafe { malloc(size) as *mut BoxedData<T> };
 
     let ptr = match NonNull::new(ptr) {
       Some(p) => p,
@@ -68,7 +82,7 @@ impl<T> Boxed<T> {
       }
     }
 
-    value.0
+    value.value
   }
 
   /// Creates an Boxed from a raw, non-null pointer.
@@ -80,7 +94,7 @@ impl<T> Boxed<T> {
   /// freed elsewhere.
   pub unsafe extern "C" fn from_raw(ptr: *mut c_void) -> Self {
     Self {
-      ptr: NonNull::new(ptr as *mut (T, extern "C" fn(_: *mut c_void))).expect("Invalid Pointer provided"),
+      ptr: NonNull::new(ptr as *mut BoxedData<T>).expect("Invalid Pointer provided"),
       drop: true,
     }
   }
@@ -90,19 +104,23 @@ impl<T> Boxed<T> {
 
     val.ptr.as_ptr() as _
   }
+
+  pub extern "C" fn free(self) {
+    // Rust will do the trick
+  }
 }
 
 impl<T> Deref for Boxed<T> {
   type Target = T;
 
   fn deref(&self) -> &Self::Target {
-    unsafe { &self.ptr.as_ref().0 }
+    unsafe { &self.ptr.as_ref().value }
   }
 }
 
 impl<T> DerefMut for Boxed<T> {
   fn deref_mut(&mut self) -> &mut Self::Target {
-    unsafe { &mut self.ptr.as_mut().0 }
+    unsafe { &mut self.ptr.as_mut().value }
   }
 }
 
@@ -111,9 +129,9 @@ impl<T> Drop for Boxed<T> {
     if mem::size_of::<T>() > 0 && self.drop {
       // Runs drop functions of the values
       unsafe {
-        let ptr = &mut *self.ptr.as_ptr();
+        let ptr = &mut *self.ptr.as_mut();
 
-        (ptr.1)(&mut ptr.0 as *mut _ as *mut _)
+        (ptr.drop)(&mut ptr.value as *mut _ as _)
       }
 
       // Free the pointers + value like C
