@@ -1,12 +1,20 @@
 !asm 0
 
----@define
-# Define your structs, compiletime macros, etc here
-import { myFunction } from "package or an inline module path"
-
-import Module from "non inline module path"
+# Import All The Stuff Here
+---
+# you can import modules, packages here
 ---
 
----@
-@calls myFunction
----
+# main() has two meanings depending on the context
+# - if this is the main.lrt file, then it refers to the program entrypoint
+# - for modules, it acts as module init script & is ran as soon as the module is first loaded in any part of the program
+#   note that the module state is **recreated** across parts of the application and state is not synced
+# - This might change in the future
+def main()
+
+end
+
+# Appending `pub` exports the functions to other modules
+# It is not allowed in main.lrt file
+def my_fn()
+end
